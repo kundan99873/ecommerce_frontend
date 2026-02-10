@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Package, ChevronRight, ChevronDown, Check, Circle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { orders } from "@/data/products";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 const statusColors: Record<string, string> = {
   delivered: "bg-success text-success-foreground",

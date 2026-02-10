@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/context/wishlistContext";
 import { useCart } from "@/context/cartContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 const Wishlist = () => {
   const { items, removeItem } = useWishlist();

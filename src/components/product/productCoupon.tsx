@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Tag, Check, X } from "lucide-react";
+import { Tag, Check, X, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCoupon } from "@/context/couponContext";
+import { toast } from "@/hooks/useToast";
 
 interface ProductCouponProps {
   price: number;
@@ -12,6 +13,7 @@ const ProductCoupon = ({ price }: ProductCouponProps) => {
   const { availableCoupons } = useCoupon();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<{ valid: boolean; discountedPrice: number; message: string } | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const handleCheck = () => {
     if (!code.trim()) return;
@@ -33,32 +35,71 @@ const ProductCoupon = ({ price }: ProductCouponProps) => {
     setResult({ valid: true, discountedPrice: discounted, message: `You save $${disc.toFixed(2)} with ${coupon.code}` });
   };
 
+  const handleCopy = (couponCode: string) => {
+    navigator.clipboard.writeText(couponCode);
+    setCopiedCode(couponCode);
+    setCode(couponCode);
+    setResult(null);
+    toast({ title: "Copied!", description: `${couponCode} copied & applied to input` });
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  // Show top 2 eligible coupons as quick suggestions
+  const suggestions = availableCoupons
+    .filter((c) => new Date(c.expiresAt) >= new Date())
+    .slice(0, 2);
+
   return (
-    <div className="mt-4 space-y-2">
+    <div className="mt-5 space-y-3 bg-card border rounded-xl p-4">
       <div className="flex items-center gap-2 text-sm">
-        <Tag className="h-4 w-4 text-muted-foreground" />
-        <span className="font-medium">Have a coupon?</span>
+        <Tag className="h-4 w-4 text-primary" />
+        <span className="font-semibold">Have a coupon?</span>
       </div>
+
+      {/* Quick coupon suggestions */}
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {suggestions.map((c) => (
+            <button
+              key={c.code}
+              onClick={() => handleCopy(c.code)}
+              className="flex items-center gap-1.5 text-xs border border-dashed border-primary/40 bg-primary/5 rounded-lg px-3 py-1.5 hover:bg-primary/10 transition-colors group"
+            >
+              <code className="font-mono font-bold tracking-wider text-primary">{c.code}</code>
+              <span className="text-muted-foreground">
+                {c.type === "percentage" ? `${c.value}%` : `$${c.value}`} off
+              </span>
+              {copiedCode === c.code ? (
+                <Check className="h-3 w-3 text-primary" />
+              ) : (
+                <Copy className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Input
-          placeholder="Enter code"
+          placeholder="Enter coupon code"
           value={code}
           onChange={(e) => { setCode(e.target.value.toUpperCase()); setResult(null); }}
           onKeyDown={(e) => e.key === "Enter" && handleCheck()}
-          className="text-sm"
+          className="text-sm font-mono tracking-wider"
         />
-        <Button variant="outline" size="sm" onClick={handleCheck} disabled={!code.trim()}>
-          Check
+        <Button variant="default" size="sm" onClick={handleCheck} disabled={!code.trim()}>
+          Apply
         </Button>
       </div>
+
       {result && (
-        <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${
-          result.valid ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+        <div className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 ${
+          result.valid ? "bg-primary/10 text-primary border border-primary/20" : "bg-destructive/10 text-destructive border border-destructive/20"
         }`}>
-          {result.valid ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
-          <span>{result.message}</span>
+          {result.valid ? <Check className="h-4 w-4 shrink-0" /> : <X className="h-4 w-4 shrink-0" />}
+          <span className="flex-1">{result.message}</span>
           {result.valid && (
-            <span className="ml-auto font-semibold">Price: ${result.discountedPrice.toFixed(2)}</span>
+            <span className="font-bold text-sm">${result.discountedPrice.toFixed(2)}</span>
           )}
         </div>
       )}

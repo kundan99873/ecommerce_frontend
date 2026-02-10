@@ -10,7 +10,7 @@ import { useAuth, type Address } from "@/context/authContext";
 import { toast } from "@/hooks/useToast";
 import { orders } from "@/data/products";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const Profile = () => {
   const { user, updateProfile, addAddress, removeAddress, changePassword, logout } = useAuth();

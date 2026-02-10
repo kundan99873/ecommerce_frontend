@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { orders } from "@/data/products";
 import { toast } from "@/hooks/useToast";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface Review {
   productId: number;

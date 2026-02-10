@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/authContext";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const ResetPassword = () => {
   const { resetPassword } = useAuth();
