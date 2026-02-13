@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Heart, User, Search, Menu, X, Moon, Sun, LogIn } from "lucide-react";
+import { Heart, User, Search, Menu, X, Moon, Sun, LogIn, Shield } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/context/wishlistContext";
 import { useTheme } from "@/context/themeContext";
@@ -62,13 +62,20 @@ const Navbar = () => {
             </Link>
           )}
           {isAuthenticated ? (
-            <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
-              {user?.avatar ? (
-                <img src={user.avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
-              ) : (
-                <User className="h-5 w-5" />
+            <>
+              {user?.role === "admin" && (
+                <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors" title="Admin Panel">
+                  <Shield className="h-5 w-5" />
+                </Link>
               )}
-            </Link>
+              <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
+              </Link>
+            </>
           ) : (
             <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               <LogIn className="h-5 w-5" />
