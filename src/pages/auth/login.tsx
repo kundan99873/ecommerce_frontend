@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/useToast";
 import { motion } from "motion/react";
+import GoogleLoginBtn from "@/components/user/auth/googleLoginBtn";
 
 const Login = () => {
   const { login, isLoading, isAuthenticated } = useAuth();
@@ -84,6 +85,8 @@ const Login = () => {
               Sign In
             </Button>
           </form>
+
+          <GoogleLoginBtn />
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}

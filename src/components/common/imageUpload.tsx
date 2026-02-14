@@ -3,7 +3,7 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/hooks/useToast";
 
 interface ImageUploadProps {
-  onUpload: (dataUrl: string) => void;
+  onUpload: (dataUrl: File | null) => void;
   currentImage?: string;
 }
 
@@ -24,13 +24,11 @@ const ImageUpload = ({ onUpload, currentImage }: ImageUploadProps) => {
       toast({ title: "File too large", description: "Max file size is 2MB." });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      setPreview(url);
-      onUpload(url);
-    };
-    reader.readAsDataURL(file);
+
+    
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    onUpload(file);
   }, [onUpload]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -43,6 +41,7 @@ const ImageUpload = ({ onUpload, currentImage }: ImageUploadProps) => {
   const clear = () => {
     setPreview(null);
     if (inputRef.current) inputRef.current.value = "";
+    onUpload(null);
   };
 
   return (
