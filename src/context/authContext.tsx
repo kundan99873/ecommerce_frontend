@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { toast } from "@/hooks/useToast";
 
+export type UserRole = "admin" | "user";
+
 export interface User {
   id: string;
   name: string;
   email: string;
   phone?: string;
   avatar?: string;
+  role: UserRole;
   addresses: Address[];
   createdAt: string;
 }
@@ -52,10 +55,11 @@ const MOCK_USERS: { email: string; password: string; user: User }[] = [
       id: "usr_1",
       name: "Kundan Chaudhary",
       email: "kundan@gmail.com",
-      phone: "+91 8779253883",
+      phone: "+1 555-0123",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+      role: "admin",
       addresses: [
-        { id: "addr_1", label: "Home", name: "Kundan Chaudhary", street: "123 Main St", city: "Mumbai", state: "Maharashtra", zip: "400037", country: "India", isDefault: true },
+        { id: "addr_1", label: "Home", name: "Kundan Chaudhary", street: "123 Main St", city: "Mumbai", state: "Maharashtra", zip: "400037", country: "IN", isDefault: true },
       ],
       createdAt: "2024-06-15",
     },
@@ -130,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: `usr_${Date.now()}`,
       name,
       email,
+      role: "user",
       addresses: [],
       createdAt: new Date().toISOString().split("T")[0],
     };
