@@ -231,12 +231,10 @@ const Register = () => {
 
     const response = await mutation.mutateAsync(formData)
     console.log({response})
-    toast({ title: "Account created!", description: "Welcome to LUMIÈRE." });
-
-    // const success = await registerUser(data.name, data.email, data.password);
-    // if (success) {
-    //   navigate("/", { replace: true });
-    // }
+    if(response.success) {
+      toast({ title: "Account created!", description: "Welcome to LUMIÈRE." });
+      navigate("/login", { replace: true });
+    }
   };
 
   return (

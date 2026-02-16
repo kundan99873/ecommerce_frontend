@@ -28,19 +28,19 @@ const AdminLayout = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="h-screen flex bg-background overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r bg-card">
+      <aside className="hidden md:flex flex-col w-64 border-r bg-card h-full">
         <div className="p-6 border-b">
           <Link
             to="/"
             className="font-display text-xl font-bold text-foreground"
           >
-            LUMIÈRE
+            SHOPNOW
           </Link>
           <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 max-h-screen">
           {navItems.map((item) => {
             const active =
               location.pathname === item.to ||
@@ -98,7 +98,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Mobile header */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full">
         <header className="md:hidden flex items-center justify-between border-b px-4 h-14 bg-card">
           <Link to="/" className="font-display text-lg font-bold">
             LUMIÈRE

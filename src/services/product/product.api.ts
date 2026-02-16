@@ -1,14 +1,15 @@
-import axios from "axios";
+import { api } from "@/api/api";
 import type { Product } from "./product.types";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-export const fetchProducts = async (): Promise<Product[]> => {
-  const response = await axios.get(`${API_URL}/api/products`);
+const fetchProducts = async (): Promise<Product[]> => {
+  const response = await api.get(`/products`);
   return response.data.data;
 };
 
-export const fetchProductBySlug = async (slug: string): Promise<Product> => {
-  const response = await axios.get(`${API_URL}/api/products/${slug}`);
+const fetchProductBySlug = async (slug: string): Promise<Product> => {
+  const response = await api.get(`/products/${slug}`);
   return response.data.data;
 };
+
+
+export { fetchProducts, fetchProductBySlug }

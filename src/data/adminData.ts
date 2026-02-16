@@ -17,6 +17,7 @@ export interface Category {
   slug: string;
   productCount: number;
   createdAt: string;
+  image?: string;
 }
 
 export const mockCategories: Category[] = [

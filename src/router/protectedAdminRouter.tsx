@@ -6,11 +6,10 @@ const ProtectedAdminRoute = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
-  if (isLoading) <PageLoader />;
+  if (isLoading) return <PageLoader />;
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated)
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
 
   if (user?.role !== "admin") {
     return <Navigate to="/" replace />;

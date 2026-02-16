@@ -69,8 +69,8 @@ const Navbar = () => {
                 </Link>
               )}
               <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
                 ) : (
                   <User className="h-5 w-5" />
                 )}

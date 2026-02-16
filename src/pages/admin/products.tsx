@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/useToast";
 import { products as initialProducts, type Product, categories } from "@/data/products";
+import AddProduct from "@/components/admin/product/addProduct";
 
 const PAGE_SIZE = 8;
 
@@ -232,12 +233,13 @@ const AdminProducts = () => {
       </div>
 
       {/* Edit / Add Modal */}
-      <Dialog open={!!editProduct} onOpenChange={() => setEditProduct(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+      <Dialog open={!!editProduct} onOpenChange={() => setEditProduct(null)} >
+        <DialogContent className="max-w-lg max-h-[80vh] min-w-[60vw] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">{isNew ? "Add Product" : "Edit Product"}</DialogTitle>
           </DialogHeader>
-          {editProduct && (
+          <AddProduct />
+          {/* {editProduct && (
             <div className="space-y-4">
               <div>
                 <Label>Name</Label>
@@ -282,11 +284,11 @@ const AdminProducts = () => {
                 </label>
               </div>
             </div>
-          )}
-          <DialogFooter>
+          )} */}
+          {/* <DialogFooter>
             <Button variant="outline" onClick={() => setEditProduct(null)}>Cancel</Button>
             <Button onClick={handleSave}>{isNew ? "Add Product" : "Save Changes"}</Button>
-          </DialogFooter>
+          </DialogFooter> */}
         </DialogContent>
       </Dialog>
     </>

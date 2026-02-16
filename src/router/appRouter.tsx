@@ -63,10 +63,10 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin/",
-    Component: AdminLayout,
+    Component: ProtectedAdminRoute,
     children: [
       {
-        Component: ProtectedAdminRoute,
+        Component: AdminLayout,
         children: [
           { index: true, Component: AdminDashboard },
           { path: "products", Component: AdminProducts },

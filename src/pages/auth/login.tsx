@@ -9,9 +9,10 @@ import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/useToast";
 import { motion } from "motion/react";
 import GoogleLoginBtn from "@/components/user/auth/googleLoginBtn";
+import type { LoginResponse } from "@/services/auth/auth.types";
 
 const Login = () => {
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, loginLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || "/";
@@ -34,12 +35,17 @@ const Login = () => {
       setError("Please fill in all fields");
       return;
     }
-    const success = await login(email, password, remember);
-    if (success) {
-      toast({ title: "Welcome back!", description: "You have been logged in successfully." });
-      navigate(from, { replace: true });
-    } else {
-      setError("Invalid email or password");
+    try {
+      const response: LoginResponse = await login(email, password);
+      console.log({response})
+      if (response.success) {
+        toast({ title: "Welcome back!", description: "You have been logged in successfully." });
+        navigate(from, { replace: true });
+      } else {
+        setError(response.message || "Invalid email or password");
+      }
+    } catch (error: any) {
+      setError(error?.response?.data?.message || "An error occurred during login. Please try again.");
     }
   };
 
@@ -80,8 +86,8 @@ const Login = () => {
               <label htmlFor="remember" className="text-sm cursor-pointer">Remember me</label>
             </div>
 
-            <Button type="submit" className="w-full py-5" disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
+            <Button type="submit" className="w-full py-5" disabled={loginLoading}>
+              {loginLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LogIn className="h-4 w-4 mr-2" />}
               Sign In
             </Button>
           </form>
