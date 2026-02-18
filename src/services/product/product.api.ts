@@ -11,5 +11,12 @@ const fetchProductBySlug = async (slug: string): Promise<Product> => {
   return response.data.data;
 };
 
+const addProduct = async (data: FormData): Promise<Product> => {
+  const response = await api.post(`/products`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data.data;
+}
 
-export { fetchProducts, fetchProductBySlug }
+
+export { fetchProducts, fetchProductBySlug, addProduct };

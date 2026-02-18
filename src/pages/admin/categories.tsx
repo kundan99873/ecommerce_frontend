@@ -21,12 +21,7 @@ const AdminCategories = () => {
   const [editingCat, setEditingCat] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const { data: catList = [], isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: categoryService.getAll,
-  });
-
-  const { data, isFetching } = useGetCategory();
+  const { data, isLoading } = useGetCategory();
 
   const addCategoryMutation = useAddCategory();
   const createMutation = useMutation({
@@ -66,14 +61,6 @@ const AdminCategories = () => {
       toast({ title: "Error", description: err.message }),
   });
 
-  console.log({data})
-
-  const filtered = useMemo(() => {
-    if (!search) return catList;
-    const q = search.toLowerCase();
-    return catList.filter((c) => c.name.toLowerCase().includes(q));
-  }, [catList, search]);
-
   const handleSubmit = async (values: CategoryFormValues) => {
     const formData = new FormData();
     formData.append("name", values.name);
@@ -93,13 +80,6 @@ const AdminCategories = () => {
         setModalOpen(false);
       }
     }
-
-    // const data = { name: values.name, image: values.image };
-    // if (editingCat) {
-    //   updateMutation.mutate({ id: editingCat.id, data });
-    // } else {
-    //   createMutation.mutate(data);
-    // }
   };
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
@@ -111,7 +91,7 @@ const AdminCategories = () => {
           <div>
             <h1 className="text-2xl font-display font-bold">Categories</h1>
             <p className="text-muted-foreground text-sm">
-              {filtered.length} categories
+              {data?.data.length} categories
             </p>
           </div>
           <Button

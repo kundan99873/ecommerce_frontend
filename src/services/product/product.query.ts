@@ -1,19 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchProducts, fetchProductBySlug } from "./product.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchProducts, fetchProductBySlug, addProduct } from "./product.api";
+import { queryClient } from "@/api/client";
+// import type { ApiResponse } from "@/api/api.types";
+import type { Product } from "./product.types";
 
 export const productsKeys = {
   all: ["products"],
   detail: (slug: string) => ["products", slug],
 };
 
-export const useProducts = () => {
+const useProducts = () => {
   return useQuery({
     queryKey: productsKeys.all,
     queryFn: fetchProducts,
   });
 };
 
-export const useProduct = (slug: string) => {
+const useProduct = (slug: string) => {
   return useQuery({
     queryKey: productsKeys.detail(slug),
     queryFn: () => fetchProductBySlug(slug),
@@ -21,3 +24,12 @@ export const useProduct = (slug: string) => {
   });
 };
 
+const useAddProduct = () => {
+  return useMutation<Product, Error, FormData>({
+    mutationFn: addProduct,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: productsKeys.all }),
+  });
+};
+
+export { useProducts, useProduct, useAddProduct };

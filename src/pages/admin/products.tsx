@@ -1,42 +1,88 @@
-import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, Edit2, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
-import { products as initialProducts, type Product, categories } from "@/data/products";
-import AddProduct from "@/components/admin/product/addProduct";
+import { productService, type AdminProduct, categories } from "@/services/productService";
+import ProductFormModal from "@/components/admin/product/productFormModal";
+import DeleteConfirmDialog from "@/components/admin/common/deleteConfirmModal";
+import { useAddProduct } from "@/services/product/product.query";
+import type { ProductFormValues } from "@/components/admin/product/product.types";
 
 const PAGE_SIZE = 8;
 
-// const emptyProduct = (): Partial<Product> & { active: boolean } => ({
-//   name: "", price: 0, category: "", brand: "", description: "", rating: 0, reviews: 0, inStock: true, active: true,
-//   image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=750&fit=crop",
-// });
-
 const AdminProducts = () => {
-  const navigate = useNavigate();
-  const [productList, setProductList] = useState(() =>
-    initialProducts.map((p) => ({ ...p, active: true, deleted: false }))
-  );
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [stockFilter, setStockFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [page, setPage] = useState(1);
-  const [editProduct, setEditProduct] = useState<(Partial<Product> & { active: boolean }) | null>(null);
-  const [isNew, setIsNew] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<(AdminProduct & { id: number }) | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+
+  // React Query
+  const { data: productList = [], isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: productService.getAll,
+  });
+
+  const addProductMutation = useAddProduct();
+
+  const createMutation = useMutation({
+    mutationFn: (data: ProductFormValues) => productService.create({ ...data, active: data.active, price: data.price }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Product added" });
+      setModalOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ProductFormValues }) => productService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Product updated" });
+      setModalOpen(false);
+      setEditingProduct(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: productService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: "Product deleted" });
+      setDeleteTarget(null);
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: productService.bulkDelete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast({ title: `${selected.size} products deleted` });
+      setSelected(new Set());
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: number; active: boolean }) => productService.update(id, { active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+
   const filtered = useMemo(() => {
-    let list = productList.filter((p) => !p.deleted);
+    let list = [...productList];
     if (search) {
       const q = search.toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
@@ -44,7 +90,6 @@ const AdminProducts = () => {
     if (categoryFilter !== "All") list = list.filter((p) => p.category === categoryFilter);
     if (stockFilter === "inStock") list = list.filter((p) => p.inStock);
     if (stockFilter === "outOfStock") list = list.filter((p) => !p.inStock);
-
     list.sort((a, b) => {
       if (sortBy === "price") return a.price - b.price;
       if (sortBy === "created") return b.id - a.id;
@@ -56,36 +101,21 @@ const AdminProducts = () => {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleSave = useCallback(() => {
-    if (!editProduct?.name || !editProduct?.category) {
-      toast({ title: "Validation Error", description: "Name and category are required." });
-      return;
-    }
-    if (isNew) {
-      const newP = { ...editProduct, id: Date.now(), rating: 0, reviews: 0, deleted: false } as any;
-      setProductList((prev) => [newP, ...prev]);
-      toast({ title: "Product added" });
+  const openAdd = () => { setEditingProduct(null); setModalOpen(true); };
+  const openEdit = (p: AdminProduct) => { setEditingProduct(p); setModalOpen(true); };
+
+  const handleSubmit = async (values: FormData) => {
+    if (editingProduct) {
+      // updateMutation.mutate({ id: editingProduct.id, data: values });
     } else {
-      setProductList((prev) => prev.map((p) => (p.id === editProduct.id ? { ...p, ...editProduct } : p)));
-      toast({ title: "Product updated" });
+      console.log(values);
+      const res = await addProductMutation.mutateAsync(values);
+      console.log(res)
+      // createMutation.mutate(values);
     }
-    setEditProduct(null);
-  }, [editProduct, isNew]);
-
-  const handleDelete = (id: number) => {
-    setProductList((prev) => prev.map((p) => (p.id === id ? { ...p, deleted: true } : p)));
-    toast({ title: "Product deleted" });
   };
 
-  const toggleActive = (id: number) => {
-    setProductList((prev) => prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
-  };
-
-  const handleBulkDelete = () => {
-    setProductList((prev) => prev.map((p) => (selected.has(p.id) ? { ...p, deleted: true } : p)));
-    setSelected(new Set());
-    toast({ title: `${selected.size} products deleted` });
-  };
+  const isMutating = createMutation.isPending || updateMutation.isPending;
 
   return (
     <>
@@ -97,11 +127,11 @@ const AdminProducts = () => {
           </div>
           <div className="flex gap-2">
             {selected.size > 0 && (
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Button variant="destructive" size="sm" onClick={() => bulkDeleteMutation.mutate(Array.from(selected))}>
                 Delete ({selected.size})
               </Button>
             )}
-            <Button onClick={() => navigate("/admin/products/add")}>
+            <Button onClick={openAdd}>
               <Plus className="h-4 w-4 mr-2" /> Add Product
             </Button>
           </div>
@@ -144,77 +174,83 @@ const AdminProducts = () => {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="p-3 text-left w-10">
-                      <Checkbox
-                        checked={paged.length > 0 && paged.every((p) => selected.has(p.id))}
-                        onCheckedChange={(c) => {
-                          const s = new Set(selected);
-                          paged.forEach((p) => (c ? s.add(p.id) : s.delete(p.id)));
-                          setSelected(s);
-                        }}
-                      />
-                    </th>
-                    <th className="p-3 text-left">Product</th>
-                    <th className="p-3 text-left">Category</th>
-                    <th className="p-3 text-right">Price</th>
-                    <th className="p-3 text-center">Stock</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map((p) => (
-                    <tr key={p.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="p-3">
-                        <Checkbox checked={selected.has(p.id)} onCheckedChange={(c) => {
-                          const s = new Set(selected);
-                          c ? s.add(p.id) : s.delete(p.id);
-                          setSelected(s);
-                        }} />
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-3">
-                          <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
-                          <div>
-                            <p className="font-medium">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{p.brand}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3">{p.category}</td>
-                      <td className="p-3 text-right font-medium">${p.price}</td>
-                      <td className="p-3 text-center">
-                        <Badge variant={p.inStock ? "default" : "destructive"} className="text-xs">
-                          {p.inStock ? "In Stock" : "Out"}
-                        </Badge>
-                      </td>
-                      <td className="p-3 text-center">
-                        <Badge variant={p.active ? "outline" : "secondary"} className="text-xs">
-                          {p.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActive(p.id)}>
-                            {p.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditProduct(p); setIsNew(false); }}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(p.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+            {isLoading ? (
+              <div className="p-6 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="p-3 text-left w-10">
+                        <Checkbox
+                          checked={paged.length > 0 && paged.every((p) => selected.has(p.id))}
+                          onCheckedChange={(c) => {
+                            const s = new Set(selected);
+                            paged.forEach((p) => (c ? s.add(p.id) : s.delete(p.id)));
+                            setSelected(s);
+                          }}
+                        />
+                      </th>
+                      <th className="p-3 text-left">Product</th>
+                      <th className="p-3 text-left">Category</th>
+                      <th className="p-3 text-right">Price</th>
+                      <th className="p-3 text-center">Stock</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {paged.map((p) => (
+                      <tr key={p.id} className="border-b hover:bg-muted/30 transition-colors">
+                        <td className="p-3">
+                          <Checkbox checked={selected.has(p.id)} onCheckedChange={(c) => {
+                            const s = new Set(selected);
+                            c ? s.add(p.id) : s.delete(p.id);
+                            setSelected(s);
+                          }} />
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+                            <div>
+                              <p className="font-medium">{p.name}</p>
+                              <p className="text-xs text-muted-foreground">{p.brand}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3">{p.category}</td>
+                        <td className="p-3 text-right font-medium">${p.price}</td>
+                        <td className="p-3 text-center">
+                          <Badge variant={p.inStock ? "default" : "destructive"} className="text-xs">
+                            {p.inStock ? "In Stock" : "Out"}
+                          </Badge>
+                        </td>
+                        <td className="p-3 text-center">
+                          <Badge variant={p.active ? "outline" : "secondary"} className="text-xs">
+                            {p.active ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActiveMutation.mutate({ id: p.id, active: !p.active })}>
+                              {p.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(p.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 border-t">
                 <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
@@ -232,65 +268,28 @@ const AdminProducts = () => {
         </Card>
       </div>
 
-      {/* Edit / Add Modal */}
-      <Dialog open={!!editProduct} onOpenChange={() => setEditProduct(null)} >
-        <DialogContent className="max-w-lg max-h-[80vh] min-w-[60vw] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display">{isNew ? "Add Product" : "Edit Product"}</DialogTitle>
-          </DialogHeader>
-          <AddProduct />
-          {/* {editProduct && (
-            <div className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <Input value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Price</Label>
-                  <Input type="number" value={editProduct.price} onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
-                </div>
-                <div>
-                  <Label>Brand</Label>
-                  <Input value={editProduct.brand} onChange={(e) => setEditProduct({ ...editProduct, brand: e.target.value })} />
-                </div>
-              </div>
-              <div>
-                <Label>Category</Label>
-                <Select value={editProduct.category} onValueChange={(v) => setEditProduct({ ...editProduct, category: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.filter((c) => c !== "All").map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea value={editProduct.description} onChange={(e) => setEditProduct({ ...editProduct, description: e.target.value })} />
-              </div>
-              <div>
-                <Label>Image URL</Label>
-                <Input value={editProduct.image} onChange={(e) => setEditProduct({ ...editProduct, image: e.target.value })} />
-                {editProduct.image && <img src={editProduct.image} alt="preview" className="h-20 w-20 rounded-lg object-cover mt-2" />}
-              </div>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={editProduct.inStock} onCheckedChange={(c) => setEditProduct({ ...editProduct, inStock: !!c })} />
-                  In Stock
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={editProduct.active} onCheckedChange={(c) => setEditProduct({ ...editProduct, active: !!c })} />
-                  Active
-                </label>
-              </div>
-            </div>
-          )} */}
-          {/* <DialogFooter>
-            <Button variant="outline" onClick={() => setEditProduct(null)}>Cancel</Button>
-            <Button onClick={handleSave}>{isNew ? "Add Product" : "Save Changes"}</Button>
-          </DialogFooter> */}
-        </DialogContent>
-      </Dialog>
+      <ProductFormModal
+        open={modalOpen}
+        onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
+        defaultValues={editingProduct ? {
+          ...editingProduct,
+          slug: editingProduct.name ? editingProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") : "",
+          brand: editingProduct.brand || "",
+          description: editingProduct.description || "",
+          image: editingProduct.image || "",
+          variants: [{ color: "", size: "", sku: `SKU-${editingProduct.id}`, originalPrice: editingProduct.price, discountedPrice: editingProduct.price, stock: editingProduct.inStock ? 10 : 0, isActive: true, images: editingProduct.image ? [{ id: "1", url: editingProduct.image, isPrimary: true }] : [] }],
+        } : undefined}
+        onSubmit={handleSubmit}
+        isLoading={isMutating}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget)}
+        title="Delete Product"
+        description="This will soft-delete the product. Are you sure?"
+      />
     </>
   );
 };

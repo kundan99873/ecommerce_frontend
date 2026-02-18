@@ -41,19 +41,18 @@ const CategoryFormModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-  } = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: { name: "", image: undefined },
-  });
+  const { control, handleSubmit, reset, setValue } =
+    useForm<CategoryFormValues>({
+      resolver: zodResolver(categorySchema),
+      defaultValues: { name: "", image: undefined },
+    });
 
   useEffect(() => {
     if (open && defaultValues) {
-      reset({ name: defaultValues.name, image: defaultValues.image || undefined });
+      reset({
+        name: defaultValues.name,
+        image: defaultValues.image || undefined,
+      });
       setImagePreview(defaultValues.image || null);
     } else if (open) {
       reset({ name: "", image: undefined });

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/useToast";
 import { categories } from "@/data/products";
+import { useGetCategory } from "@/services/category/category.query";
 
 interface VariantImage {
   id: string;
@@ -71,6 +72,10 @@ const AddProduct = () => {
   const [slugEdited, setSlugEdited] = useState(false);
   const [variants, setVariants] = useState<Variant[]>([createVariant()]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { data: category, isFetching: categoryFetching } = useGetCategory();
+
+  console.log({category, categoryFetching})
 
   // Product field handlers
   const updateProduct = (field: keyof ProductForm, value: string | boolean) => {
