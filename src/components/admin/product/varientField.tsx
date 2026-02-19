@@ -36,6 +36,8 @@ const VariantField = ({
     }));
     const current = images;
     if (current.length === 0 && newImgs.length > 0) newImgs[0].isPrimary = true;
+
+    console.log({current, newImgs})
     setValue(`variants.${index}.images`, [...current, ...newImgs], {
       shouldValidate: true,
     });

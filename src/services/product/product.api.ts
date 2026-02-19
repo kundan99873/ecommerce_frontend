@@ -1,8 +1,9 @@
 import { api } from "@/api/api";
-import type { Product } from "./product.types";
+import type { Product, ProductResponse } from "./product.types";
+import type { ApiResponse } from "@/api/api.types";
 
-const fetchProducts = async (): Promise<Product[]> => {
-  const response = await api.get(`/products`);
+const fetchProducts = async (): Promise<ProductResponse> => {
+  const response = await api.get(`/product`);
   return response.data.data;
 };
 
@@ -11,8 +12,8 @@ const fetchProductBySlug = async (slug: string): Promise<Product> => {
   return response.data.data;
 };
 
-const addProduct = async (data: FormData): Promise<Product> => {
-  const response = await api.post(`/products`, data, {
+const addProduct = async (data: FormData): Promise<ApiResponse> => {
+  const response = await api.post(`/product/add`, data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data.data;

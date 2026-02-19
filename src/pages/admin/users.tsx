@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
-import { Search, Shield, ShieldOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Shield, ShieldOff, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/useToast";
 import { mockUsers, type AdminUser } from "@/data/adminData";
+import UserDetailModal from "@/components/admin/user/userDetailModal";
 
 const PAGE_SIZE = 10;
 
@@ -16,7 +16,7 @@ const AdminUsers = () => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let list = users;
@@ -125,7 +125,9 @@ const AdminUsers = () => {
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleBlock(u.id)}>
                             {u.status === "active" ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDetailUser(u)}>View</Button>
+                          <Button variant="ghost" size="sm" onClick={() => setDetailUserId(u.id)}>
+                            <Eye className="h-4 w-4 mr-1" /> View
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -150,45 +152,7 @@ const AdminUsers = () => {
         </Card>
       </div>
 
-      <Dialog open={!!detailUser} onOpenChange={() => setDetailUser(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-display">User Details</DialogTitle>
-          </DialogHeader>
-          {detailUser && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary">
-                  {detailUser.name.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-medium text-lg">{detailUser.name}</p>
-                  <p className="text-sm text-muted-foreground">{detailUser.email}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-muted rounded-lg p-3">
-                  <p className="text-muted-foreground">Role</p>
-                  <p className="font-medium capitalize">{detailUser.role}</p>
-                </div>
-                <div className="bg-muted rounded-lg p-3">
-                  <p className="text-muted-foreground">Status</p>
-                  <p className="font-medium capitalize">{detailUser.status}</p>
-                </div>
-                <div className="bg-muted rounded-lg p-3">
-                  <p className="text-muted-foreground">Orders</p>
-                  <p className="font-medium">{detailUser.orders}</p>
-                </div>
-                <div className="bg-muted rounded-lg p-3">
-                  <p className="text-muted-foreground">Total Spent</p>
-                  <p className="font-medium">${detailUser.spent.toLocaleString()}</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">Joined: {detailUser.joinedAt}</p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <UserDetailModal userId={detailUserId} onOpenChange={() => setDetailUserId(null)} />
     </>
   );
 };

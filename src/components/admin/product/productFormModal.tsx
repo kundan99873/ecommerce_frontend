@@ -141,7 +141,6 @@ const ProductFormModal = ({
 const handleSubmit = form.handleSubmit((values) => {
   const formData = new FormData();
 
-  // Basic fields
   formData.append("name", values.name);
   formData.append("slug", values.slug);
   formData.append("brand", values.brand || "");
@@ -150,7 +149,6 @@ const handleSubmit = form.handleSubmit((values) => {
   formData.append("inStock", String(values.inStock));
   formData.append("active", String(values.active));
 
-  // Prepare variants WITHOUT images
   const variantsWithoutImages = values.variants.map((v) => ({
     // id: v.id,
     color: v.color,
@@ -163,13 +161,13 @@ const handleSubmit = form.handleSubmit((values) => {
 
   formData.append("variants", JSON.stringify(variantsWithoutImages));
 
-  // Append images by index
   values.variants.forEach((variant, index) => {
+    console.log({variant})
     variant.images?.forEach((img) => {
       if (img instanceof File) {
-        formData.append(`images_${index}`, img);
+        formData.append(`variants[${index}]`, img);
       } else if ((img as any).file) {
-        formData.append(`images_${index}`, (img as any).file);
+        formData.append(`variants[${index}]`, (img as any).file);
       }
     });
   });
@@ -177,10 +175,9 @@ const handleSubmit = form.handleSubmit((values) => {
   onSubmit(formData);
 });
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display">
             {isEdit ? "Edit Product" : "Add Product"}
@@ -315,23 +312,6 @@ const handleSubmit = form.handleSubmit((values) => {
                 </div>
               )}
             />
-            {/* <Controller
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <div className="space-y-1">
-                  <Label>Main Image URL</Label>
-                  <Input {...field} placeholder="https://..." />
-                  {field.value && (
-                    <img
-                      src={field.value}
-                      alt="preview"
-                      className="h-16 w-16 rounded-lg object-cover mt-1"
-                    />
-                  )}
-                </div>
-              )}
-            /> */}
             <div className="flex items-center gap-6">
               <Controller
                 control={form.control}

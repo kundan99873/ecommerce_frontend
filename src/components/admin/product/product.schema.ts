@@ -12,6 +12,7 @@ const variantSchema = z.object({
     id: z.string(),
     url: z.string(),
     isPrimary: z.boolean(),
+    file: z.instanceof(File).optional(),
   })).min(1, "At least 1 image required"),
 });
 
