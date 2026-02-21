@@ -37,20 +37,44 @@ const VariantField = ({
     const current = images;
     if (current.length === 0 && newImgs.length > 0) newImgs[0].isPrimary = true;
 
-    console.log({current, newImgs})
+    console.log({ current, newImgs });
     setValue(`variants.${index}.images`, [...current, ...newImgs], {
       shouldValidate: true,
     });
   };
 
-  const removeImage = (imgId: string) => {
-    let imgs = images.filter((i) => i.id !== imgId);
-    if (imgs.length > 0 && !imgs.some((i) => i.isPrimary))
-      imgs[0].isPrimary = true;
-    setValue(`variants.${index}.images`, imgs, { shouldValidate: true });
+  // const removeImage = (imgId: string | number) => {
+  //   let imgs = images.filter((i) => i.id !== imgId);
+  //   if (imgs.length > 0 && !imgs.some((i) => i.isPrimary))
+  //     imgs[0].isPrimary = true;
+  //   setValue(`variants.${index}.images`, imgs, { shouldValidate: true });
+  //   setValue(
+  //     `variants.${index}.removed_image_ids`,
+  //     [...images.filter((i) => i.id === imgId).map((i) => i.id)],
+  //     { shouldValidate: true },
+  //   );
+  // };
+
+  const removeImage = (imgId: string | number) => {
+    const variant = watch(`variants.${index}`);
+    const updatedImages = (variant.images || []).filter(
+      (i: any) => String(i.id) !== String(imgId),
+    );
+    if (updatedImages.length && !updatedImages.some((i: any) => i.isPrimary)) {
+      updatedImages[0].isPrimary = true;
+    }
+    setValue(`variants.${index}.images`, updatedImages, {
+      shouldValidate: true,
+    });
+    const removed = variant.removed_image_ids || [];
+    if (!removed.includes(imgId)) {
+      setValue(`variants.${index}.removed_image_ids`, [...removed, imgId], {
+        shouldValidate: true,
+      });
+    }
   };
 
-  const setPrimary = (imgId: string) => {
+  const setPrimary = (imgId: string | number) => {
     setValue(
       `variants.${index}.images`,
       images.map((i) => ({ ...i, isPrimary: i.id === imgId })),
@@ -131,25 +155,6 @@ const VariantField = ({
             <div className="space-y-1">
               <Label className="text-xs">Size</Label>
               <Input {...field} placeholder="e.g. M" />
-            </div>
-          )}
-        />
-        <Controller
-          control={control}
-          name={`variants.${index}.sku`}
-          render={({ field, fieldState }) => (
-            <div className="space-y-1">
-              <Label className="text-xs">SKU *</Label>
-              <Input
-                {...field}
-                placeholder="e.g. SKU-001"
-                className={fieldState.error ? "border-destructive" : ""}
-              />
-              {fieldState.error && (
-                <p className="text-xs text-destructive">
-                  {fieldState.error.message}
-                </p>
-              )}
             </div>
           )}
         />
@@ -272,7 +277,7 @@ const VariantField = ({
                     e.stopPropagation();
                     removeImage(img.id);
                   }}
-                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <X className="h-3 w-3" />
                 </button>

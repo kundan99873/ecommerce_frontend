@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -27,12 +27,6 @@ import { productSchema } from "./product.schema";
 import { useGetCategory } from "@/services/category/category.query";
 import type { ProductFormModalProps, ProductFormValues } from "./product.types";
 
-const generateSlug = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
 const ProductFormModal = ({
   open,
   onOpenChange,
@@ -40,14 +34,12 @@ const ProductFormModal = ({
   onSubmit,
   isLoading,
 }: ProductFormModalProps) => {
-  const isEdit = !!defaultValues?.id;
+  const isEdit = !!defaultValues?.slug;
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      slug: "",
-      price: 0,
       brand: "",
       category: "",
       description: "",
@@ -57,7 +49,6 @@ const ProductFormModal = ({
         {
           color: "",
           size: "",
-          sku: "",
           originalPrice: 0,
           discountedPrice: 0,
           stock: 0,
@@ -72,7 +63,6 @@ const ProductFormModal = ({
     control: form.control,
     name: "variants",
   });
-  const [slugEdited, setSlugEdited] = useState(false);
 
   const { data: categoryData } = useGetCategory();
 
@@ -80,20 +70,31 @@ const ProductFormModal = ({
     if (open && defaultValues) {
       form.reset({
         name: defaultValues.name || "",
-        slug: defaultValues.slug || generateSlug(defaultValues.name || ""),
-        price: defaultValues.price || 0,
         brand: defaultValues.brand || "",
-        category: defaultValues.category || "",
+        category: defaultValues.category?.slug || "",
         description: defaultValues.description || "",
-        inStock: defaultValues.inStock ?? true,
-        active: defaultValues.active ?? true,
+        inStock: true,
+        active: true,
         variants: defaultValues.variants?.length
-          ? defaultValues.variants
+          ? defaultValues.variants.map((v: any) => ({
+              color: v.color || "",
+              size: v.size || "",
+              originalPrice: v.original_price || 0,
+              discountedPrice: v.discounted_price || 0,
+              stock: v.stock || 0,
+              isActive: v.isActive ?? true,
+              id: v.id,
+              images:
+                v.images?.map((img: any, idx: number) => ({
+                  id: img.id || idx,
+                  url: img.image_url || img.url || "",
+                  isPrimary: img.isPrimary ?? false,
+                })) || [],
+            }))
           : [
               {
                 color: "",
                 size: "",
-                sku: "",
                 originalPrice: 0,
                 discountedPrice: 0,
                 stock: 0,
@@ -102,23 +103,19 @@ const ProductFormModal = ({
               },
             ],
       });
-      setSlugEdited(true);
+      // setSlugEdited(true);
     } else if (open) {
       form.reset({
         name: "",
-        slug: "",
-        price: 0,
         brand: "",
         category: "",
         description: "",
-        image: "",
         inStock: true,
         active: true,
         variants: [
           {
             color: "",
             size: "",
-            sku: "",
             originalPrice: 0,
             discountedPrice: 0,
             stock: 0,
@@ -127,53 +124,47 @@ const ProductFormModal = ({
           },
         ],
       });
-      setSlugEdited(false);
     }
   }, [open, defaultValues]);
 
-  const watchName = form.watch("name");
-  useEffect(() => {
-    if (!slugEdited && watchName) {
-      form.setValue("slug", generateSlug(watchName));
-    }
-  }, [watchName, slugEdited]);
+  const handleSubmit = form.handleSubmit((values) => {
+    const formData = new FormData();
 
-const handleSubmit = form.handleSubmit((values) => {
-  const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("brand", values.brand || "");
+    formData.append("category", values.category);
+    formData.append("description", values.description || "");
+    formData.append("inStock", String(values.inStock));
+    formData.append("active", String(values.active));
 
-  formData.append("name", values.name);
-  formData.append("slug", values.slug);
-  formData.append("brand", values.brand || "");
-  formData.append("category", values.category);
-  formData.append("description", values.description || "");
-  formData.append("inStock", String(values.inStock));
-  formData.append("active", String(values.active));
+    const variantsWithoutImages = values.variants.map((v) => ({
+      color: v.color,
+      size: v.size,
+      id: v.id,
+      original_price: v.originalPrice,
+      discounted_price: v.discountedPrice,
+      stock: v.stock,
+      isActive: v.isActive,
+      ...(isEdit && { removed_image_ids: v.removed_image_ids || null }),
+    }));
 
-  const variantsWithoutImages = values.variants.map((v) => ({
-    // id: v.id,
-    color: v.color,
-    size: v.size,
-    original_price: v.originalPrice,
-    discounted_price: v.discountedPrice,
-    stock: v.stock,
-    isActive: v.isActive,
-  }));
+    formData.append("variants", JSON.stringify(variantsWithoutImages));
 
-  formData.append("variants", JSON.stringify(variantsWithoutImages));
-
-  values.variants.forEach((variant, index) => {
-    console.log({variant})
-    variant.images?.forEach((img) => {
-      if (img instanceof File) {
-        formData.append(`variants[${index}]`, img);
-      } else if ((img as any).file) {
-        formData.append(`variants[${index}]`, (img as any).file);
-      }
+    values.variants.forEach((variant, index) => {
+      console.log({ variant });
+      variant.images?.forEach((img) => {
+        if (img instanceof File) {
+          formData.append(`variants[${index}]`, img);
+        } else if ((img as any).file) {
+          formData.append(`variants[${index}]`, (img as any).file);
+        }
+      });
     });
+
+    onSubmit(formData);
   });
 
-  onSubmit(formData);
-});
+  // console.log({err: form.formState.errors})
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,7 +180,7 @@ const handleSubmit = form.handleSubmit((values) => {
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Basic Information
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <Controller
                 control={form.control}
                 name="name"
@@ -209,52 +200,8 @@ const handleSubmit = form.handleSubmit((values) => {
                   </div>
                 )}
               />
-              <Controller
-                control={form.control}
-                name="slug"
-                render={({ field, fieldState }) => (
-                  <div className="space-y-1">
-                    <Label>Slug *</Label>
-                    <Input
-                      {...field}
-                      onChange={(e) => {
-                        setSlugEdited(true);
-                        field.onChange(e);
-                      }}
-                      placeholder="auto-generated"
-                      className={fieldState.error ? "border-destructive" : ""}
-                    />
-                    {fieldState.error && (
-                      <p className="text-xs text-destructive">
-                        {fieldState.error.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-              />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <Controller
-                control={form.control}
-                name="price"
-                render={({ field, fieldState }) => (
-                  <div className="space-y-1">
-                    <Label>Base Price *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(+e.target.value)}
-                      className={fieldState.error ? "border-destructive" : ""}
-                    />
-                    {fieldState.error && (
-                      <p className="text-xs text-destructive">
-                        {fieldState.error.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-              />
+            <div className="grid grid-cols-2 gap-4">
               <Controller
                 control={form.control}
                 name="brand"
@@ -358,7 +305,6 @@ const handleSubmit = form.handleSubmit((values) => {
                   append({
                     color: "",
                     size: "",
-                    sku: "",
                     originalPrice: 0,
                     discountedPrice: 0,
                     stock: 0,

@@ -1,8 +1,9 @@
 import type z from "zod";
 import type { productSchema } from "./product.schema";
+import type { Product } from "@/services/product/product.types";
 
 export interface VariantImage {
-  id: string;
+  id: string | number;
   url: string;
   file: File;
   isPrimary: boolean;
@@ -23,7 +24,7 @@ export type ProductFormValues = z.infer<typeof productSchema>;
 export interface ProductFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: ProductFormValues & { id?: number };
+  defaultValues?: Product;
   onSubmit: (values: FormData) => void;
   isLoading?: boolean;
 }

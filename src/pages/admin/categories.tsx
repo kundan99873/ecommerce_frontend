@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit2, Trash2, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,7 +74,7 @@ const AdminCategories = () => {
       const response = await addCategoryMutation.mutateAsync(formData);
       if (response.success) {
         toast({
-          title: "Category added suceessfully",
+          title: "Category added successfully",
           description: response.message,
         });
         setModalOpen(false);
@@ -82,7 +82,7 @@ const AdminCategories = () => {
     }
   };
 
-  const isMutating = createMutation.isPending || updateMutation.isPending;
+  const isMutating = createMutation.isPending || updateMutation.isPending || addCategoryMutation.isPending;
 
   return (
     <>

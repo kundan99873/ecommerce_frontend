@@ -3,23 +3,25 @@ import { z } from "zod";
 const variantSchema = z.object({
   color: z.string().optional(),
   size: z.string().optional(),
-  sku: z.string().min(1, "SKU is required"),
+  id: z.number().optional(),
+  // sku: z.string().min(1, "SKU is required"),
   originalPrice: z.number({ message: "Required" }).positive("Must be positive"),
   discountedPrice: z.number({ message: "Required" }).positive("Must be positive"),
   stock: z.number().int().min(0),
   isActive: z.boolean(),
   images: z.array(z.object({
-    id: z.string(),
+    id: z.union([z.string(), z.number()]).optional(),
     url: z.string(),
     isPrimary: z.boolean(),
     file: z.instanceof(File).optional(),
   })).min(1, "At least 1 image required"),
+  removed_image_ids: z.array(z.union([z.string(), z.number()])).optional(),
 });
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required"),
-  price: z.number({ message: "Price is required" }).positive("Must be positive"),
+  // slug: z.string().min(1, "Slug is required"),
+  // price: z.number({ message: "Price is required" }).positive("Must be positive"),
   brand: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   description: z.string().optional(),
@@ -29,12 +31,12 @@ const productSchema = z.object({
   variants: z.array(variantSchema).min(1, "At least one variant is required"),
 }).superRefine((data, ctx) => {
   // Unique SKU check
-  const skus = data.variants.map(v => v.sku.toLowerCase());
-  skus.forEach((sku, i) => {
-    if (skus.indexOf(sku) !== i) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate SKU", path: ["variants", i, "sku"] });
-    }
-  });
+  // const skus = data.variants.map(v => v.sku.toLowerCase());
+  // skus.forEach((sku, i) => {
+  //   if (skus.indexOf(sku) !== i) {
+  //     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duplicate SKU", path: ["variants", i, "sku"] });
+  //   }
+  // });
   // Discounted <= Original
   data.variants.forEach((v, i) => {
     if (v.discountedPrice > v.originalPrice) {

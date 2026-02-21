@@ -1,20 +1,20 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Plus,
   Edit2,
   Trash2,
-  Eye,
-  EyeOff,
   ChevronLeft,
   ChevronRight,
+  EyeOff,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -24,15 +24,15 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
-import {
-  productService,
-  type AdminProduct,
-  categories,
-} from "@/services/productService";
+import { productService, categories } from "@/services/productService";
 import ProductFormModal from "@/components/admin/product/productFormModal";
 import DeleteConfirmDialog from "@/components/admin/common/deleteConfirmModal";
-import { useAddProduct, useProducts } from "@/services/product/product.query";
-import type { ProductFormValues } from "@/components/admin/product/product.types";
+import {
+  useAddProduct,
+  useProducts,
+  useUpdateProduct,
+} from "@/services/product/product.query";
+import type { Product } from "@/services/product/product.types";
 
 const PAGE_SIZE = 8;
 
@@ -45,50 +45,14 @@ const AdminProducts = () => {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<
-    (AdminProduct & { id: number }) | null
-  >(null);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  // React Query
-  // const { data: productList = [] } = useQuery({
-  //   queryKey: ["products"],
-  //   queryFn: productService.getAll,
-  // });
-
-  const { data, isLoading, isPending } = useProducts();
-  const productList = [];
-
-  console.log({ data, isLoading, isPending });
+  const { data, isLoading } = useProducts();
 
   const addProductMutation = useAddProduct();
-
-  const createMutation = useMutation({
-    mutationFn: (data: ProductFormValues) =>
-      productService.create({
-        ...data,
-        active: data.active,
-        price: data.price,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Product added" });
-      setModalOpen(false);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ProductFormValues }) =>
-      productService.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Product updated" });
-      setModalOpen(false);
-      setEditingProduct(null);
-    },
-  });
+  const updateProductMutation = useUpdateProduct();
 
   const deleteMutation = useMutation({
     mutationFn: productService.delete,
@@ -108,60 +72,49 @@ const AdminProducts = () => {
     },
   });
 
-  const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
-      productService.update(id, { active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
-  });
-
-  const filtered = useMemo(() => {
-    let list = [...productList];
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q),
-      );
-    }
-    if (categoryFilter !== "All")
-      list = list.filter((p) => p.category === categoryFilter);
-    if (stockFilter === "inStock") list = list.filter((p) => p.inStock);
-    if (stockFilter === "outOfStock") list = list.filter((p) => !p.inStock);
-    list.sort((a, b) => {
-      if (sortBy === "price") return a.price - b.price;
-      if (sortBy === "created") return b.id - a.id;
-      return a.name.localeCompare(b.name);
-    });
-    return list;
-  }, [productList, search, categoryFilter, stockFilter, sortBy]);
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(data?.totalCount || 0 / PAGE_SIZE);
+  // const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openAdd = () => {
     setEditingProduct(null);
     setModalOpen(true);
   };
-  const openEdit = (p: AdminProduct) => {
+  const openEdit = (p: Product) => {
     setEditingProduct(p);
     setModalOpen(true);
   };
 
   const handleSubmit = async (values: FormData) => {
     if (editingProduct) {
-      // updateMutation.mutate({ id: editingProduct.id, data: values });
+      console.log({ values });
+      for (let [key, value] of values.entries()) {
+        console.log(`${key}: ${value}`);
+      }
+      const res = await updateProductMutation.mutateAsync({
+        slug: editingProduct.slug,
+        data: values,
+      });
+      console.log({ res });
+      if (res.success) {
+        toast({ title: "Product updated" });
+        setModalOpen(false);
+      } else {
+        toast({ title: "Error updating product", description: res.message });
+      }
     } else {
       console.log(values);
       const res = await addProductMutation.mutateAsync(values);
-      console.log({ res });
-      // createMutation.mutate(values);
+      if (res.success) {
+        toast({ title: "Product added" });
+        setModalOpen(false);
+      } else {
+        toast({ title: "Error adding product", description: res.message });
+      }
     }
   };
 
   const isMutating =
-    createMutation.isPending ||
-    updateMutation.isPending ||
-    addProductMutation.isPending;
+    addProductMutation.isPending || updateProductMutation.isPending;
 
   return (
     <>
@@ -170,7 +123,7 @@ const AdminProducts = () => {
           <div>
             <h1 className="text-2xl font-display font-bold">Products</h1>
             <p className="text-muted-foreground text-sm">
-              {filtered.length} products
+              {data?.totalCount || 0} products
             </p>
           </div>
           <div className="flex gap-2">
@@ -268,7 +221,7 @@ const AdminProducts = () => {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="p-3 text-left w-10">
-                        <Checkbox
+                        {/* <Checkbox
                           checked={
                             paged.length > 0 &&
                             paged.every((p) => selected.has(p.id))
@@ -280,7 +233,7 @@ const AdminProducts = () => {
                             );
                             setSelected(s);
                           }}
-                        />
+                        /> */}
                       </th>
                       <th className="p-3 text-left">Product</th>
                       <th className="p-3 text-left">Category</th>
@@ -327,39 +280,37 @@ const AdminProducts = () => {
                         </td>
                         <td className="p-3 text-center">
                           <Badge
-                            variant={p.variants[0].stock > 0 ? "default" : "destructive"}
+                            variant={
+                              p.variants[0].stock > 0
+                                ? "default"
+                                : "destructive"
+                            }
                             className="text-xs"
                           >
                             {p.variants[0].stock > 0 ? "In Stock" : "Out"}
                           </Badge>
                         </td>
                         <td className="p-3 text-center">
-                          {/* <Badge
-                            variant={p.active ? "outline" : "secondary"}
+                          <Badge
+                            variant={p.is_active ? "outline" : "secondary"}
                             className="text-xs"
                           >
-                            {p.active ? "Active" : "Inactive"}
-                          </Badge> */}
+                            {p.is_active ? "Active" : "Inactive"}
+                          </Badge>
                         </td>
                         <td className="p-3">
                           <div className="flex items-center justify-end gap-1">
-                            {/* <Button
+                            <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() =>
-                                toggleActiveMutation.mutate({
-                                  id: p.id,
-                                  active: !p.active,
-                                })
-                              }
                             >
-                              {p.active ? (
+                              {p.is_active ? (
                                 <EyeOff className="h-4 w-4" />
                               ) : (
                                 <Eye className="h-4 w-4" />
                               )}
-                            </Button> */}
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -372,7 +323,7 @@ const AdminProducts = () => {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive"
-                              onClick={() => setDeleteTarget(p.id)}
+                              onClick={() => setDeleteTarget(p.slug)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -421,41 +372,7 @@ const AdminProducts = () => {
           setModalOpen(open);
           if (!open) setEditingProduct(null);
         }}
-        defaultValues={
-          editingProduct
-            ? {
-                ...editingProduct,
-                slug: editingProduct.name
-                  ? editingProduct.name
-                      .toLowerCase()
-                      .replace(/[^a-z0-9]+/g, "-")
-                  : "",
-                brand: editingProduct.brand || "",
-                description: editingProduct.description || "",
-                image: editingProduct.image || "",
-                variants: [
-                  {
-                    color: "",
-                    size: "",
-                    sku: `SKU-${editingProduct.id}`,
-                    originalPrice: editingProduct.price,
-                    discountedPrice: editingProduct.price,
-                    stock: editingProduct.inStock ? 10 : 0,
-                    isActive: true,
-                    images: editingProduct.image
-                      ? [
-                          {
-                            id: "1",
-                            url: editingProduct.image,
-                            isPrimary: true,
-                          },
-                        ]
-                      : [],
-                  },
-                ],
-              }
-            : undefined
-        }
+        defaultValues={editingProduct || undefined}
         onSubmit={handleSubmit}
         isLoading={isMutating}
       />
