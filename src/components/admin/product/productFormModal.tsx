@@ -145,6 +145,7 @@ const ProductFormModal = ({
       discounted_price: v.discountedPrice,
       stock: v.stock,
       isActive: v.isActive,
+      primary_image_index: v.images.findIndex((img) => img.isPrimary) ?? 0,
       ...(isEdit && { removed_image_ids: v.removed_image_ids || null }),
     }));
 

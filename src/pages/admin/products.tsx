@@ -14,7 +14,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-// import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -24,22 +23,26 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
-import { productService, categories } from "@/services/productService";
+import { productService } from "@/services/productService";
 import ProductFormModal from "@/components/admin/product/productFormModal";
 import DeleteConfirmDialog from "@/components/admin/common/deleteConfirmModal";
 import {
   useAddProduct,
+  useDeleteProduct,
   useProducts,
   useUpdateProduct,
 } from "@/services/product/product.query";
 import type { Product } from "@/services/product/product.types";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useGetCategory } from "@/services/category/category.query";
+import { formatCurrency } from "@/utils/utils";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [page, setPage] = useState(1);
@@ -49,19 +52,19 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const { data, isLoading } = useProducts();
+  const debouncedSearch = useDebounce(search);
+
+  const { data, isLoading } = useProducts({
+    page,
+    limit: PAGE_SIZE,
+    search: debouncedSearch,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
+  });
+  const { data: categoryData } = useGetCategory();
 
   const addProductMutation = useAddProduct();
   const updateProductMutation = useUpdateProduct();
-
-  const deleteMutation = useMutation({
-    mutationFn: productService.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast({ title: "Product deleted" });
-      setDeleteTarget(null);
-    },
-  });
+  const deleteProductMutation = useDeleteProduct();
 
   const bulkDeleteMutation = useMutation({
     mutationFn: productService.bulkDelete,
@@ -72,7 +75,7 @@ const AdminProducts = () => {
     },
   });
 
-  const totalPages = Math.ceil(data?.totalCount || 0 / PAGE_SIZE);
+  const totalPages = Math.ceil((data?.totalCounts || 0) / PAGE_SIZE);
   // const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const openAdd = () => {
@@ -102,7 +105,6 @@ const AdminProducts = () => {
         toast({ title: "Error updating product", description: res.message });
       }
     } else {
-      console.log(values);
       const res = await addProductMutation.mutateAsync(values);
       if (res.success) {
         toast({ title: "Product added" });
@@ -110,6 +112,22 @@ const AdminProducts = () => {
       } else {
         toast({ title: "Error adding product", description: res.message });
       }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteProductMutation.mutateAsync(deleteTarget);
+
+      toast({ title: "Product deleted" });
+      setDeleteTarget(null);
+    } catch (error: any) {
+      toast({
+        title: "Error deleting product",
+        description: error?.message ?? "Something went wrong",
+      });
     }
   };
 
@@ -123,7 +141,7 @@ const AdminProducts = () => {
           <div>
             <h1 className="text-2xl font-display font-bold">Products</h1>
             <p className="text-muted-foreground text-sm">
-              {data?.totalCount || 0} products
+              {data?.totalCounts || 0} products
             </p>
           </div>
           <div className="flex gap-2">
@@ -169,13 +187,15 @@ const AdminProducts = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                  <SelectItem value={"all"}>All</SelectItem>
+                  {categoryData?.data.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
               <Select
                 value={stockFilter}
                 onValueChange={(v) => {
@@ -244,13 +264,14 @@ const AdminProducts = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data?.data?.map((p) => (
-                      <tr
-                        key={p.slug}
-                        className="border-b hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="p-3">
-                          {/* <Checkbox
+                    {(data?.data?.length ?? 0 > 0) ? (
+                      data?.data?.map((p) => (
+                        <tr
+                          key={p.slug}
+                          className="border-b hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-3">
+                            {/* <Checkbox
                             checked={selected.has(p.slug)}
                             onCheckedChange={(c) => {
                               const s = new Set(selected);
@@ -258,79 +279,89 @@ const AdminProducts = () => {
                               setSelected(s);
                             }}
                           /> */}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={p.variants[0].images[0].image_url}
-                              alt={p.name}
-                              className="h-10 w-10 rounded-lg object-cover"
-                            />
-                            <div>
-                              <p className="font-medium">{p.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {p.brand}
-                              </p>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={p.variants[0].images[0].image_url}
+                                alt={p.name}
+                                className="h-10 w-10 rounded-lg object-cover"
+                              />
+                              <div>
+                                <p className="font-medium">{p.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {p.brand}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-3">{p.category.name}</td>
-                        <td className="p-3 text-right font-medium">
-                          ${p.variants[0].original_price}
-                        </td>
-                        <td className="p-3 text-center">
-                          <Badge
-                            variant={
-                              p.variants[0].stock > 0
-                                ? "default"
-                                : "destructive"
-                            }
-                            className="text-xs"
-                          >
-                            {p.variants[0].stock > 0 ? "In Stock" : "Out"}
-                          </Badge>
-                        </td>
-                        <td className="p-3 text-center">
-                          <Badge
-                            variant={p.is_active ? "outline" : "secondary"}
-                            className="text-xs"
-                          >
-                            {p.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
+                          </td>
+                          <td className="p-3">{p.category.name}</td>
+                          <td className="p-3 text-right font-medium">
+                            {formatCurrency(p.variants[0].original_price)}
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge
+                              variant={
+                                p.variants[0].stock > 0
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className="text-xs"
                             >
-                              {p.is_active ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openEdit(p)}
+                              {p.variants[0].stock > 0 ? "In Stock" : "Out"}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge
+                              variant={p.is_active ? "outline" : "secondary"}
+                              className="text-xs"
                             >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => setDeleteTarget(p.slug)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                              {p.is_active ? "Active" : "Inactive"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                              >
+                                {p.is_active ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openEdit(p)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => setDeleteTarget(p.slug)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="p-10 text-center text-muted-foreground"
+                        >
+                          Product Not Found
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -380,7 +411,8 @@ const AdminProducts = () => {
       <DeleteConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget)}
+        onConfirm={handleDelete}
+        loading={deleteProductMutation.isPending}
         title="Delete Product"
         description="This will soft-delete the product. Are you sure?"
       />

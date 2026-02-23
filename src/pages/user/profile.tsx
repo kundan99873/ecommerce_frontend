@@ -23,9 +23,7 @@ import { orders } from "@/data/products";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "motion/react";
 import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
 
-dayjs.extend(advancedFormat);
 
 const Profile = () => {
   const {

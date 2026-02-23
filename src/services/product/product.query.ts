@@ -4,22 +4,21 @@ import {
   fetchProductBySlug,
   addProduct,
   updateProduct,
+  deleteProductBySlug,
 } from "./product.api";
 import { queryClient } from "@/api/client";
-// import type { ApiResponse } from "@/api/api.types";
-// import type { Product } from "./product.types";
 import type { ApiResponse } from "@/api/api.types";
-import type { ProductResponse } from "./product.types";
+import type { GetProductsQuery, ProductResponse } from "./product.types";
 
 export const productsKeys = {
   all: ["products"],
   detail: (slug: string) => ["products", slug],
 };
 
-const useProducts = () => {
+const useProducts = (params?: GetProductsQuery) => {
   return useQuery<ProductResponse>({
-    queryFn: fetchProducts,
-    queryKey: productsKeys.all,
+    queryFn: () => fetchProducts(params),
+    queryKey: [...productsKeys.all, params],
   });
 };
 
@@ -47,4 +46,18 @@ const useUpdateProduct = () => {
   });
 };
 
-export { useProducts, useProduct, useAddProduct, useUpdateProduct };
+const useDeleteProduct = () => {
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (slug) => deleteProductBySlug(slug),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: productsKeys.all }),
+  });
+};
+
+export {
+  useProducts,
+  useProduct,
+  useAddProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+};

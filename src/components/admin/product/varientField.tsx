@@ -43,18 +43,6 @@ const VariantField = ({
     });
   };
 
-  // const removeImage = (imgId: string | number) => {
-  //   let imgs = images.filter((i) => i.id !== imgId);
-  //   if (imgs.length > 0 && !imgs.some((i) => i.isPrimary))
-  //     imgs[0].isPrimary = true;
-  //   setValue(`variants.${index}.images`, imgs, { shouldValidate: true });
-  //   setValue(
-  //     `variants.${index}.removed_image_ids`,
-  //     [...images.filter((i) => i.id === imgId).map((i) => i.id)],
-  //     { shouldValidate: true },
-  //   );
-  // };
-
   const removeImage = (imgId: string | number) => {
     const variant = watch(`variants.${index}`);
     const updatedImages = (variant.images || []).filter(
@@ -67,7 +55,7 @@ const VariantField = ({
       shouldValidate: true,
     });
     const removed = variant.removed_image_ids || [];
-    if (!removed.includes(imgId)) {
+    if (!removed.includes(imgId) && typeof imgId === "number") {
       setValue(`variants.${index}.removed_image_ids`, [...removed, imgId], {
         shouldValidate: true,
       });

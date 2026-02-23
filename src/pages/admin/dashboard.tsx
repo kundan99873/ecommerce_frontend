@@ -165,10 +165,10 @@ const Dashboard = () => {
                   />
                   <Tooltip
                     contentStyle={tooltipStyle}
-                    formatter={(value: number) => [
-                      `$${value.toLocaleString()}`,
-                      "Revenue",
-                    ]}
+                    // formatter={(value: number) => [
+                    //   `$${value.toLocaleString()}`,
+                    //   "Revenue",
+                    // ]}
                   />
                   <Bar
                     dataKey="revenue"

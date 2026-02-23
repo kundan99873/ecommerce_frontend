@@ -27,5 +27,13 @@ export interface ProductResponse {
   success: boolean;
   data: Product[];
   message: string;
-  totalCount: number;
+  totalCounts: number;
+}
+
+export interface GetProductsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  brand?: string;
 }

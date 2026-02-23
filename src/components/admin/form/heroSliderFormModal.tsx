@@ -13,49 +13,68 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2, Upload, X } from "lucide-react";
-import type { Category } from "@/services/category/category.types";
+import type { HeroSlide } from "@/services/slides/heroSlides.types";
+import { Textarea } from "@/components/ui/textarea";
 
-const categorySchema = z.object({
-  name: z.string().min(1, "Name is required"),
+const heroSliderSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
   image: z.union([z.instanceof(File), z.string()]).optional(),
+  cta: z.string(),
+  link: z.string(),
 });
 
-export type CategoryFormValues = z.infer<typeof categorySchema>;
+export type heroSliderFormValues = z.infer<typeof heroSliderSchema>;
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: Category | null;
-  onSubmit: (values: CategoryFormValues) => void;
+  defaultValues?: HeroSlide | null;
+  onSubmit: (values: heroSliderFormValues) => void;
   isLoading?: boolean;
 }
 
-const CategoryFormModal = ({
+const heroSliderFormModal = ({
   open,
   onOpenChange,
   defaultValues,
   onSubmit,
   isLoading,
 }: Props) => {
-  const isEdit = !!defaultValues?.slug;
+  const isEdit = !!defaultValues?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const { control, handleSubmit, reset, setValue } =
-    useForm<CategoryFormValues>({
-      resolver: zodResolver(categorySchema),
-      defaultValues: { name: "", image: undefined },
+    useForm<heroSliderFormValues>({
+      resolver: zodResolver(heroSliderSchema),
+      defaultValues: {
+        title: "",
+        description: "",
+        image: undefined,
+        cta: "",
+        link: "",
+      },
     });
 
   useEffect(() => {
     if (open && defaultValues) {
       reset({
-        name: defaultValues.name,
+        title: defaultValues.title,
+        description: defaultValues.description || "",
         image: defaultValues.image_url || undefined,
+        cta: defaultValues.cta || "",
+        link: defaultValues.link || "",
       });
       setImagePreview(defaultValues.image_url || null);
     } else if (open) {
-      reset({ name: "", image: undefined });
+      reset({
+        title: "",
+        description: "",
+        image: undefined,
+        cta: "",
+        link: "",
+      });
       setImagePreview(null);
     }
   }, [open, defaultValues]);
@@ -69,40 +88,29 @@ const CategoryFormModal = ({
     e.target.value = "";
   };
 
-  const slugify = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-display">
-            {isEdit ? "Edit Category" : "Add Category"}
+            {isEdit ? "Edit heroSlider" : "Add heroSlider"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Controller
             control={control}
-            name="name"
+            name="title"
             render={({ field, fieldState }) => (
               <div className="space-y-1">
-                <Label>Name *</Label>
+                <Label>Title *</Label>
                 <Input
                   {...field}
-                  placeholder="Category name"
+                  placeholder="HeroSlider title"
                   className={fieldState.error ? "border-destructive" : ""}
                 />
                 {fieldState.error && (
                   <p className="text-xs text-destructive">
                     {fieldState.error.message}
-                  </p>
-                )}
-                {field.value && (
-                  <p className="text-xs text-muted-foreground">
-                    Slug: /{slugify(field.value)}
                   </p>
                 )}
               </div>
@@ -111,10 +119,66 @@ const CategoryFormModal = ({
 
           <Controller
             control={control}
+            name="description"
+            render={({ field }) => (
+              <div className="space-y-1">
+                <Label>Description</Label>
+                <Textarea
+                  {...field}
+                  placeholder="HeroSlider description..."
+                  rows={2}
+                />
+              </div>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Controller
+              control={control}
+              name="cta"
+              render={({ field, fieldState }) => (
+                <div className="space-y-1">
+                  <Label>CTA *</Label>
+                  <Input
+                    {...field}
+                    placeholder="HeroSlider CTA"
+                    className={fieldState.error ? "border-destructive" : ""}
+                  />
+                  {fieldState.error && (
+                    <p className="text-xs text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+            <Controller
+              control={control}
+              name="link"
+              render={({ field, fieldState }) => (
+                <div className="space-y-1">
+                  <Label>Link *</Label>
+                  <Input
+                    {...field}
+                    placeholder="HeroSlider link"
+                    className={fieldState.error ? "border-destructive" : ""}
+                  />
+                  {fieldState.error && (
+                    <p className="text-xs text-destructive">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </div>
+
+          <Controller
+            control={control}
             name="image"
             render={() => (
               <div className="space-y-2">
-                <Label>Category Image</Label>
+                <Label>HeroSlider Image</Label>
                 {imagePreview ? (
                   <div className="relative flex justify-center">
                     <img
@@ -165,7 +229,7 @@ const CategoryFormModal = ({
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {isEdit ? "Save" : "Add Category"}
+              {isEdit ? "Save" : "Add heroSlider"}
             </Button>
           </DialogFooter>
         </form>
@@ -174,4 +238,4 @@ const CategoryFormModal = ({
   );
 };
 
-export default CategoryFormModal;
+export default heroSliderFormModal;

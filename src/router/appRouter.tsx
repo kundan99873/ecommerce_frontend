@@ -1,6 +1,10 @@
 import PageLoader from "@/components/common/pageLoader";
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router";
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+
+dayjs.extend(advancedFormat);
 
 const ProtectedRoute = lazy(() => import("./protectedRouter"));
 const ProtectedAdminRoute = lazy(() => import("./protectedAdminRouter"));
@@ -31,6 +35,7 @@ const AdminOrders = lazy(() => import("@/pages/admin/orders"));
 const AdminUsers = lazy(() => import("@/pages/admin/users"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/analytics"));
 const AdminAddProduct = lazy(() => import("@/pages/admin/addProduct"));
+const AdminHeroSliders = lazy(() => import("@/pages/admin/heroSlider"));
 
 const NotFound = lazy(() => import("@/pages/notFound"));
 
@@ -72,6 +77,7 @@ const router = createBrowserRouter([
           { path: "products", Component: AdminProducts },
           { path: "products/add", Component: AdminAddProduct },
           { path: "categories", Component: AdminCategories },
+          { path: "hero-sliders", Component: AdminHeroSliders },
           { path: "orders", Component: AdminOrders },
           { path: "users", Component: AdminUsers },
           { path: "analytics", Component: AdminAnalytics },

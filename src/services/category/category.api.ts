@@ -15,7 +15,9 @@ const getCategory = async () => {
 };
 
 const updateCategory = async ({ slug, body }: UpdateCategoryBody) => {
-  const response = await api.patch<ApiResponse>(`/category/${slug}`, body);
+  const response = await api.patch<ApiResponse>(`/category/${slug}`, body, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
   return response.data;
 };
 

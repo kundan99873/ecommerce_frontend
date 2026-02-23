@@ -11,23 +11,27 @@ import {
 
 import { Loader2 } from "lucide-react";
 
-interface DeleteConfirmDialogProps {
+interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading?: boolean;
   title?: string;
   description?: string;
+  btnText?: string;
+  loadingText?: string;
 }
 
-const DeleteConfirmDialog = ({
+const ConfirmDialog = ({
   open,
   onOpenChange,
   onConfirm,
   loading = false,
   title = "Are you sure?",
   description = "This action cannot be undone.",
-}: DeleteConfirmDialogProps) => (
+  btnText = "Delete",
+  loadingText = "Deleting...",
+}: ConfirmDialogProps) => (
   <AlertDialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
     <AlertDialogContent>
       <AlertDialogHeader>
@@ -47,11 +51,11 @@ const DeleteConfirmDialog = ({
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {loading ? "Deleting..." : "Delete"}
+          {loading ? loadingText : btnText}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
 );
 
-export default DeleteConfirmDialog;
+export default ConfirmDialog;

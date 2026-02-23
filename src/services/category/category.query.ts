@@ -8,7 +8,7 @@ import {
 } from "./category.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
-import type { GetCategoryResponse } from "./category.types";
+import type { GetCategoryResponse, UpdateCategoryBody } from "./category.types";
 
 const useAddCategory = () => {
   return useMutation<ApiResponse, Error, FormData>({
@@ -32,7 +32,7 @@ const useGetCategoryBySlug = () => {
 };
 
 const useUpdateCategory = () => {
-  return useMutation({
+  return useMutation<ApiResponse, Error, UpdateCategoryBody>({
     mutationFn: updateCategory,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["category"] }),
   });

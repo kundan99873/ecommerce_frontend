@@ -6,7 +6,7 @@ export interface AddCategoryBody {
 
 export interface UpdateCategoryBody {
   slug: string;
-  body: AddCategoryBody;
+  body: FormData;
 }
 
 export interface Category {
@@ -14,6 +14,8 @@ export interface Category {
   description: string | null;
   slug: string;
   image_url: string;
+  created_at: string;  
+  product_count: number;
 }
 
 export interface GetCategoryResponse {

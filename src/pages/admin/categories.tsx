@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit2, Trash2, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,13 +8,17 @@ import { toast } from "@/hooks/useToast";
 import CategoryFormModal, {
   type CategoryFormValues,
 } from "@/components/admin/category/categoryFormModal";
-import DeleteConfirmDialog from "@/components/admin/common/deleteConfirmModal";
-import { categoryService } from "@/services/categoryService";
-import type { Category } from "@/data/adminData";
-import { useAddCategory, useGetCategory } from "@/services/category/category.query";
+import {
+  useAddCategory,
+  useDeleteCategory,
+  useGetCategory,
+  useUpdateCategory,
+} from "@/services/category/category.query";
+import dayjs from "dayjs";
+import type { Category } from "@/services/category/category.types";
+import ConfirmDialog from "@/components/admin/common/confirmModal";
 
 const AdminCategories = () => {
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<Category | null>(null);
@@ -24,52 +27,30 @@ const AdminCategories = () => {
   const { data, isLoading } = useGetCategory();
 
   const addCategoryMutation = useAddCategory();
-  const createMutation = useMutation({
-    mutationFn: (data: { name: string; image?: string }) =>
-      categoryService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast({ title: "Category added" });
-      setModalOpen(false);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: { name: string; image?: string };
-    }) => categoryService.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast({ title: "Category updated" });
-      setModalOpen(false);
-      setEditingCat(null);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: categoryService.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast({ title: "Category deleted" });
-      setDeleteTarget(null);
-    },
-    onError: (err: Error) =>
-      toast({ title: "Error", description: err.message }),
-  });
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
 
   const handleSubmit = async (values: CategoryFormValues) => {
     const formData = new FormData();
     formData.append("name", values.name);
+    console.log({ values });
     if (values.image) {
       formData.append("image", values?.image);
     }
 
     if (editingCat) {
-      return;
+      const response = await updateCategoryMutation.mutateAsync({
+        slug: editingCat.slug,
+        body: formData,
+      });
+      if (response.success) {
+        toast({
+          title: "Category updated successfully",
+          description: response.message,
+        });
+        setModalOpen(false);
+        setEditingCat(null);
+      }
     } else {
       const response = await addCategoryMutation.mutateAsync(formData);
       if (response.success) {
@@ -82,7 +63,20 @@ const AdminCategories = () => {
     }
   };
 
-  const isMutating = createMutation.isPending || updateMutation.isPending || addCategoryMutation.isPending;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const response = await deleteCategoryMutation.mutateAsync(deleteTarget);
+    if (response.success) {
+      toast({
+        title: "Category deleted successfully",
+        description: response.message,
+      });
+      setDeleteTarget(null);
+    }
+  };
+
+  const isMutating =
+    addCategoryMutation.isPending || updateCategoryMutation.isPending;
 
   return (
     <>
@@ -162,9 +156,9 @@ const AdminCategories = () => {
                         <td className="p-3 text-muted-foreground">
                           /{cat.slug}
                         </td>
-                        <td className="p-3 text-center">{cat.productCount}</td>
+                        <td className="p-3 text-center">{cat.product_count}</td>
                         <td className="p-3 text-muted-foreground">
-                          {cat.createdAt}
+                          {dayjs(cat.created_at).format("Do MMM YYYY")}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center justify-end gap-1">
@@ -183,7 +177,7 @@ const AdminCategories = () => {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive"
-                              onClick={() => setDeleteTarget(cat.id)}
+                              onClick={() => setDeleteTarget(cat.slug)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -210,10 +204,10 @@ const AdminCategories = () => {
         isLoading={isMutating}
       />
 
-      <DeleteConfirmDialog
+      <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget)}
+        onConfirm={handleDelete}
         title="Delete Category"
         description="This will permanently remove this category. Categories with products cannot be deleted."
       />
