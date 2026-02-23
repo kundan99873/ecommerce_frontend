@@ -1,16 +1,27 @@
 import { Link } from "react-router";
 import { ArrowRight, TrendingUp } from "lucide-react";
-import { products } from "@/data/products";
 import HeroCarousel from "@/components/home/heroCarousel";
 import CategoryNav from "@/components/category/categoryNav";
 import ProductCard from "@/components/product/productCard";
 import FlashDeals from "@/components/home/flashDeals";
 import RecentlyViewed from "@/components/product/recentlyViewed";
 import TrustBadges from "@/components/home/trustBadges";
+import { useProducts } from "@/services/product/product.query";
 
 const Home = () => {
-  const featured = products.slice(0, 4);
-  const trending = products.filter((p) => p.rating >= 4.7).slice(0, 4);
+  // const featured = products.slice(0, 4);
+  // const trending = products.filter((p) => p.rating >= 4.7).slice(0, 4);
+
+  const { data: featuredProduct } = useProducts({
+    limit: 5,
+    page: 1,
+    filter: "featured",
+  });
+  const { data: trendingProduct } = useProducts({
+    limit: 5,
+    page: 1,
+    filter: "trending",
+  });
 
   return (
     <>
@@ -31,8 +42,8 @@ const Home = () => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {featured.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
+          {featuredProduct?.data.map((p, i) => (
+            <ProductCard key={p.slug} product={p} index={i} />
           ))}
         </div>
       </section>
@@ -48,8 +59,8 @@ const Home = () => {
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {trending.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
+          {trendingProduct?.data.map((p, i) => (
+            <ProductCard key={p.slug} product={p} index={i} />
           ))}
         </div>
       </section>

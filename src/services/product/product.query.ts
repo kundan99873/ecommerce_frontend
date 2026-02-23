@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
   fetchProducts,
   fetchProductBySlug,
@@ -22,7 +22,7 @@ const useProducts = (params?: GetProductsQuery) => {
   });
 };
 
-const useProduct = (slug: string) => {
+const useGetProduct = (slug: string) => {
   return useQuery({
     queryKey: productsKeys.detail(slug),
     queryFn: () => fetchProductBySlug(slug),
@@ -54,10 +54,35 @@ const useDeleteProduct = () => {
   });
 };
 
+const useInfiniteProducts = (params?: GetProductsQuery) => {
+  return useInfiniteQuery({
+    queryKey: ["products", params],
+
+    initialPageParam: 1, 
+
+    queryFn: ({ pageParam }) =>
+      fetchProducts({ ...params, page: pageParam }),
+
+    getNextPageParam: (lastPage, allPages) => {
+      const totalLoaded = allPages.reduce(
+        (acc, page) => acc + page.data.length,
+        0
+      );
+
+      return totalLoaded < Math.ceil(lastPage.totalCounts / (params?.limit || 1))
+        ? allPages.length + 1
+        : undefined;
+    },
+
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 export {
   useProducts,
-  useProduct,
+  useGetProduct,
   useAddProduct,
   useUpdateProduct,
   useDeleteProduct,
+  useInfiniteProducts,
 };

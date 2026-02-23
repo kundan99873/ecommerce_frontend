@@ -1,6 +1,17 @@
 import { useParams, Link } from "react-router";
 import { useState, useEffect } from "react";
-import { Star, Minus, Plus, ArrowLeft, Truck, RotateCcw, Shield, Bell, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Star,
+  Minus,
+  Plus,
+  ArrowLeft,
+  Truck,
+  RotateCcw,
+  Shield,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { products } from "@/data/products";
 import { useCart } from "@/context/cartContext";
@@ -12,6 +23,8 @@ import { trackProductView } from "@/components/product/recentlyViewed";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
 import ProductReviews from "@/components/product/productReview";
+import { useGetProduct } from "@/services/product/product.query";
+import { skipToken } from "@tanstack/react-query";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -21,6 +34,9 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [activeImage, setActiveImage] = useState(0);
+
+  const { data, isLoading } = useGetProduct((id as string) ?? skipToken);
+  console.log({ data, isLoading });
 
   // Scroll to top on navigation
   useEffect(() => {
@@ -43,7 +59,9 @@ const ProductDetail = () => {
       <>
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-display">Product not found</h1>
-          <Link to="/products" className="text-primary mt-4 inline-block">Back to shop</Link>
+          <Link to="/products" className="text-primary mt-4 inline-block">
+            Back to shop
+          </Link>
         </div>
       </>
     );
@@ -51,15 +69,21 @@ const ProductDetail = () => {
 
   const images = product.images?.length ? product.images : [product.image];
   const isOutOfStock = !product.inStock || product.stock === 0;
-  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const related = products
+    .filter((p) => p.category === product.category && p.id !== product.id)
+    .slice(0, 4);
 
   const nextImage = () => setActiveImage((prev) => (prev + 1) % images.length);
-  const prevImage = () => setActiveImage((prev) => (prev - 1 + images.length) % images.length);
+  const prevImage = () =>
+    setActiveImage((prev) => (prev - 1 + images.length) % images.length);
 
   return (
     <>
       <div className="container mx-auto px-4 py-8">
-        <Link to="/products" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to shop
         </Link>
 
@@ -82,7 +106,9 @@ const ProductDetail = () => {
 
               {isOutOfStock && (
                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                  <Badge variant="destructive" className="text-sm px-4 py-2">Out of Stock</Badge>
+                  <Badge variant="destructive" className="text-sm px-4 py-2">
+                    Out of Stock
+                  </Badge>
                 </div>
               )}
 
@@ -112,10 +138,16 @@ const ProductDetail = () => {
                     key={idx}
                     onClick={() => setActiveImage(idx)}
                     className={`shrink-0 w-16 h-20 rounded-md overflow-hidden border-2 transition-all ${
-                      idx === activeImage ? "border-primary ring-1 ring-primary" : "border-transparent opacity-60 hover:opacity-100"
+                      idx === activeImage
+                        ? "border-primary ring-1 ring-primary"
+                        : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${idx + 1}`} className="h-full w-full object-cover" />
+                    <img
+                      src={img}
+                      alt={`Thumb ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -124,26 +156,39 @@ const ProductDetail = () => {
 
           <div className="flex flex-col justify-center">
             <p className="text-sm text-muted-foreground">{product.category}</p>
-            <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">{product.name}</h1>
+            <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">
+              {product.name}
+            </h1>
 
             <div className="flex items-center gap-2 mt-3">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-primary text-primary" : "text-border"}`} />
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-primary text-primary" : "text-border"}`}
+                  />
                 ))}
               </div>
-              <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
+              <span className="text-sm text-muted-foreground">
+                ({product.reviews} reviews)
+              </span>
             </div>
 
             <div className="flex items-center gap-3 mt-4">
               <span className="text-2xl font-bold">${product.price}</span>
               {product.originalPrice && (
-                <span className="text-lg text-muted-foreground line-through">${product.originalPrice}</span>
+                <span className="text-lg text-muted-foreground line-through">
+                  ${product.originalPrice}
+                </span>
               )}
-              {isOutOfStock && <Badge variant="destructive">Out of Stock</Badge>}
+              {isOutOfStock && (
+                <Badge variant="destructive">Out of Stock</Badge>
+              )}
             </div>
 
-            <p className="text-muted-foreground mt-4 leading-relaxed">{product.description}</p>
+            <p className="text-muted-foreground mt-4 leading-relaxed">
+              {product.description}
+            </p>
 
             {product.sizes && (
               <div className="mt-6">
@@ -154,7 +199,9 @@ const ProductDetail = () => {
                       key={s}
                       onClick={() => setSelectedSize(s)}
                       className={`px-4 py-2 text-sm rounded border transition-colors ${
-                        selectedSize === s ? "bg-foreground text-background border-foreground" : "border-border hover:border-foreground"
+                        selectedSize === s
+                          ? "bg-foreground text-background border-foreground"
+                          : "border-border hover:border-foreground"
                       }`}
                     >
                       {s}
@@ -173,7 +220,9 @@ const ProductDetail = () => {
                       key={c}
                       onClick={() => setSelectedColor(c)}
                       className={`px-4 py-2 text-sm rounded border transition-colors ${
-                        selectedColor === c ? "bg-foreground text-background border-foreground" : "border-border hover:border-foreground"
+                        selectedColor === c
+                          ? "bg-foreground text-background border-foreground"
+                          : "border-border hover:border-foreground"
                       }`}
                     >
                       {c}
@@ -185,11 +234,21 @@ const ProductDetail = () => {
 
             <div className="flex items-center gap-4 mt-6">
               <div className="flex items-center border rounded">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 text-muted-foreground hover:text-foreground" disabled={isOutOfStock}>
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3 py-2 text-muted-foreground hover:text-foreground"
+                  disabled={isOutOfStock}
+                >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="px-4 py-2 text-sm font-medium">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 text-muted-foreground hover:text-foreground" disabled={isOutOfStock}>
+                <span className="px-4 py-2 text-sm font-medium">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 py-2 text-muted-foreground hover:text-foreground"
+                  disabled={isOutOfStock}
+                >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
@@ -197,14 +256,22 @@ const ProductDetail = () => {
                 <Button
                   variant="outline"
                   className="flex-1 py-6 text-sm font-semibold tracking-wide gap-2"
-                  onClick={() => toast({ title: "We'll notify you!", description: "You'll get an email when this item is back in stock." })}
+                  onClick={() =>
+                    toast({
+                      title: "We'll notify you!",
+                      description:
+                        "You'll get an email when this item is back in stock.",
+                    })
+                  }
                 >
                   <Bell className="h-4 w-4" /> Notify Me When Available
                 </Button>
               ) : (
                 <Button
                   className="flex-1 py-6 text-sm font-semibold tracking-wide"
-                  onClick={() => addItem(product, quantity, selectedSize, selectedColor)}
+                  onClick={() =>
+                    addItem(product, quantity, selectedSize, selectedColor)
+                  }
                 >
                   Add to Cart — ${product.price * quantity}
                 </Button>
@@ -212,7 +279,9 @@ const ProductDetail = () => {
             </div>
 
             {/* Coupon check */}
-            {!isOutOfStock && <ProductCoupon price={product.price * quantity} />}
+            {!isOutOfStock && (
+              <ProductCoupon price={product.price * quantity} />
+            )}
 
             {/* Zipcode delivery check */}
             <div className="mt-6 pt-6 border-t">
@@ -236,11 +305,17 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews */}
-        <ProductReviews productId={product.id} rating={product.rating} reviewCount={product.reviews} />
+        <ProductReviews
+          productId={product.id}
+          rating={product.rating}
+          reviewCount={product.reviews}
+        />
 
         {related.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-2xl font-display font-bold mb-6">You May Also Like</h2>
+            <h2 className="text-2xl font-display font-bold mb-6">
+              You May Also Like
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {related.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />

@@ -21,6 +21,8 @@ export interface VariantFieldProps {
 
 export type ProductFormValues = z.infer<typeof productSchema>;
 
+export type StockType = "all" | "in_stock" | "out_of_stock"
+
 export interface ProductFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

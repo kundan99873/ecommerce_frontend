@@ -32,10 +32,11 @@ import {
   useProducts,
   useUpdateProduct,
 } from "@/services/product/product.query";
-import type { Product } from "@/services/product/product.types";
+import type { Product, SortOptions } from "@/services/product/product.types";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useGetCategory } from "@/services/category/category.query";
 import { formatCurrency } from "@/utils/utils";
+import type { StockType } from "@/components/admin/product/product.types";
 
 const PAGE_SIZE = 5;
 
@@ -43,8 +44,8 @@ const AdminProducts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [stockFilter, setStockFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
+  const [stockFilter, setStockFilter] = useState<StockType>("all");
+  const [sortBy, setSortBy] = useState<SortOptions | "all">("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
@@ -59,6 +60,8 @@ const AdminProducts = () => {
     limit: PAGE_SIZE,
     search: debouncedSearch,
     category: categoryFilter === "all" ? undefined : categoryFilter,
+    sort: sortBy === "all" ? undefined : sortBy,
+    filter: stockFilter === "all" ? undefined : stockFilter
   });
   const { data: categoryData } = useGetCategory();
 
@@ -198,7 +201,7 @@ const AdminProducts = () => {
 
               <Select
                 value={stockFilter}
-                onValueChange={(v) => {
+                onValueChange={(v: StockType) => {
                   setStockFilter(v);
                   setPage(1);
                 }}
@@ -208,18 +211,20 @@ const AdminProducts = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Stock</SelectItem>
-                  <SelectItem value="inStock">In Stock</SelectItem>
-                  <SelectItem value="outOfStock">Out of Stock</SelectItem>
+                  <SelectItem value="in_stock">In Stock</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-35">
+              <Select value={sortBy} onValueChange={val => setSortBy(val as SortOptions | "all")}>
+                <SelectTrigger className="w-42">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="price">Price</SelectItem>
-                  <SelectItem value="created">Newest</SelectItem>
+                  <SelectItem value="all">Recommended</SelectItem>
+                  <SelectItem value="price_high">Price High to Low</SelectItem>
+                  <SelectItem value="price_low">Price Low to High</SelectItem>
+                  <SelectItem value="top_rated">Top Rated</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -308,7 +313,7 @@ const AdminProducts = () => {
                               }
                               className="text-xs"
                             >
-                              {p.variants[0].stock > 0 ? "In Stock" : "Out"}
+                              {p.variants[0].stock > 0 ? "In Stock" : "Out of Stock"}
                             </Badge>
                           </td>
                           <td className="p-3 text-center">

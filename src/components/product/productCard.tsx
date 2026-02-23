@@ -1,10 +1,11 @@
 import { Link } from "react-router";
-import type { Product } from "@/data/products";
-import { ShoppingBag, Heart } from "lucide-react";
-import { useCart } from "@/context/cartContext";
-import { useWishlist } from "@/context/wishlistContext";
+import { ShoppingBag } from "lucide-react";
+// import { useCart } from "@/context/cartContext";
+// import { useWishlist } from "@/context/wishlistContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
+import type { Product } from "@/services/product/product.types";
+import { formatCurrency } from "@/utils/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -12,9 +13,9 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const { addItem } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
-  const wishlisted = isInWishlist(product.id);
+  // const { addItem } = useCart();
+  // const { toggleItem, isInWishlist } = useWishlist();
+  // const wishlisted = isInWishlist(product.id);
 
   return (
     <motion.div
@@ -24,20 +25,20 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       transition={{ delay: index * 0.08, duration: 0.4 }}
       className="group"
     >
-      <Link to={`/product/${product.id}`} className="block">
+      <Link to={`/product/${product.slug}`} className="block">
         <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-secondary">
           <img
-            src={product.image}
+            src={product.variants[0].images[0].image_url}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
-          {product.originalPrice && (
+          {/* {product.originalPrice && ( */}
             <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
-              -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+              -{Math.round((1 - product.variants[0].discounted_price / product.variants[0].original_price) * 100)}%
             </span>
-          )}
-          <button
+          {/* )} */}
+          {/* <button
             onClick={(e) => {
               e.preventDefault();
               toggleItem(product);
@@ -49,8 +50,8 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             }`}
           >
             <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
-          </button>
-          {!product.inStock && (
+          </button> */}
+          {!product.variants[0].stock && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <span className="text-sm font-semibold text-foreground">
                 Out of Stock
@@ -61,21 +62,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       </Link>
       <div className="mt-3 flex items-start justify-between gap-2">
         <div>
-          <Link to={`/product/${product.id}`}>
+          <Link to={`/product/${product.slug}`}>
             <h3 className="text-sm font-medium text-foreground leading-tight hover:text-primary transition-colors">
               {product.name}
             </h3>
           </Link>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {product.category}
+            {product.category.name}
           </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm font-semibold text-foreground">
-              ${product.price}
+              {formatCurrency(product.variants[0].discounted_price)}
             </span>
-            {product.originalPrice && (
+            {product.variants[0].original_price && (
               <span className="text-xs text-muted-foreground line-through">
-                ${product.originalPrice}
+                {formatCurrency(product.variants[0].original_price)}
               </span>
             )}
           </div>
@@ -86,9 +87,9 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           className="h-8 w-8 shrink-0 mt-1 hover:bg-primary hover:text-primary-foreground transition-colors"
           onClick={(e) => {
             e.preventDefault();
-            addItem(product);
+            // addItem(product);
           }}
-          disabled={!product.inStock}
+          disabled={!product.variants[0].stock}
         >
 
           <ShoppingBag className="h-4 w-4" />

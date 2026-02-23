@@ -30,10 +30,15 @@ export interface ProductResponse {
   totalCounts: number;
 }
 
+export type SortOptions = "price_low" | "price_high" | "top_rated" | "newest";
+export type FilterOptions = "in_stock" | "out_of_stock" | "featured" | "trending"
+
 export interface GetProductsQuery {
   page?: number;
   limit?: number;
   search?: string;
   category?: string;
   brand?: string;
+  sort?: SortOptions;
+  filter?: FilterOptions;
 }
