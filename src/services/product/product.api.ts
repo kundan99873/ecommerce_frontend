@@ -17,7 +17,7 @@ const fetchProducts = async (
 };
 
 const fetchProductBySlug = async (slug: string): Promise<Product> => {
-  const response = await api.get(`/products/${slug}`);
+  const response = await api.get(`/product/${slug}`);
   return response.data;
 };
 

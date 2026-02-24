@@ -3,21 +3,22 @@ import { ArrowRight, TrendingUp } from "lucide-react";
 import HeroCarousel from "@/components/home/heroCarousel";
 import CategoryNav from "@/components/category/categoryNav";
 import ProductCard from "@/components/product/productCard";
-import FlashDeals from "@/components/home/flashDeals";
+// import FlashDeals from "@/components/home/flashDeals";
 import RecentlyViewed from "@/components/product/recentlyViewed";
 import TrustBadges from "@/components/home/trustBadges";
 import { useProducts } from "@/services/product/product.query";
+import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 
 const Home = () => {
   // const featured = products.slice(0, 4);
   // const trending = products.filter((p) => p.rating >= 4.7).slice(0, 4);
 
-  const { data: featuredProduct } = useProducts({
+  const { data: featuredProduct, isLoading: featuredLoading } = useProducts({
     limit: 5,
     page: 1,
     filter: "featured",
   });
-  const { data: trendingProduct } = useProducts({
+  const { data: trendingProduct, isLoading: trendingLoading } = useProducts({
     limit: 5,
     page: 1,
     filter: "trending",
@@ -42,13 +43,17 @@ const Home = () => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {featuredProduct?.data.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
+          {featuredLoading
+            ? Array(4)
+                .fill(undefined)
+                .map((_, i) => <ProductCardSkeleton key={i} />)
+            : featuredProduct?.data.map((p, i) => (
+                <ProductCard key={p.slug} product={p} index={i} />
+              ))}
         </div>
       </section>
 
-      <FlashDeals />
+      {/* <FlashDeals /> */}
 
       {/* Trending */}
       <section className="container mx-auto px-4 py-16">
@@ -59,9 +64,13 @@ const Home = () => {
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {trendingProduct?.data.map((p, i) => (
-            <ProductCard key={p.slug} product={p} index={i} />
-          ))}
+          {trendingLoading
+            ? Array(4)
+                .fill(undefined)
+                .map((_, i) => <ProductCardSkeleton key={i} />)
+            : trendingProduct?.data.map((p, i) => (
+                <ProductCard key={p.slug} product={p} index={i} />
+              ))}
         </div>
       </section>
 

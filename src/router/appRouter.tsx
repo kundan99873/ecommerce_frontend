@@ -36,6 +36,7 @@ const AdminUsers = lazy(() => import("@/pages/admin/users"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/analytics"));
 const AdminAddProduct = lazy(() => import("@/pages/admin/addProduct"));
 const AdminHeroSliders = lazy(() => import("@/pages/admin/heroSlider"));
+const AdminCoupons = lazy(() => import("@/pages/admin/coupons"));
 
 const NotFound = lazy(() => import("@/pages/notFound"));
 
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
           { path: "products", Component: AdminProducts },
           { path: "products/add", Component: AdminAddProduct },
           { path: "categories", Component: AdminCategories },
+          { path: "coupon", Component: AdminCoupons },
           { path: "hero-sliders", Component: AdminHeroSliders },
           { path: "orders", Component: AdminOrders },
           { path: "users", Component: AdminUsers },

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import ProductCard from "@/components/product/productCard";
 import { products } from "@/data/products";
@@ -25,6 +25,7 @@ import { motion } from "motion/react";
 import { useInfiniteProducts } from "@/services/product/product.query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useGetCategory } from "@/services/category/category.query";
+import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 
 const maxPrice = Math.max(...products.map((p) => p.price));
 // const brands = [...new Set(products.map((p) => p.category))]; // using category as brand proxy
@@ -33,7 +34,7 @@ type SortOption = "default" | "price-asc" | "price-desc" | "rating" | "newest";
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeCategory = searchParams.get("category") || "All";
+  const activeCategory = searchParams.get("category") || "all";
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
@@ -46,7 +47,8 @@ const Products = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteProducts({
       search: debouncedSearch,
-      limit: 10,
+      limit: 8,
+      category: activeCategory !== "all" ? activeCategory : undefined,
     });
 
   useEffect(() => {
@@ -69,36 +71,36 @@ const Products = () => {
   const { data: categoryData } = useGetCategory();
   console.log({ categoryData });
 
-  const filtered = useMemo(() => {
-    let result = products.filter((p) => {
-      const matchCategory =
-        activeCategory === "All" || p.category === activeCategory;
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
-      const matchRating = p.rating >= minRating;
-      const matchStock = !inStockOnly || p.inStock;
-      return (
-        matchCategory && matchSearch && matchPrice && matchRating && matchStock
-      );
-    });
+  // const filtered = useMemo(() => {
+  //   let result = products.filter((p) => {
+  //     const matchCategory =
+  //       activeCategory === "All" || p.category === activeCategory;
+  //     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+  //     const matchPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+  //     const matchRating = p.rating >= minRating;
+  //     const matchStock = !inStockOnly || p.inStock;
+  //     return (
+  //       matchCategory && matchSearch && matchPrice && matchRating && matchStock
+  //     );
+  //   });
 
-    switch (sortBy) {
-      case "price-asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case "newest":
-        result.sort((a, b) => b.id - a.id);
-        break;
-    }
+  //   switch (sortBy) {
+  //     case "price-asc":
+  //       result.sort((a, b) => a.price - b.price);
+  //       break;
+  //     case "price-desc":
+  //       result.sort((a, b) => b.price - a.price);
+  //       break;
+  //     case "rating":
+  //       result.sort((a, b) => b.rating - a.rating);
+  //       break;
+  //     case "newest":
+  //       result.sort((a, b) => b.id - a.id);
+  //       break;
+  //   }
 
-    return result;
-  }, [activeCategory, search, sortBy, priceRange, minRating, inStockOnly]);
+  //   return result;
+  // }, [activeCategory, search, sortBy, priceRange, minRating, inStockOnly]);
 
   const clearFilters = () => {
     setSearch("");
@@ -116,7 +118,7 @@ const Products = () => {
     priceRange[1] < maxPrice ||
     minRating > 0 ||
     inStockOnly ||
-    activeCategory !== "All";
+    activeCategory !== "all";
 
   const FilterContent = () => (
     <div className="space-y-6">
@@ -184,19 +186,22 @@ const Products = () => {
     </div>
   );
 
+  console.log({ data });
+
+  const totalCounts = data?.pages[0]?.totalCounts ?? 0;
+
   return (
     <>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl md:text-4xl font-display font-bold mb-6">
           Shop
         </h1>
-
         {/* Top bar: categories, search, sort, filter toggle */}
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSearchParams({})}
-              className={`px-4 py-2 text-sm rounded-full border transition-colors ${
+              className={`px-4 py-2 text-sm rounded-full cursor-pointer border transition-colors ${
                 activeCategory === "all"
                   ? "bg-foreground text-background border-foreground"
                   : "bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground"
@@ -208,7 +213,7 @@ const Products = () => {
               <button
                 key={cat.slug}
                 onClick={() => setSearchParams({ category: cat.slug })}
-                className={`px-4 py-2 text-sm rounded-full border transition-colors ${
+                className={`px-4 py-2 text-sm rounded-full cursor-pointer border transition-colors ${
                   activeCategory === cat.slug
                     ? "bg-foreground text-background border-foreground"
                     : "bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground"
@@ -268,11 +273,19 @@ const Products = () => {
 
         {/* Results count */}
         <p className="text-sm text-muted-foreground mb-4">
-          {filtered.length} product{filtered.length !== 1 ? "s" : ""}
+          {totalCounts} product{totalCounts !== 1 ? "s" : ""}
         </p>
 
         {/* Grid */}
-        {filtered.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 ">
+            {Array(4)
+              .fill(undefined)
+              .map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+          </div>
+        ) : totalCounts > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {data?.pages.map((page) =>
               page.data.map((p, i) => (
@@ -281,13 +294,14 @@ const Products = () => {
             )}
             <div ref={loadMoreRef} className="col-span-full h-10" />
 
-            {isFetchingNextPage && (
-              <p className="col-span-full text-center">Loading more...</p>
-            )}
+            {isFetchingNextPage &&
+              Array(4)
+                .fill(undefined)
+                .map((_, i) => <ProductCardSkeleton key={i} />)}
 
             {!hasNextPage && (
               <p className="col-span-full text-center text-gray-500">
-                No more products 🚫
+                No more products
               </p>
             )}
           </div>

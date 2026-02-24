@@ -8,6 +8,7 @@ import {
   BarChart3,
   ArrowLeft,
   LogOut,
+  Ticket,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useTheme } from "@/context/themeContext";
@@ -18,6 +19,7 @@ const navItems = [
   { to: "/admin/products", icon: Package, label: "Products" },
   { to: "/admin/categories", icon: Tags, label: "Categories" },
   { to: "/admin/hero-sliders", icon: Tags, label: "Hero Sliders" },
+  { to: "/admin/coupon", icon: Ticket, label: "Coupons" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/analytics", icon: BarChart3, label: "Analytics" },

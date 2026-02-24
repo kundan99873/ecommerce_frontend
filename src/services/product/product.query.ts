@@ -55,23 +55,17 @@ const useDeleteProduct = () => {
 };
 
 const useInfiniteProducts = (params?: GetProductsQuery) => {
+  const limit = params?.limit ?? 10;
   return useInfiniteQuery({
     queryKey: ["products", params],
+    initialPageParam: 1,
 
-    initialPageParam: 1, 
-
-    queryFn: ({ pageParam }) =>
-      fetchProducts({ ...params, page: pageParam }),
+    queryFn: ({ pageParam }) => fetchProducts({ ...params, page: pageParam }),
 
     getNextPageParam: (lastPage, allPages) => {
-      const totalLoaded = allPages.reduce(
-        (acc, page) => acc + page.data.length,
-        0
-      );
-
-      return totalLoaded < Math.ceil(lastPage.totalCounts / (params?.limit || 1))
-        ? allPages.length + 1
-        : undefined;
+      const totalPages = Math.ceil(lastPage.totalCounts / limit);
+      const nextPage = allPages.length + 1;
+      return nextPage <= totalPages ? nextPage : undefined;
     },
 
     staleTime: 1000 * 60 * 5,

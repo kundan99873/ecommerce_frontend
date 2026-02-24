@@ -17,6 +17,10 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   // const { toggleItem, isInWishlist } = useWishlist();
   // const wishlisted = isInWishlist(product.id);
 
+  if(!product?.variants?.[0]?.images?.[0]?.image_url) {
+    return null; // Skip rendering if no image URL is available
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
