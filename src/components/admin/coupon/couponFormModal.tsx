@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
@@ -28,13 +28,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { couponSchema, type CouponFormValues } from "./coupon.schema";
-import type { AdminCoupon } from "@/services/couponService";
 import { Label } from "@/components/ui/label";
+import type { Coupon } from "@/services/coupon/coupon.types";
 
 interface CouponFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: AdminCoupon | null;
+  defaultValues?: Coupon | null;
   onSubmit: (values: CouponFormValues) => void;
   isLoading?: boolean;
 }
@@ -47,6 +47,8 @@ const CouponFormModal = ({
   isLoading,
 }: CouponFormModalProps) => {
   const isEdit = !!defaultValues?.id;
+  const [openStartDate, setOpenStartDate] = useState(false);
+  const [openEndDate, setOpenEndDate] = useState(false);
 
   const {
     control,
@@ -198,9 +200,12 @@ const CouponFormModal = ({
               render={({ field }) => (
                 <div className="space-y-1">
                   <Label className="block">Start Date</Label>
-                  <Popover>
+                  <Popover open={openStartDate} onOpenChange={setOpenStartDate}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left"
+                      >
                         <CalendarIcon className="mr-2 h-4 w-full" />
                         {field.value
                           ? dayjs(field.value).format("Do MMM YYYY")
@@ -211,7 +216,11 @@ const CouponFormModal = ({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          if (!date) return;
+                          field.onChange(date);
+                          setOpenStartDate(false);
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -226,9 +235,12 @@ const CouponFormModal = ({
               render={({ field }) => (
                 <div className="space-y-1">
                   <Label className="block">End Date</Label>
-                  <Popover>
+                  <Popover open={openEndDate} onOpenChange={setOpenEndDate}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left"
+                      >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {field.value
                           ? dayjs(field.value).format("Do MMM YYYY")
@@ -239,7 +251,11 @@ const CouponFormModal = ({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          if (!date) return;
+                          field.onChange(date);
+                          setOpenEndDate(false);
+                        }}
                       />
                     </PopoverContent>
                   </Popover>

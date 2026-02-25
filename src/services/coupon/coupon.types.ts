@@ -6,38 +6,50 @@ export interface GetCouponsQuery {
 }
 
 export interface Coupon {
-    id: string;
-    code: string;
-    description?: string;
-    discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
-    discount_value: number;
-    start_date: string;
-    end_date: string;
-    max_uses?: number | null;
-    min_purchase?: number | null;
-    is_active: boolean;
-    is_global: boolean;
-    created_at: string;
-    updated_at: string;
+  id: number;
+  code: string;
+  description?: string;
+  discount_type: "PERCENTAGE" | "FIXED";
+  discount_value: number;
+  start_date: string;
+  end_date: string;
+  max_uses?: number | null;
+  min_purchase?: number | null;
+  is_active: boolean;
+  is_global: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CouponResponse {
-    coupons: Coupon[];
-    total: number;
-    page: number;
-    limit: number;
+  success: boolean;
+  data: Coupon[];
+  message: string;
+  totalCounts: number;
 }
 
 export interface CouponBody {
-    code: string;
-    description?: string;
-    discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
-    discount_value: number;
-    start_date: string;
-    end_date: string;
-    max_uses?: number | null;
-    min_purchase?: number | null;
-    is_active: boolean;
-    is_global: boolean;
+  code: string;
+  description?: string;
+  discount_type: "PERCENTAGE" | "FIXED";
+  discount_value: number;
+  start_date: string;
+  end_date: string;
+  max_uses?: number | null;
+  min_purchase?: number | null;
+  is_active: boolean;
+  is_global: boolean;
 }
 
+export interface UpdateCouponBody {
+  code?: string;
+  description?: string;
+  discount_type?: "PERCENTAGE" | "FIXED";
+  discount_value?: number;
+  start_date?: string;
+  end_date?: string;
+  max_uses?: number | null;
+  min_purchase?: number | null;
+  is_active?: boolean;
+  is_global?: boolean;
+}

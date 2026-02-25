@@ -25,7 +25,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
 import { productService } from "@/services/productService";
 import ProductFormModal from "@/components/admin/product/productFormModal";
-import DeleteConfirmDialog from "@/components/admin/common/deleteConfirmModal";
 import {
   useAddProduct,
   useDeleteProduct,
@@ -37,6 +36,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useGetCategory } from "@/services/category/category.query";
 import { formatCurrency } from "@/utils/utils";
 import type { StockType } from "@/components/admin/product/product.types";
+import ConfirmDialog from "@/components/admin/common/confirmModal";
 
 const PAGE_SIZE = 5;
 
@@ -52,6 +52,7 @@ const AdminProducts = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [activeTarget, setActiveTarget] = useState<Product | null>(null);
 
   const debouncedSearch = useDebounce(search);
 
@@ -61,7 +62,7 @@ const AdminProducts = () => {
     search: debouncedSearch,
     category: categoryFilter === "all" ? undefined : categoryFilter,
     sort: sortBy === "all" ? undefined : sortBy,
-    filter: stockFilter === "all" ? undefined : stockFilter
+    filter: stockFilter === "all" ? undefined : stockFilter,
   });
   const { data: categoryData } = useGetCategory();
 
@@ -131,6 +132,23 @@ const AdminProducts = () => {
         title: "Error deleting product",
         description: error?.message ?? "Something went wrong",
       });
+    }
+  };
+
+  const handleChangeStatus = async () => {
+    if (!activeTarget) return;
+    const updatedData = new FormData();
+    updatedData.append("is_active", (!activeTarget.is_active).toString());
+    const res = await updateProductMutation.mutateAsync({
+      slug: activeTarget.slug,
+      data: updatedData, 
+    });
+
+    if (res.success) {
+      toast({ title: "Product status updated" });
+      setActiveTarget(null);
+    } else {
+      toast({ title: "Error updating status", description: res.message });
     }
   };
 
@@ -215,7 +233,10 @@ const AdminProducts = () => {
                   <SelectItem value="out_of_stock">Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sortBy} onValueChange={val => setSortBy(val as SortOptions | "all")}>
+              <Select
+                value={sortBy}
+                onValueChange={(val) => setSortBy(val as SortOptions | "all")}
+              >
                 <SelectTrigger className="w-42">
                   <SelectValue />
                 </SelectTrigger>
@@ -313,7 +334,9 @@ const AdminProducts = () => {
                               }
                               className="text-xs"
                             >
-                              {p.variants[0].stock > 0 ? "In Stock" : "Out of Stock"}
+                              {p.variants[0].stock > 0
+                                ? "In Stock"
+                                : "Out of Stock"}
                             </Badge>
                           </td>
                           <td className="p-3 text-center">
@@ -330,6 +353,7 @@ const AdminProducts = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={() => setActiveTarget(p)}
                               >
                                 {p.is_active ? (
                                   <EyeOff className="h-4 w-4" />
@@ -413,13 +437,24 @@ const AdminProducts = () => {
         isLoading={isMutating}
       />
 
-      <DeleteConfirmDialog
+      <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         loading={deleteProductMutation.isPending}
         title="Delete Product"
         description="This will soft-delete the product. Are you sure?"
+      />
+
+      <ConfirmDialog
+        open={activeTarget !== null}
+        onOpenChange={() => setActiveTarget(null)}
+        onConfirm={handleChangeStatus}
+        title="Toggle Product Status"
+        description="This will toggle the active status of this product."
+        btnText="Change Status"
+        loadingText="Changing..."
+        loading={updateProductMutation.isPending}
       />
     </>
   );

@@ -1,4 +1,4 @@
-export type DiscountType = "PERCENTAGE" | "FIXED";
+export type DiscountType = "percentage" | "fixed";
 
 export interface AdminCoupon {
   id: number;
@@ -18,22 +18,22 @@ export interface AdminCoupon {
 
 let couponStore: AdminCoupon[] = [
   {
-    id: 1, code: "WELCOME10", description: "10% off on orders above $50", discount_type: "PERCENTAGE",
+    id: 1, code: "WELCOME10", description: "10% off on orders above $50", discount_type: "percentage",
     discount_value: 10, start_date: "2025-01-01", end_date: "2026-12-31", max_uses: 1000,
     min_purchase: 50, is_active: true, is_global: true, created_at: "2025-01-01", updated_at: "2025-01-01",
   },
   {
-    id: 2, code: "FLAT20", description: "$20 off on orders above $100", discount_type: "FIXED",
+    id: 2, code: "FLAT20", description: "$20 off on orders above $100", discount_type: "fixed",
     discount_value: 20, start_date: "2025-01-01", end_date: "2026-12-31", max_uses: 500,
     min_purchase: 100, is_active: true, is_global: true, created_at: "2025-01-15", updated_at: "2025-01-15",
   },
   {
-    id: 3, code: "SAVE15", description: "15% off on orders above $150", discount_type: "PERCENTAGE",
+    id: 3, code: "SAVE15", description: "15% off on orders above $150", discount_type: "percentage",
     discount_value: 15, start_date: "2025-01-01", end_date: "2026-06-30", max_uses: null,
     min_purchase: 150, is_active: true, is_global: false, created_at: "2025-02-01", updated_at: "2025-02-01",
   },
   {
-    id: 4, code: "SUMMER25", description: "$25 off on orders above $200", discount_type: "FIXED",
+    id: 4, code: "SUMMER25", description: "$25 off on orders above $200", discount_type: "fixed",
     discount_value: 25, start_date: "2025-06-01", end_date: "2026-08-31", max_uses: 200,
     min_purchase: 200, is_active: false, is_global: false, created_at: "2025-03-01", updated_at: "2025-03-01",
   },
