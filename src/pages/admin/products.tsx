@@ -141,7 +141,7 @@ const AdminProducts = () => {
     updatedData.append("is_active", (!activeTarget.is_active).toString());
     const res = await updateProductMutation.mutateAsync({
       slug: activeTarget.slug,
-      data: updatedData, 
+      data: updatedData,
     });
 
     if (res.success) {
@@ -309,7 +309,7 @@ const AdminProducts = () => {
                           <td className="p-3">
                             <div className="flex items-center gap-3">
                               <img
-                                src={p.variants[0].images[0].image_url}
+                                src={p?.variants?.[0]?.images?.[0]?.image_url}
                                 alt={p.name}
                                 className="h-10 w-10 rounded-lg object-cover"
                               />

@@ -30,6 +30,7 @@ import {
 import { couponSchema, type CouponFormValues } from "./coupon.schema";
 import { Label } from "@/components/ui/label";
 import type { Coupon } from "@/services/coupon/coupon.types";
+import { MultiSelect } from "@/components/common/multiSelect";
 
 interface CouponFormModalProps {
   open: boolean;
@@ -49,6 +50,7 @@ const CouponFormModal = ({
   const isEdit = !!defaultValues?.id;
   const [openStartDate, setOpenStartDate] = useState(false);
   const [openEndDate, setOpenEndDate] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   const {
     control,
@@ -192,6 +194,21 @@ const CouponFormModal = ({
               )}
             />
           </div>
+          <MultiSelect
+            options={[
+              { id: 1, name: "Product A" },
+              { id: 2, name: "Product B" },
+              { id: 3, name: "Product C" },
+              { id: 4, name: "Product D" },
+              { id: 5, name: "Product E" },
+              { id: 6, name: "Product F" },
+              { id: 7, name: "Product G" },
+              { id: 8, name: "Product H" },
+            ]}
+            selected={selectedProducts}
+            onChange={setSelectedProducts}
+            placeholder="Select products for coupon"
+          />
           <div className="grid grid-cols-2 gap-4">
             {/* Start Date */}
             <Controller

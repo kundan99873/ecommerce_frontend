@@ -5,6 +5,7 @@ import {
   addProduct,
   updateProduct,
   deleteProductBySlug,
+  fetchProductWithoutVariant,
 } from "./product.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
@@ -27,6 +28,13 @@ const useGetProduct = (slug: string) => {
     queryKey: productsKeys.detail(slug),
     queryFn: () => fetchProductBySlug(slug),
     enabled: slug !== "",
+  });
+};
+
+const useGetProductWithoutVariant = (params?: GetProductsQuery) => {
+  return useQuery({
+    queryKey: ["products_without_variant", params],
+    queryFn: () => fetchProductWithoutVariant(params),
   });
 };
 
@@ -79,4 +87,5 @@ export {
   useUpdateProduct,
   useDeleteProduct,
   useInfiniteProducts,
+  useGetProductWithoutVariant,
 };

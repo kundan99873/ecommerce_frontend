@@ -23,9 +23,27 @@ export interface Product {
   }[];
 }
 
+export interface ProductWithoutVariant {
+  name: string;
+  description: string;
+  category: {
+    name: string;
+    slug: string;
+  };
+  brand: string;
+  slug: string;
+  is_active: boolean;
+}
+
 export interface ProductResponse {
   success: boolean;
   data: Product[];
+  message: string;
+  totalCounts: number;
+}
+export interface ProductWithoutVariantResponse {
+  success: boolean;
+  data: ProductWithoutVariant[];
   message: string;
   totalCounts: number;
 }

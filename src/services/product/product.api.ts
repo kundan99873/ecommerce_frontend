@@ -3,6 +3,7 @@ import type {
   GetProductsQuery,
   Product,
   ProductResponse,
+  ProductWithoutVariantResponse,
 } from "./product.types";
 import type { ApiResponse } from "@/api/api.types";
 import { cleanQueryParams } from "@/utils/utils";
@@ -18,6 +19,15 @@ const fetchProducts = async (
 
 const fetchProductBySlug = async (slug: string): Promise<Product> => {
   const response = await api.get(`/product/${slug}`);
+  return response.data;
+};
+
+const fetchProductWithoutVariant = async (
+  params?: GetProductsQuery,
+): Promise<ProductWithoutVariantResponse> => {
+  const response = await api.get(`/product/without-variant`, {
+    params: cleanQueryParams(params ?? {}),
+  });
   return response.data;
 };
 
@@ -49,6 +59,7 @@ const deleteProductBySlug = async (slug: string): Promise<ApiResponse> => {
 export {
   fetchProducts,
   fetchProductBySlug,
+  fetchProductWithoutVariant,
   addProduct,
   updateProduct,
   deleteProductBySlug,
