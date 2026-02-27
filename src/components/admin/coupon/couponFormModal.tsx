@@ -30,7 +30,7 @@ import {
 import { couponSchema, type CouponFormValues } from "./coupon.schema";
 import { Label } from "@/components/ui/label";
 import type { Coupon } from "@/services/coupon/coupon.types";
-import { MultiSelect } from "@/components/common/multiSelect";
+import SearchProductMultiSelect from "../common/searchProductMultiSelect";
 
 interface CouponFormModalProps {
   open: boolean;
@@ -50,12 +50,12 @@ const CouponFormModal = ({
   const isEdit = !!defaultValues?.id;
   const [openStartDate, setOpenStartDate] = useState(false);
   const [openEndDate, setOpenEndDate] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
 
   const {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CouponFormValues>({
     resolver: zodResolver(couponSchema),
@@ -69,7 +69,8 @@ const CouponFormModal = ({
       max_uses: null,
       min_purchase: null,
       is_active: true,
-      is_global: false,
+      is_global: true,
+      product_ids: [],
     },
   });
 
@@ -86,9 +87,14 @@ const CouponFormModal = ({
         min_purchase: defaultValues.min_purchase,
         is_active: defaultValues.is_active,
         is_global: defaultValues.is_global,
+        product_ids: Array.isArray(defaultValues.product_ids)
+          ? defaultValues.product_ids
+          : [],
       });
     }
   }, [open, defaultValues, reset]);
+
+  console.log(watch("product_ids"));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -194,21 +200,6 @@ const CouponFormModal = ({
               )}
             />
           </div>
-          <MultiSelect
-            options={[
-              { id: 1, name: "Product A" },
-              { id: 2, name: "Product B" },
-              { id: 3, name: "Product C" },
-              { id: 4, name: "Product D" },
-              { id: 5, name: "Product E" },
-              { id: 6, name: "Product F" },
-              { id: 7, name: "Product G" },
-              { id: 8, name: "Product H" },
-            ]}
-            selected={selectedProducts}
-            onChange={setSelectedProducts}
-            placeholder="Select products for coupon"
-          />
           <div className="grid grid-cols-2 gap-4">
             {/* Start Date */}
             <Controller
@@ -311,6 +302,24 @@ const CouponFormModal = ({
               )}
             />
           </div>
+
+          {!watch("is_global") && (
+            <Controller
+              name="product_ids"
+              control={control}
+              render={({ field }) => (
+                <div>
+                  <Label className="block mb-2">Select Products *</Label>
+                  <SearchProductMultiSelect
+                    selectedProducts={
+                      Array.isArray(field.value) ? field.value : []
+                    }
+                    setSelectedProducts={field.onChange}
+                  />
+                </div>
+              )}
+            />
+          )}
 
           <DialogFooter>
             <Button

@@ -19,6 +19,7 @@ export interface Coupon {
   is_global: boolean;
   created_at: string;
   updated_at: string;
+  product_ids?: number[];
 }
 
 export interface CouponResponse {
@@ -39,6 +40,7 @@ export interface CouponBody {
   min_purchase?: number | null;
   is_active: boolean;
   is_global: boolean;
+  product_ids?: number[];
 }
 
 export interface UpdateCouponBody {
@@ -52,4 +54,5 @@ export interface UpdateCouponBody {
   min_purchase?: number | null;
   is_active?: boolean;
   is_global?: boolean;
+  product_ids?: number[];
 }

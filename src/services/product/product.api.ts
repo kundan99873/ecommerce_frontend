@@ -25,7 +25,7 @@ const fetchProductBySlug = async (slug: string): Promise<Product> => {
 const fetchProductWithoutVariant = async (
   params?: GetProductsQuery,
 ): Promise<ProductWithoutVariantResponse> => {
-  const response = await api.get(`/product/without-variant`, {
+  const response = await api.get(`/product/without-variants`, {
     params: cleanQueryParams(params ?? {}),
   });
   return response.data;

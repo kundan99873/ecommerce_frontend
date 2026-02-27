@@ -91,6 +91,7 @@ const AdminCoupons = () => {
         end_date: values.end_date.toISOString(),
         max_uses: values.max_uses ?? null,
         min_purchase: values.min_purchase ?? null,
+        product_ids: values.product_ids || [],
       });
       if (res.success) {
         toast({ title: "Coupon created" });

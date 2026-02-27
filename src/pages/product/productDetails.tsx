@@ -35,6 +35,8 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [activeImage, setActiveImage] = useState(0);
 
+  console.log({ id });
+
   const { data, isLoading } = useGetProduct((id as string) ?? skipToken);
   console.log({ data, isLoading });
 
