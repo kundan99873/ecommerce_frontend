@@ -13,18 +13,17 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { products } from "@/data/products";
 import { useCart } from "@/context/cartContext";
-import ProductCard from "@/components/product/productCard";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/useToast";
 import { motion, AnimatePresence } from "motion/react";
 import { trackProductView } from "@/components/product/recentlyViewed";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
-import ProductReviews from "@/components/product/productReview";
 import { useGetProduct } from "@/services/product/product.query";
 import { skipToken } from "@tanstack/react-query";
+import { formatCurrency } from "@/utils/utils";
+import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -35,12 +34,10 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [activeImage, setActiveImage] = useState(0);
 
-  console.log({ id });
-
-  const { data, isLoading } = useGetProduct(("bata-4-1771739715857" as string) ?? skipToken);
-  console.log({ data, isLoading });
-
+  
+  const { data, isLoading } = useGetProduct((id as string) ?? skipToken);
   const product = data?.data;
+  const selectedProduct = data?.data?.selected_variant;
 
   // Scroll to top on navigation
   useEffect(() => {
@@ -58,6 +55,8 @@ const ProductDetail = () => {
     setSelectedColor(undefined);
   }, [id]);
 
+  if(isLoading) return <ProductCardSkeleton />
+
   if (!product) {
     return (
       <>
@@ -71,11 +70,11 @@ const ProductDetail = () => {
     );
   }
 
-  const images = product.images?.length ? product.images : [product.image];
-  const isOutOfStock = !product.inStock || product.stock === 0;
-  const related = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const images = product.selected_variant.images;
+  const isOutOfStock = product.selected_variant.stock === 0;
+  // const related = products
+  //   .filter((p) => p.category === product.category && p.id !== product.id)
+  //   .slice(0, 4);
 
   const nextImage = () => setActiveImage((prev) => (prev + 1) % images.length);
   const prevImage = () =>
@@ -98,7 +97,7 @@ const ProductDetail = () => {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activeImage}
-                  src={images[activeImage]}
+                  src={selectedProduct?.images[activeImage].image_url}
                   alt={`${product.name} - Image ${activeImage + 1}`}
                   className="h-full w-full object-cover"
                   initial={{ opacity: 0 }}
@@ -134,10 +133,12 @@ const ProductDetail = () => {
               )}
             </div>
 
+            
+
             {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {images.map((img: string, idx: number) => (
+                {images.map((img, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
@@ -148,7 +149,7 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img
-                      src={img}
+                      src={img.image_url}
                       alt={`Thumb ${idx + 1}`}
                       className="h-full w-full object-cover"
                     />
@@ -159,7 +160,7 @@ const ProductDetail = () => {
           </div>
 
           <div className="flex flex-col justify-center">
-            <p className="text-sm text-muted-foreground">{product.category}</p>
+            <p className="text-sm text-muted-foreground">{product.category.name}</p>
             <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">
               {product.name}
             </h1>
@@ -173,16 +174,16 @@ const ProductDetail = () => {
                   />
                 ))}
               </div>
-              <span className="text-sm text-muted-foreground">
+              {/* <span className="text-sm text-muted-foreground">
                 ({product.reviews} reviews)
-              </span>
+              </span> */}
             </div>
 
             <div className="flex items-center gap-3 mt-4">
-              <span className="text-2xl font-bold">${product.price}</span>
-              {product.originalPrice && (
+              <span className="text-2xl font-bold">{formatCurrency(selectedProduct?.discounted_price)}</span>
+              {selectedProduct?.original_price && (
                 <span className="text-lg text-muted-foreground line-through">
-                  ${product.originalPrice}
+                  {formatCurrency(selectedProduct?.original_price)}
                 </span>
               )}
               {isOutOfStock && (
@@ -194,7 +195,7 @@ const ProductDetail = () => {
               {product.description}
             </p>
 
-            {product.sizes && (
+            {/* {product.sizes && (
               <div className="mt-6">
                 <p className="text-sm font-medium mb-2">Size</p>
                 <div className="flex flex-wrap gap-2">
@@ -234,7 +235,7 @@ const ProductDetail = () => {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="flex items-center gap-4 mt-6">
               <div className="flex items-center border rounded">
@@ -277,14 +278,14 @@ const ProductDetail = () => {
                     addItem(product, quantity, selectedSize, selectedColor)
                   }
                 >
-                  Add to Cart — ${product.price * quantity}
+                  Add to Cart — {formatCurrency((selectedProduct?.discounted_price || 0) * quantity)}
                 </Button>
               )}
             </div>
 
             {/* Coupon check */}
             {!isOutOfStock && (
-              <ProductCoupon price={product.price * quantity} />
+              <ProductCoupon price={(selectedProduct?.discounted_price || 0) * quantity} availableCoupons={product.coupons} />
             )}
 
             {/* Zipcode delivery check */}
@@ -309,13 +310,13 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews */}
-        <ProductReviews
+        {/* <ProductReviews
           productId={product.id}
           rating={product.rating}
           reviewCount={product.reviews}
-        />
+        /> */}
 
-        {related.length > 0 && (
+        {/* {related.length > 0 && (
           <section className="mt-16">
             <h2 className="text-2xl font-display font-bold mb-6">
               You May Also Like
@@ -326,7 +327,7 @@ const ProductDetail = () => {
               ))}
             </div>
           </section>
-        )}
+        )} */}
       </div>
     </>
   );

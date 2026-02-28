@@ -25,8 +25,6 @@ export interface ProductCoupon {
   end_date: string;  
 }
 
-
-
 export interface Product {
   name: string;
   description: string;
@@ -90,6 +88,7 @@ export interface ProductDetail {
   is_active: boolean;
   variants: ProductVariant[];
   coupons: ProductCoupon[];
+  selected_variant: ProductVariant;
 }
 
 export interface ProductWithSlugResponse {
