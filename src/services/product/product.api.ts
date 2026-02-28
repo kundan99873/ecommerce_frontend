@@ -1,9 +1,9 @@
 import { api } from "@/api/api";
 import type {
   GetProductsQuery,
-  Product,
   ProductResponse,
   ProductWithoutVariantResponse,
+  ProductWithSlugResponse,
 } from "./product.types";
 import type { ApiResponse } from "@/api/api.types";
 import { cleanQueryParams } from "@/utils/utils";
@@ -17,7 +17,7 @@ const fetchProducts = async (
   return response.data;
 };
 
-const fetchProductBySlug = async (slug: string): Promise<Product> => {
+const fetchProductBySlug = async (slug: string): Promise<ProductWithSlugResponse> => {
   const response = await api.get(`/product/${slug}`);
   return response.data;
 };

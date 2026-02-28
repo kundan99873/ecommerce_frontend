@@ -28,7 +28,7 @@ import { skipToken } from "@tanstack/react-query";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find((p) => p.id === Number(id));
+  // const product = products.find((p) => p.id === Number(id));
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
@@ -37,8 +37,10 @@ const ProductDetail = () => {
 
   console.log({ id });
 
-  const { data, isLoading } = useGetProduct((id as string) ?? skipToken);
+  const { data, isLoading } = useGetProduct(("bata-4-1771739715857" as string) ?? skipToken);
   console.log({ data, isLoading });
+
+  const product = data?.data;
 
   // Scroll to top on navigation
   useEffect(() => {

@@ -29,7 +29,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       transition={{ delay: index * 0.08, duration: 0.4 }}
       className="group"
     >
-      <Link to={`/product/${product.slug}`} className="block">
+      <Link to={`/product/${product.slug}?color=${product.variants[0].color}&size=${product.variants[0].size}`} className="block">
         <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-secondary">
           <img
             src={product.variants[0].images[0].image_url}

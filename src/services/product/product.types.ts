@@ -1,3 +1,32 @@
+export interface ProductVariant {
+  color: string;
+  size: string;
+  original_price: number;
+  discounted_price: number;
+  stock: number;
+  id: number;
+  images: {
+    image_url: string;
+    id?: number;
+  }[];
+  removed_image_ids?: string[];
+}
+
+export type DiscountType = "FIXED" | "PERCENTAGE";
+
+export interface ProductCoupon {
+  code: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  max_discount: number | null;
+  description: string;
+  min_purchase: number | null;
+  start_date: string; 
+  end_date: string;  
+}
+
+
+
 export interface Product {
   name: string;
   description: string;
@@ -8,19 +37,7 @@ export interface Product {
   brand: string;
   slug: string;
   is_active: boolean;
-  variants: {
-    color: string;
-    size: string;
-    original_price: number;
-    discounted_price: number;
-    stock: number;
-    id: number;
-    images: {
-      image_url: string;
-      id?: number;
-    }[];
-    removed_image_ids?: string[];
-  }[];
+  variants: ProductVariant[];
 }
 
 export interface ProductWithoutVariant {
@@ -59,4 +76,24 @@ export interface GetProductsQuery {
   brand?: string;
   sort?: SortOptions;
   filter?: FilterOptions;
+}
+
+export interface ProductDetail {
+  name: string;
+  description: string;
+  category: {
+    name: string;
+    slug: string;
+  };
+  brand: string;
+  slug: string;
+  is_active: boolean;
+  variants: ProductVariant[];
+  coupons: ProductCoupon[];
+}
+
+export interface ProductWithSlugResponse {
+  success: boolean;
+  data: ProductDetail;
+  message: string;
 }
