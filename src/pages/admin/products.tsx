@@ -9,6 +9,7 @@ import {
   ChevronRight,
   EyeOff,
   Eye,
+  Info,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import { useGetCategory } from "@/services/category/category.query";
 import { formatCurrency } from "@/utils/utils";
 import type { StockType } from "@/components/admin/product/product.types";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
+import ProductDetailModal from "@/components/admin/product/productDetailModal";
 
 const PAGE_SIZE = 5;
 
@@ -53,6 +55,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [activeTarget, setActiveTarget] = useState<Product | null>(null);
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
 
   const debouncedSearch = useDebounce(search);
 
@@ -353,6 +356,15 @@ const AdminProducts = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={() => setViewProduct(p)}
+                                title="View Details"
+                              >
+                                <Info className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 onClick={() => setActiveTarget(p)}
                               >
                                 {p.is_active ? (
@@ -455,6 +467,14 @@ const AdminProducts = () => {
         btnText="Change Status"
         loadingText="Changing..."
         loading={updateProductMutation.isPending}
+      />
+
+      <ProductDetailModal
+        product={viewProduct}
+        open={!!viewProduct}
+        onOpenChange={(open) => {
+          if (!open) setViewProduct(null);
+        }}
       />
     </>
   );

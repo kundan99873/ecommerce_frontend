@@ -10,6 +10,9 @@ import PincodeCheck from "@/components/product/pinCodeCheck";
 import { useState } from "react";
 import { getCurrentLocation, reverseGeocode } from "@/utils/locationService";
 import { Loader2, MapPin } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/utils/utils";
+import { useAuth } from "@/context/authContext";
 
 interface Props {
   onSubmit: (data: CheckoutFormValues) => void;
@@ -27,6 +30,7 @@ const CheckoutForm = ({
   setZipResult,
   finalTotal,
 }: Props) => {
+  const { user } = useAuth();
   const {
     control,
     handleSubmit,
@@ -35,8 +39,8 @@ const CheckoutForm = ({
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      email: "",
-      first_name: "",
+      email: user?.email || "",
+      first_name: user?.name || "",
       last_name: "",
       address: "",
       city: "",
@@ -88,10 +92,10 @@ const CheckoutForm = ({
               Detecting Location...
             </>
           ) : (
-            <>
+            <div className="cursor-pointer flex">
               <MapPin className="h-4 w-4" />
               Auto-Detect My Location
-            </>
+            </div>
           )}
         </button>
         <p className="text-xs text-primary mt-1 text-center">
@@ -162,7 +166,7 @@ const CheckoutForm = ({
         render={({ field }) => (
           <div>
             <Label>Address</Label>
-            <Input {...field} />
+            <Textarea {...field} placeholder="Enter your full address..." />
             {errors.address && (
               <p className="text-sm text-red-500 mt-1">
                 {errors.address.message}
@@ -245,17 +249,17 @@ const CheckoutForm = ({
       </div>
 
       {/* PAYMENT (UI ONLY) */}
-      <div>
+      {/* <div>
         <h2 className="font-display text-lg font-bold mb-4">Payment</h2>
         <Input placeholder="Card number" />
-      </div>
+      </div> */}
 
       <Button
         type="submit"
         disabled={zipResult !== null && !zipResult.deliverable}
         className="w-full py-6 text-sm font-semibold"
       >
-        Place Order — ${finalTotal.toFixed(2)}
+        Place Order — {formatCurrency(finalTotal)}
       </Button>
     </form>
   );

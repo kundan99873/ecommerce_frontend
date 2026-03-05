@@ -1,11 +1,12 @@
-import { Link } from "react-router";
-import { ShoppingBag } from "lucide-react";
-// import { useCart } from "@/context/cartContext";
-// import { useWishlist } from "@/context/wishlistContext";
+import { Link, useNavigate } from "react-router";
+import { Heart, Loader2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import type { Product } from "@/services/product/product.types";
 import { formatCurrency } from "@/utils/utils";
+import { useCart } from "@/context/cartContext";
+import { useAuth } from "@/context/authContext";
+import { useWishlist } from "@/context/wishlistContext";
 
 interface ProductCardProps {
   product: Product;
@@ -13,13 +14,13 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  // const { addItem } = useCart();
-  // const { toggleItem, isInWishlist } = useWishlist();
-  // const wishlisted = isInWishlist(product.id);
+  const { addItem, addingSku } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { toggleItem, isInWishlist } = useWishlist();
+  const wishlisted = isInWishlist(product.variants[0].sku);
 
-  if(!product?.variants?.[0]?.images?.[0]?.image_url) {
-    return null; // Skip rendering if no image URL is available
-  }
+  if (!product?.variants?.[0]?.images?.[0]?.image_url) return null;
 
   return (
     <motion.div
@@ -29,7 +30,10 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       transition={{ delay: index * 0.08, duration: 0.4 }}
       className="group"
     >
-      <Link to={`/product/${product.slug}?color=${product.variants[0].color}&size=${product.variants[0].size}`} className="block">
+      <Link
+        to={`/product/${product.slug}?color=${product.variants[0].color}${product.variants[0].size ? `&size=${product.variants[0].size}` : ""}`}
+        className="block"
+      >
         <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-secondary">
           <img
             src={product.variants[0].images[0].image_url}
@@ -38,14 +42,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             loading="lazy"
           />
           {/* {product.originalPrice && ( */}
-            <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
-              -{Math.round((1 - product.variants[0].discounted_price / product.variants[0].original_price) * 100)}%
-            </span>
+          <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
+            -
+            {Math.round(
+              (1 -
+                product.variants[0].discounted_price /
+                  product.variants[0].original_price) *
+                100,
+            )}
+            %
+          </span>
           {/* )} */}
-          {/* <button
+          <button
             onClick={(e) => {
               e.preventDefault();
-              toggleItem(product);
+              toggleItem(product.variants[0].sku);
             }}
             className={`absolute top-3 right-3 p-2 rounded-full transition-all cursor-pointer ${
               wishlisted
@@ -54,7 +65,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             }`}
           >
             <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
-          </button> */}
+          </button>
           {!product.variants[0].stock && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <span className="text-sm font-semibold text-foreground">
@@ -91,12 +102,18 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           className="h-8 w-8 shrink-0 mt-1 hover:bg-primary hover:text-primary-foreground transition-colors"
           onClick={(e) => {
             e.preventDefault();
-            // addItem(product);
+            if (!isAuthenticated) return navigate("/login");
+            addItem(product.variants[0].sku, 1);
           }}
-          disabled={!product.variants[0].stock}
+          disabled={
+            !product.variants[0].stock || addingSku === product.variants[0].sku
+          }
         >
-
-          <ShoppingBag className="h-4 w-4" />
+          {addingSku === product.variants[0].sku ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShoppingBag className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </motion.div>

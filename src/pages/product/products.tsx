@@ -49,6 +49,7 @@ const Products = () => {
       search: debouncedSearch,
       limit: 8,
       category: activeCategory !== "all" ? activeCategory : undefined,
+      is_product_listing_page: true,
     });
 
   useEffect(() => {

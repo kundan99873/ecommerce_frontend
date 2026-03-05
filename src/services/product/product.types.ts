@@ -4,6 +4,7 @@ export interface ProductVariant {
   original_price: number;
   discounted_price: number;
   stock: number;
+  sku: string;
   id: number;
   images: {
     image_url: string;
@@ -74,6 +75,7 @@ export interface GetProductsQuery {
   brand?: string;
   sort?: SortOptions;
   filter?: FilterOptions;
+  is_product_listing_page?: boolean;
 }
 
 export interface ProductDetail {

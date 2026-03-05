@@ -1,544 +1,549 @@
-// import { useState } from "react";
-// import { useNavigate } from "react-router";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Separator } from "@/components/ui/separator";
-// import { useCart } from "@/context/cartContext";
-// import { useCoupon } from "@/context/couponContext";
-// import { toast } from "@/hooks/useToast";
-// import { CheckCircle, Loader2, MapPin } from "lucide-react";
-// import PincodeCheck from "@/components/product/pinCodeCheck";
-// import CouponInput from "@/components/cart/couponInput";
-// import { getCurrentLocation, reverseGeocode } from "@/utils/locationService";
-// import { Controller, useForm } from "react-hook-form";
-
-// const Checkout = () => {
-//   const { items, totalPrice, clearCart } = useCart();
-//   const { discount, appliedCoupon } = useCoupon();
-//   const navigate = useNavigate();
-//   const [placed, setPlaced] = useState(false);
-//   const [zipResult, setZipResult] = useState<{
-//     deliverable: boolean;
-//     eta?: string;
-//   } | null>(null);
-//   const [locationLoading, setLocationLoading] = useState(false);
-
-//   const {
-//     control,
-//     handleSubmit,
-//     formState: { errors },
-//   } = useForm({
-
-//   });
-
-//   const shipping = totalPrice >= 100 ? 0 : 9.99;
-//   const finalTotal = totalPrice - discount + shipping;
-
-//   const onSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (zipResult && !zipResult.deliverable) {
-//       toast({
-//         title: "Cannot proceed",
-//         description: "Delivery is not available at the entered ZIP code.",
-//       });
-//       return;
-//     }
-//     setPlaced(true);
-//     clearCart();
-//     toast({
-//       title: "Order placed!",
-//       description: "Your order has been successfully placed.",
-//     });
-//   };
-
-//   if (placed) {
-//     return (
-//       <>
-//         <div className="container mx-auto px-4 py-20 text-center">
-//           <CheckCircle className="h-16 w-16 mx-auto text-success" />
-//           <h1 className="text-3xl font-display font-bold mt-4">
-//             Order Confirmed!
-//           </h1>
-//           <p className="text-muted-foreground mt-2">
-//             Thank you for your purchase. You'll receive a confirmation email
-//             shortly.
-//           </p>
-//           <Button className="mt-6" onClick={() => navigate("/orders")}>
-//             View Orders
-//           </Button>
-//         </div>
-//       </>
-//     );
-//   }
-
-//   if (items.length === 0) {
-//     navigate("/cart");
-//     return null;
-//   }
-
-//   const handleAutoDetectLocation = async (e) => {
-//     // console.log(e.)
-//     setLocationLoading(true);
-//     try {
-//       const coords = await getCurrentLocation();
-//       if (coords) {
-//         const location = await reverseGeocode(coords.lat, coords.lon);
-//         if (location) {
-//           console.log(location);
-//           // toast.success("Location detected successfully");
-//         }
-//       }
-//     } catch (error) {
-//       console.error("Error detecting location:", error);
-//       // toast.error("Failed to detect location");
-//     } finally {
-//       setLocationLoading(false);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <div className="container mx-auto px-4 py-8 max-w-4xl">
-//         <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
-
-//         <form
-//           onSubmit={handleSubmit(onSubmit)}
-//           className="grid md:grid-cols-5 gap-8"
-//         >
-//           <div className="md:col-span-3 space-y-6">
-//             <div className="bg-card border rounded-lg p-3 mx-2 mb-3">
-//               <button
-//                 type="button"
-//                 onClick={handleAutoDetectLocation}
-//                 disabled={locationLoading}
-//                 className="w-full flex items-center justify-center gap-2 text-primary font-semibold text-sm transition-colors disabled:opacity-50"
-//               >
-//                 {locationLoading ? (
-//                   <>
-//                     <Loader2 className="h-4 w-4 animate-spin" />
-//                     Detecting Location...
-//                   </>
-//                 ) : (
-//                   <>
-//                     <MapPin className="h-4 w-4" />
-//                     Auto-Detect My Location
-//                   </>
-//                 )}
-//               </button>
-//               <p className="text-xs text-primary mt-1 text-center">
-//                 We'll auto-fill your address details
-//               </p>
-//             </div>
-//             <div>
-//               <h2 className="font-display text-lg font-bold mb-4">
-//                 Contact Information
-//               </h2>
-//               <div className="grid gap-4">
-//                 <Controller
-//                   name="email"
-//                   control={control}
-//                   render={({ field }) => (
-//                     <div>
-//                       <Label htmlFor="email">Email</Label>
-//                       <Input
-//                         type="email"
-//                         placeholder="your@email.com"
-//                         value={field.value}
-//                         onChange={(e) => field.onChange(e.target.value)}
-//                       />
-//                       {errors.email && (
-//                         <p className="text-sm text-red-500 mt-1">
-//                           {errors.email.message}
-//                         </p>
-//                       )}
-//                     </div>
-//                   )}
-//                 />
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <Controller
-//                     name="first_name"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="first">First Name</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.first_name && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.first_name.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                   <Controller
-//                     name="last_name"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="last">Last Name</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.last_name && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.last_name.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div>
-//               <h2 className="font-display text-lg font-bold mb-4">
-//                 Shipping Address
-//               </h2>
-//               <div className="grid gap-4">
-//                 <Controller
-//                   name="address"
-//                   control={control}
-//                   render={({ field }) => (
-//                     <div>
-//                       <Label htmlFor="address">Address</Label>
-//                       <Input
-//                         value={field.value}
-//                         onChange={(e) => field.onChange(e.target.value)}
-//                       />
-//                       {errors.address && (
-//                         <p className="text-sm text-red-500 mt-1">
-//                           {errors.address.message}
-//                         </p>
-//                       )}
-//                     </div>
-//                   )}
-//                 />
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <Controller
-//                     name="city"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="city">City</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.city && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.city.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                   <Controller
-//                     name="state"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="state">State</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.state && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.state.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                   <Controller
-//                     name="country"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="country">Country</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.country && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.country.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                   <Controller
-//                     name="pin_code"
-//                     control={control}
-//                     render={({ field }) => (
-//                       <div>
-//                         <Label htmlFor="pin_code">Pincode</Label>
-//                         <Input
-//                           value={field.value}
-//                           onChange={(e) => field.onChange(e.target.value)}
-//                         />
-//                         {errors.pincode && (
-//                           <p className="text-sm text-red-500 mt-1">
-//                             {errors.pincode.message}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Zipcode deliverability */}
-//             <div className="bg-card border rounded-lg p-4">
-//               <PincodeCheck onResult={(r) => setZipResult(r)} />
-//             </div>
-
-//             <div>
-//               <h2 className="font-display text-lg font-bold mb-4">Payment</h2>
-//               <div className="grid gap-4">
-//                 <div>
-//                   <Label htmlFor="card">Card Number</Label>
-//                   <Input id="card" required placeholder="1234 5678 9012 3456" />
-//                 </div>
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <Label htmlFor="expiry">Expiry</Label>
-//                     <Input id="expiry" required placeholder="MM/YY" />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="cvv">CVV</Label>
-//                     <Input id="cvv" required placeholder="123" />
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-
-//             <Button
-//               type="submit"
-//               className="w-full py-6 text-sm font-semibold tracking-wide"
-//               disabled={zipResult !== null && !zipResult.deliverable}
-//             >
-//               Place Order — ${finalTotal.toFixed(2)}
-//             </Button>
-//           </div>
-
-//           <div className="md:col-span-2">
-//             <div className="bg-card border rounded-lg p-5 sticky top-24 space-y-4">
-//               <h2 className="font-display text-lg font-bold">Your Items</h2>
-//               <div className="space-y-3">
-//                 {items.map(({ product, quantity }) => (
-//                   <div key={product.id} className="flex gap-3">
-//                     <img
-//                       src={product.image}
-//                       alt={product.name}
-//                       className="h-16 w-14 object-cover rounded"
-//                     />
-//                     <div className="flex-1 text-sm">
-//                       <p className="font-medium leading-tight">
-//                         {product.name}
-//                       </p>
-//                       <p className="text-muted-foreground">Qty: {quantity}</p>
-//                     </div>
-//                     <span className="text-sm font-medium">
-//                       ${product.price * quantity}
-//                     </span>
-//                   </div>
-//                 ))}
-//               </div>
-//               <Separator />
-//               <CouponInput cartTotal={totalPrice} />
-//               <div className="space-y-2 text-sm">
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Subtotal</span>
-//                   <span>${totalPrice.toFixed(2)}</span>
-//                 </div>
-//                 {discount > 0 && (
-//                   <div className="flex justify-between text-success">
-//                     <span>Discount ({appliedCoupon?.code})</span>
-//                     <span>-${discount.toFixed(2)}</span>
-//                   </div>
-//                 )}
-//                 <div className="flex justify-between">
-//                   <span className="text-muted-foreground">Shipping</span>
-//                   <span>{shipping === 0 ? "Free" : `$${shipping}`}</span>
-//                 </div>
-//                 {zipResult?.eta && (
-//                   <div className="flex justify-between text-xs">
-//                     <span className="text-muted-foreground">Est. Delivery</span>
-//                     <span className="text-success">{zipResult.eta}</span>
-//                   </div>
-//                 )}
-//                 <Separator />
-//                 <div className="flex justify-between font-semibold">
-//                   <span>Total</span>
-//                   <span>${finalTotal.toFixed(2)}</span>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </form>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default Checkout;
-
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { useCart } from "@/context/cartContext";
 import { useCoupon } from "@/context/couponContext";
-import { toast } from "@/hooks/useToast";
-import { CheckCircle } from "lucide-react";
+import { useAuth } from "@/context/authContext";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import { useAddOrder } from "@/services/order/order.query";
+
+import AddressManager from "@/components/user/checkout/AddressManager";
 import CouponInput from "@/components/cart/couponInput";
-import type { CheckoutFormValues } from "@/components/user/checkout/checkoutSchema";
-import CheckoutForm from "@/components/user/checkout/checkoutForm";
+
+import { formatCurrency } from "@/utils/utils";
+import { toast } from "@/hooks/useToast";
+
+import type { Address } from "@/services/user/user.types";
+
+type PaymentMethod = "RAZORPAY" | "COD";
 
 const Checkout = () => {
-  const { items, totalPrice, clearCart } = useCart();
-  const { discount, appliedCoupon } = useCoupon();
   const navigate = useNavigate();
 
+  const { items, totalPrice, clearCart } = useCart();
+  const { discount, appliedCoupon } = useCoupon();
+  const { user } = useAuth();
+  const { openPayment } = useRazorpay();
+  const addOrderMutation = useAddOrder();
+
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("RAZORPAY");
+  const [processing, setProcessing] = useState(false);
   const [placed, setPlaced] = useState(false);
-  const [zipResult, setZipResult] = useState<{
-    deliverable: boolean;
-    eta?: string;
-  } | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  if (items.length === 0) {
-    navigate("/cart");
-    return null;
-  }
-
-  const shipping = totalPrice >= 100 ? 0 : 9.99;
-  const finalTotal = totalPrice - discount + shipping;
-
-  const onSubmit = (data: CheckoutFormValues) => {
-    if (zipResult && !zipResult.deliverable) {
-      toast({
-        title: "Cannot proceed",
-        description: "Delivery is not available at the entered pincode.",
-      });
-      return;
-    }
-
-    console.log("Checkout Data:", data);
-
-    setPlaced(true);
-    clearCart();
-
-    toast({
-      title: "Order placed!",
-      description: "Your order has been successfully placed.",
-    });
-  };
-
-  if (placed) {
+  if (items.length === 0 && !placed) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
-        <CheckCircle className="h-16 w-16 mx-auto text-success" />
-        <h1 className="text-3xl font-display font-bold mt-4">
-          Order Confirmed!
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Thank you for your purchase. You'll receive a confirmation email
-          shortly.
-        </p>
-        <Button className="mt-6" onClick={() => navigate("/orders")}>
-          View Orders
+        <h1 className="text-2xl font-bold">Your cart is empty</h1>
+        <Button className="mt-6" onClick={() => navigate("/")}>
+          Continue Shopping
         </Button>
       </div>
     );
   }
 
+  /* ---------------- PRICE CALCULATION ---------------- */
+
+  const shipping = totalPrice >= 100 ? 0 : 9.99;
+  const finalTotal = totalPrice - discount + shipping;
+
+  /* ---------------- MAIN ORDER FUNCTION ---------------- */
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast({
+        title: "Select Address",
+        description: "Please select a delivery address.",
+      });
+      return;
+    }
+
+    if (processing) return;
+
+    try {
+      setProcessing(true);
+
+      const order = await addOrderMutation.mutateAsync({
+        address_id: Number(selectedAddress.id),
+        coupon_code: appliedCoupon?.code,
+        payment_method: paymentMethod,
+      });
+
+      if (!order?.success) {
+        toast({
+          title: "Order Failed",
+          description: order?.message || "Please try again.",
+        });
+        setProcessing(false);
+        return;
+      }
+
+      /* ---------------- COD FLOW ---------------- */
+
+      if (paymentMethod === "COD") {
+        clearCart();
+        setPlaced(true);
+
+        toast({
+          title: "Order Confirmed",
+          description: "Cash on Delivery selected.",
+        });
+
+        setTimeout(() => navigate("/"), 5000);
+
+        setProcessing(false);
+        return;
+      }
+
+      /* ---------------- RAZORPAY FLOW ---------------- */
+
+      openPayment({
+        amount: Math.round(finalTotal * 100), // convert to paise
+        name: "E-Commerce Store",
+        description: "Order Payment",
+        email: user?.email ?? "",
+        contact: selectedAddress.phone_number ?? "",
+
+        onSuccess: async (response) => {
+          try {
+            console.log("Payment Success:", response);
+
+            // 🔐 Ideally verify payment here
+
+            clearCart();
+            setPlaced(true);
+
+            toast({
+              title: "Payment Successful",
+              description: "Redirecting to home page...",
+            });
+
+            setTimeout(() => navigate("/"), 5000);
+          } catch {
+            toast({
+              title: "Verification Failed",
+              description: "Please contact support.",
+            });
+          } finally {
+            setProcessing(false);
+          }
+        },
+
+        onFailure: () => {
+          toast({
+            title: "Payment Failed",
+            description: "Please try again.",
+          });
+          setProcessing(false);
+        },
+      });
+    } catch (err) {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later.",
+      });
+      setProcessing(false);
+    }
+  };
+
+  /* ---------------- SUCCESS PAGE ---------------- */
+
+  if (placed) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="container mx-auto px-4 py-20 text-center"
+      >
+        <CheckCircle className="h-16 w-16 mx-auto text-green-600" />
+        <h1 className="text-3xl font-bold mt-4">Order Confirmed!</h1>
+        <p className="text-muted-foreground mt-2">
+          You will be redirected shortly.
+        </p>
+      </motion.div>
+    );
+  }
+
+  /* ---------------- MAIN CHECKOUT UI ---------------- */
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid md:grid-cols-5 gap-8">
-        {/* LEFT SIDE FORM */}
-        <CheckoutForm
-          onSubmit={onSubmit}
-          zipResult={zipResult}
-          setZipResult={setZipResult}
-          finalTotal={finalTotal}
-        />
+        {/* LEFT SIDE */}
+        <div className="md:col-span-3 space-y-6">
+          <AddressManager
+            onSelect={(addr) =>
+              setSelectedAddress((prev) => (prev?.id === addr.id ? prev : addr))
+            }
+            selectedId={selectedAddress?.id}
+          />
 
-        {/* RIGHT SIDE CART SUMMARY */}
+          {/* PAYMENT METHOD */}
+          <div className="bg-card border rounded-xl p-5">
+            <h2 className="font-semibold mb-4">Payment Method</h2>
+
+            <RadioGroup
+              value={paymentMethod}
+              onValueChange={(val) => setPaymentMethod(val as PaymentMethod)}
+              className="space-y-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="RAZORPAY" id="razorpay" />
+                <label htmlFor="razorpay">Pay Online (Razorpay)</label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="COD" id="cod" />
+                <label htmlFor="cod">Cash on Delivery</label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <Button
+            className="w-full py-6 font-semibold"
+            disabled={!selectedAddress || processing}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Place Order — {formatCurrency(finalTotal)}
+          </Button>
+        </div>
+
+        {/* RIGHT SIDE SUMMARY */}
         <div className="md:col-span-2">
-          <div className="bg-card border rounded-lg p-5 sticky top-24 space-y-4">
-            <h2 className="font-display text-lg font-bold">Your Items</h2>
+          <div className="bg-card border rounded-lg p-5 sticky top-24">
+            <h2 className="font-bold mb-4">Order Summary</h2>
 
-            <div className="space-y-3">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex gap-3">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-16 w-14 object-cover rounded"
-                  />
-                  <div className="flex-1 text-sm">
-                    <p className="font-medium leading-tight">{product.name}</p>
-                    <p className="text-muted-foreground">Qty: {quantity}</p>
-                  </div>
-                  <span className="text-sm font-medium">
-                    ${product.price * quantity}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {items.map((product) => (
+              <div
+                key={product.sku}
+                className="flex justify-between text-sm mb-2"
+              >
+                <span>
+                  {product.name} × {product.quantity}
+                </span>
+                <span>{formatCurrency(product.subtotal)}</span>
+              </div>
+            ))}
 
-            <Separator />
+            <Separator className="my-4" />
 
             <CouponInput cartTotal={totalPrice} />
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm mt-4">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>Subtotal</span>
+                <span>{formatCurrency(totalPrice)}</span>
               </div>
 
               {discount > 0 && (
-                <div className="flex justify-between text-success">
-                  <span>Discount ({appliedCoupon?.code})</span>
-                  <span>- ${discount.toFixed(2)}</span>
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>-{formatCurrency(discount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>{shipping === 0 ? "Free" : `$${shipping}`}</span>
+                <span>Shipping</span>
+                <span>
+                  {shipping === 0 ? "Free" : formatCurrency(shipping)}
+                </span>
               </div>
-
-              {zipResult?.eta && (
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Est. Delivery</span>
-                  <span className="text-success">{zipResult.eta}</span>
-                </div>
-              )}
 
               <Separator />
 
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>${finalTotal.toFixed(2)}</span>
+                <span>{formatCurrency(finalTotal)}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* CONFIRM MODAL */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Your Order</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            You are about to place an order of{" "}
+            <strong>{formatCurrency(finalTotal)}</strong> using{" "}
+            <strong>{paymentMethod}</strong>.
+          </p>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+
+            <Button
+              disabled={processing}
+              onClick={() => {
+                setConfirmOpen(false);
+                handlePlaceOrder();
+              }}
+            >
+              {processing ? "Processing..." : "Confirm Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default Checkout;
+
+// import { useState } from "react";
+// import { useNavigate } from "react-router";
+// import { Button } from "@/components/ui/button";
+// import { Separator } from "@/components/ui/separator";
+// import { useCart } from "@/context/cartContext";
+// import { useCoupon } from "@/context/couponContext";
+// import { useAuth } from "@/context/authContext";
+// import { useRazorpay } from "@/hooks/useRazorpay";
+// import { toast } from "@/hooks/useToast";
+// import { CheckCircle } from "lucide-react";
+// import CouponInput from "@/components/cart/couponInput";
+// import { formatCurrency } from "@/utils/utils";
+// import { motion } from "framer-motion";
+// import AddressManager from "@/components/user/checkout/AddressManager";
+// import { useAddOrder } from "@/services/order/order.query";
+// import type { Address } from "@/services/user/user.types";
+
+// const Checkout = () => {
+//   const navigate = useNavigate();
+
+//   const { items, totalPrice, clearCart } = useCart();
+//   const { discount, appliedCoupon } = useCoupon();
+//   const { user } = useAuth();
+//   const { openPayment } = useRazorpay();
+
+//   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+//   const [placed, setPlaced] = useState(false);
+//   const [processing, setProcessing] = useState(false);
+//   const addOrderMutation = useAddOrder();
+
+//   console.log({ processing });
+
+//   if (items.length === 0 && !placed) {
+//     return (
+//       <div className="container mx-auto px-4 py-20 text-center">
+//         <h1 className="text-2xl font-bold">Your cart is empty</h1>
+//         <Button className="mt-6" onClick={() => navigate("/")}>
+//           Continue Shopping
+//         </Button>
+//       </div>
+//     );
+//   }
+
+//   const shipping = totalPrice >= 100 ? 0 : 9.99;
+//   const finalTotal = totalPrice - discount + shipping;
+
+//   const handleSubmit = async () => {
+//     if (!selectedAddress) {
+//       toast({
+//         title: "Select an address",
+//         description: "Please select a delivery address.",
+//       });
+//       return;
+//     }
+
+//     if (processing) return;
+
+//     setProcessing(true);
+
+//     const res = await addOrderMutation.mutateAsync({
+//       address_id: Number(selectedAddress.id),
+//       coupon_code: appliedCoupon?.code,
+//       payment_method: "RAZORPAY",
+//     });
+
+//     if (!res.success) {
+//       toast({
+//         title: "Order Failed",
+//         description: res.message || "Failed to place order. Please try again.",
+//       });
+//       setProcessing(false);
+//       return;
+//     } else {
+//       toast({
+//         title: "Order Placed",
+//         description: "Redirecting to payment...",
+//       });
+//     }
+
+//     openPayment({
+//       amount: finalTotal,
+//       name: "E-Commerce Store",
+//       description: "Order Payment",
+//       email: user?.email ?? "",
+//       contact: selectedAddress?.phone_number ?? "",
+
+//       onSuccess: async (response) => {
+//         try {
+//           console.log("Payment Success:", response);
+
+//           // 🔐 In production:
+//           // Verify payment on backend here
+
+//           setPlaced(true);
+//           clearCart();
+
+//           toast({
+//             title: "Payment Successful",
+//             description: "Your order has been placed successfully.",
+//           });
+//         } catch (err) {
+//           toast({
+//             title: "Verification Failed",
+//             description: "Payment captured but verification failed.",
+//           });
+//         } finally {
+//           setProcessing(false);
+//         }
+//       },
+
+//       onFailure: () => {
+//         toast({
+//           title: "Payment Failed",
+//           description: "Please try again.",
+//         });
+//         setProcessing(false);
+//       },
+//     });
+//   };
+
+//   if (placed) {
+//     return (
+//       <motion.div
+//         initial={{ opacity: 0, scale: 0.95 }}
+//         animate={{ opacity: 1, scale: 1 }}
+//         className="container mx-auto px-4 py-20 text-center"
+//       >
+//         <CheckCircle className="h-16 w-16 mx-auto text-success" />
+//         <h1 className="text-3xl font-bold mt-4">Order Confirmed!</h1>
+//         <p className="text-muted-foreground mt-2">
+//           Thank you for your purchase.
+//         </p>
+//         <Button className="mt-6" onClick={() => navigate("/orders")}>
+//           View Orders
+//         </Button>
+//       </motion.div>
+//     );
+//   }
+
+//   return (
+//     <div className="container mx-auto px-4 py-8 max-w-5xl">
+//       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+//       <div className="grid md:grid-cols-5 gap-8">
+//         {/* LEFT SIDE */}
+//         <div className="md:col-span-3 space-y-6">
+//           <div className="bg-card border rounded-xl p-5">
+//             <AddressManager
+//               onSelect={(address) => {
+//                 // 🔒 Prevent unnecessary re-renders
+//                 setSelectedAddress((prev) =>
+//                   prev?.id === address?.id ? prev : address,
+//                 );
+//               }}
+//               selectedId={selectedAddress?.id}
+//             />
+//           </div>
+
+//           <Button
+//             type="submit"
+//             className="w-full py-6 text-sm font-semibold"
+//             disabled={!selectedAddress || processing}
+//             onClick={handleSubmit}
+//           >
+//             {processing
+//               ? "Processing..."
+//               : `Place Order — ${formatCurrency(finalTotal)}`}
+//           </Button>
+//         </div>
+
+//         {/* RIGHT SIDE SUMMARY */}
+//         <div className="md:col-span-2">
+//           <div className="bg-card border rounded-lg p-5 sticky top-24 space-y-4">
+//             <h2 className="text-lg font-bold">Your Items</h2>
+
+//             <div className="space-y-3">
+//               {items.map((product) => (
+//                 <div key={product.sku} className="flex gap-3">
+//                   <img
+//                     src={product.image}
+//                     alt={product.name}
+//                     className="h-16 w-14 object-cover rounded"
+//                   />
+//                   <div className="flex-1 text-sm">
+//                     <p className="font-medium">{product.name}</p>
+//                     <p className="text-muted-foreground">
+//                       Qty: {product.quantity}
+//                     </p>
+//                   </div>
+//                   <span className="text-sm font-medium">
+//                     {formatCurrency(product.subtotal)}
+//                   </span>
+//                 </div>
+//               ))}
+//             </div>
+
+//             <Separator />
+
+//             <CouponInput cartTotal={totalPrice} />
+
+//             <div className="space-y-2 text-sm">
+//               <div className="flex justify-between">
+//                 <span>Subtotal</span>
+//                 <span>{formatCurrency(totalPrice)}</span>
+//               </div>
+
+//               {discount > 0 && (
+//                 <div className="flex justify-between text-success">
+//                   <span>Discount ({appliedCoupon?.code})</span>
+//                   <span>- {formatCurrency(discount)}</span>
+//                 </div>
+//               )}
+
+//               <div className="flex justify-between">
+//                 <span>Shipping</span>
+//                 <span>
+//                   {shipping === 0 ? "Free" : formatCurrency(shipping)}
+//                 </span>
+//               </div>
+
+//               <Separator />
+
+//               <div className="flex justify-between font-semibold">
+//                 <span>Total</span>
+//                 <span>{formatCurrency(finalTotal)}</span>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Checkout;

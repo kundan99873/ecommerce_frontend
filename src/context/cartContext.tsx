@@ -1,63 +1,183 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import type { Product } from "@/data/products";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import { toast } from "@/hooks/useToast";
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  size?: string;
-  color?: string;
-}
+import {
+  useAddToCart,
+  useClearCart,
+  useGetCartItems,
+  useRemoveFromCart,
+  useUpdateCartItem,
+} from "@/services/cart/cart.query";
+import type { CartItem } from "@/services/cart/cart.types";
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, size?: string, color?: string) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addItem: (slug: string, quantity?: number) => void;
+  removeItem: (slug: string) => void;
+  updateQuantity: (slug: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  loading: boolean;
+  addingSku: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addItem = useCallback((product: Product, quantity = 1, size?: string, color?: string) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.product.id === product.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i
-        );
-      }
-      return [...prev, { product, quantity, size, color }];
-    });
-    toast({ title: "Added to cart", description: `${product.name} has been added to your cart.` });
-  }, []);
-
-  const removeItem = useCallback((productId: number) => {
-    setItems((prev) => prev.filter((i) => i.product.id !== productId));
-  }, []);
-
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.product.id !== productId));
-      return;
+  const {
+    data: cartData,
+    isLoading: cartLoading,
+    isFetching,
+  } = useGetCartItems();
+  useEffect(() => {
+    if (cartData?.success) {
+      setItems(cartData.data.items);
     }
-    setItems((prev) =>
-      prev.map((i) => (i.product.id === productId ? { ...i, quantity } : i))
-    );
-  }, []);
+  }, [cartData]);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const addToCart = useAddToCart();
+  const removeFromCart = useRemoveFromCart();
+  const updateCartItem = useUpdateCartItem();
+  const clearCartItem = useClearCart();
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const addItem = useCallback(
+    (slug: string, quantity = 1) => {
+      addToCart.mutateAsync(
+        { slug, quantity },
+        {
+          onSuccess: (data) => {
+            console.log({ data });
+            toast({
+              title: "Added to cart",
+              description: `Product has been added to your cart.`,
+            });
+          },
+          onError: (error) => {
+            toast({
+              title: "Error",
+              description: `Failed to add product to cart: ${error.message}`,
+            });
+          },
+        },
+      );
+    },
+    [addToCart],
+  );
+
+  const addingSku =
+    addToCart.isPending && addToCart.variables
+      ? addToCart.variables.slug
+      : null;
+
+  const removeItem = useCallback(
+    (slug: string) => {
+      removeFromCart.mutate(slug, {
+        onSuccess: () => {
+          toast({
+            title: "Removed from cart",
+            // description: `${item.product.name} has been removed from your cart.`,
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: `Failed to remove product from cart: ${error.message}`,
+          });
+        },
+      });
+    },
+    [removeFromCart],
+  );
+
+  const updateQuantity = useCallback(
+    (slug: string, quantity: number) => {
+      const item = items.find((i) => i.sku === slug);
+      console.log({ item, items, slug });
+      if (!item) return;
+      updateCartItem.mutate(
+        { slug, quantity },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Cart updated",
+              description: `Quantity for ${item.name} has been updated.`,
+            });
+          },
+          onError: (error) => {
+            toast({
+              title: "Error",
+              description: `Failed to update cart item: ${error.message}`,
+            });
+          },
+        },
+      );
+    },
+    [items, updateCartItem],
+  );
+
+  const clearCart = useCallback(() => {
+    clearCartItem.mutate(undefined, {
+      onSuccess: () => {
+        toast({
+          title: "Cart cleared",
+          description: "All items have been removed from your cart.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: `Failed to clear cart: ${error.message}`,
+        });
+      },
+    });
+  }, [clearCartItem]);
+
+  const totalItems = cartData?.data.total_items || 0;
+  const totalPrice = cartData?.data.total_price || 0;
+
+  const loading = useMemo(
+    () =>
+      cartLoading ||
+      isFetching ||
+      addToCart.isPending ||
+      removeFromCart.isPending ||
+      updateCartItem.isPending ||
+      clearCartItem.isPending,
+    [
+      cartLoading,
+      isFetching,
+      addToCart.isPending,
+      removeFromCart.isPending,
+      updateCartItem.isPending,
+      clearCartItem.isPending,
+    ],
+  );
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        totalItems,
+        totalPrice,
+        loading,
+        addingSku,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

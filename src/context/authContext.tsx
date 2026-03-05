@@ -6,6 +6,7 @@ import {
 } from "@/services/auth/auth.query";
 import type { LoginResponse, User } from "@/services/auth/auth.types";
 import type { ApiResponse } from "@/api/api.types";
+import PageLoader from "@/components/common/pageLoader";
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { data: user, isError, isLoading } = useLoggedInUser();
+  const { data: user, isError, isLoading, isFetching } = useLoggedInUser();
   const loginMutation = useUserLogin();
   const logoutMutation = useUserLogout();
 
@@ -35,6 +36,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loginLoading: loginMutation.isPending,
     logoutLoading: logoutMutation.isPending,
   };
+
+  if(isLoading || isFetching) return <PageLoader />;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
