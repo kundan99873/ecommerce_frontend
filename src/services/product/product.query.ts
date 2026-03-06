@@ -6,10 +6,12 @@ import {
   updateProduct,
   deleteProductBySlug,
   fetchProductWithoutVariant,
+  addReviewToProduct,
 } from "./product.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
 import type { GetProductsQuery, ProductResponse } from "./product.types";
+import { orderQueryKeys } from "../order/order.query";
 
 export const productsKeys = {
   all: ["products"],
@@ -80,6 +82,21 @@ const useInfiniteProducts = (params?: GetProductsQuery) => {
   });
 };
 
+const useAddReviewToProduct = () => {
+  return useMutation<
+    ApiResponse,
+    Error,
+    { slug: string; rating: number; comment: string }
+  >({
+    mutationFn: ({ slug, rating, comment }) =>
+      addReviewToProduct(slug, rating, comment),
+    onSuccess: (_, { slug }) => {
+      queryClient.invalidateQueries({ queryKey: productsKeys.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: orderQueryKeys.all });
+    },
+  });
+};
+
 export {
   useProducts,
   useGetProduct,
@@ -88,4 +105,5 @@ export {
   useDeleteProduct,
   useInfiniteProducts,
   useGetProductWithoutVariant,
+  useAddReviewToProduct,
 };

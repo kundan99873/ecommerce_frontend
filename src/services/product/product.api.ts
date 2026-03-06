@@ -56,6 +56,11 @@ const deleteProductBySlug = async (slug: string): Promise<ApiResponse> => {
   return response.data;
 };
 
+const addReviewToProduct = async (slug: string, rating: number, comment: string): Promise<ApiResponse> => {
+  const response = await api.post(`/product/review/${slug}`, { rating, comment });
+  return response.data;
+};
+
 export {
   fetchProducts,
   fetchProductBySlug,
@@ -63,4 +68,5 @@ export {
   addProduct,
   updateProduct,
   deleteProductBySlug,
+  addReviewToProduct,
 };

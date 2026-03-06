@@ -5,7 +5,6 @@ export interface AddOrderBody {
 }
 
 interface OrderItem {
-  product_slug: string;
   name: string;
   slug: string;
   brand: string;
@@ -18,6 +17,7 @@ interface OrderItem {
     image_url: string;
     is_primary: boolean;
   }[];
+  review?: boolean;
 }
 
 export interface Order {
@@ -28,6 +28,7 @@ export interface Order {
   final_amount: number;
   purchase_date: string;
   payment_status: "PENDING" | "SUCCESS" | "FAILED";
+  payment_method?: string;
   status:
     | "PENDING"
     | "SHIPPED"
@@ -40,8 +41,32 @@ export interface Order {
     | "PROCESSING";
 }
 
+export interface OrderDetail extends Order {
+  address: {
+    first_name: string;
+    last_name: string;
+    phone_code: string;
+    phone_number: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    pin_code: string;
+  };
+  coupon?: {
+    code: string;
+    discount_amount: number;
+  };
+}
+
 export interface OrderResponse {
   success: boolean;
   message: string;
   data: Order[];
+}
+
+export interface OrderDetailResponse {
+  success: boolean;
+  message: string;
+  data: OrderDetail;
 }
