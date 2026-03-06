@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { orders } from "@/data/products";
 import { toast } from "@/hooks/useToast";
 import { motion } from "motion/react";
+import { useGetOrderById } from "@/services/order/order.query";
 
 interface Review {
   productId: number;
@@ -34,11 +35,13 @@ const statusColors: Record<string, string> = {
 
 const OrderDetail = () => {
   const { id } = useParams();
-  const order = orders.find((o) => o.id === id);
+  const order = orders.find((o) => o.id === "ORD-2024-001");
   const [reviewingProduct, setReviewingProduct] = useState<number | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: orderData, isFetching } = useGetOrderById(id!);
 
   const existingReviews = getReviews();
 

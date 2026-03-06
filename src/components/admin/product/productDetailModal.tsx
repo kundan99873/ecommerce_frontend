@@ -2,11 +2,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, Package, Tag, Palette, Ruler } from "lucide-react";
-import type { AdminProduct } from "@/services/productService";
 import { motion } from "framer-motion";
+import type { Product } from "@/services/product/product.types";
 
 interface Props {
-  product: AdminProduct | null;
+  product: Product | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

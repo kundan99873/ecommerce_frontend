@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, type MouseEvent } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   Package,
   ChevronRight,
@@ -31,9 +31,17 @@ const Orders = () => {
 
   const { data: ordersData, isFetching } = useGetOrders();
   console.log({ ordersData, isFetching });
+  const navigate = useNavigate();
 
   const trackingFor = (status: Order["status"]) => {
-    const steps: string[] = ["PENDING", "PAID", "CANCELLED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
+    const steps: string[] = [
+      "PENDING",
+      "PAID",
+      "CANCELLED",
+      "SHIPPED",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+    ];
     const statusIndex: Record<string, number> = {
       PENDING: 0,
       PACKED: 1,
@@ -48,6 +56,14 @@ const Orders = () => {
       date: i <= idx ? "2025-02-0" + (i + 1) : "",
       done: i <= idx,
     }));
+  };
+
+  const handleOrderClick = (
+    e: MouseEvent<HTMLParagraphElement>,
+    orderId: string,
+  ) => {
+    e.stopPropagation();
+    navigate(`/order/${orderId}`);
   };
 
   return (
@@ -85,18 +101,24 @@ const Orders = () => {
                         : order.order_number,
                     )
                   }
-                  className="w-full p-5 flex items-center justify-between text-left"
+                  className="w-full p-5 flex items-center justify-between text-left cursor-pointer"
                 >
                   <div>
-                    <p className="font-semibold text-sm">
+                    <p
+                      className="font-semibold text-sm"
+                      onClick={(e) => handleOrderClick(e, order.order_number)}
+                    >
                       {order.order_number}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(order.purchase_date).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                      {new Date(order.purchase_date).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        },
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -157,7 +179,8 @@ const Orders = () => {
                                         {step.label}
                                       </span>
                                     </div>
-                                    {i < trackingFor(order.status)!.length - 1 && (
+                                    {i <
+                                      trackingFor(order.status)!.length - 1 && (
                                       <div
                                         className={`flex-1 h-0.5 mx-1 ${step.done ? "bg-primary" : "bg-muted"}`}
                                       />
@@ -186,10 +209,12 @@ const Orders = () => {
                                   {product.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  Color: {product.color} {product.size && `· Size: ${product.size}`}
+                                  Color: {product.color}{" "}
+                                  {product.size && `· Size: ${product.size}`}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  Qty: {product.quantity} · {formatCurrency(product.price)}
+                                  Qty: {product.quantity} ·{" "}
+                                  {formatCurrency(product.price)}
                                 </p>
                               </div>
                               <ChevronRight className="h-4 w-4 text-muted-foreground" />

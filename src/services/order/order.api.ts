@@ -11,4 +11,9 @@ const getOrdersApi = async () => {
   return response.data;
 };
 
-export { addOrderApi, getOrdersApi };
+const getOrderByIdApi = async (id: string) => {
+  const response = await api.get(`/order/${id}`);
+  return response.data;
+};
+
+export { addOrderApi, getOrdersApi, getOrderByIdApi };

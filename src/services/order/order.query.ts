@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { addOrderApi, getOrdersApi } from "./order.api";
+import { addOrderApi, getOrderByIdApi, getOrdersApi } from "./order.api";
 import type { ApiResponse } from "@/api/api.types";
 import type { AddOrderBody, OrderResponse } from "./order.types";
 import { queryClient } from "@/api/client";
@@ -23,4 +23,11 @@ const useGetOrders = () => {
   });
 };
 
-export { useAddOrder, useGetOrders };
+const useGetOrderById = (id: string) => {
+  return useQuery<OrderResponse>({
+    queryFn: () => getOrderByIdApi(id),
+    queryKey: [...orderQueryKeys.all, id],
+  });
+}
+
+export { useAddOrder, useGetOrders, useGetOrderById };
