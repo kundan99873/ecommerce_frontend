@@ -16,4 +16,9 @@ const getOrderByIdApi = async (id: string) => {
   return response.data;
 };
 
-export { addOrderApi, getOrdersApi, getOrderByIdApi };
+const getAllOrdersApi = async () => {
+  const response = await api.get("/order/all");
+  return response.data;
+};
+
+export { addOrderApi, getOrdersApi, getOrderByIdApi, getAllOrdersApi };

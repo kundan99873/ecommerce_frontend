@@ -70,3 +70,10 @@ export interface OrderDetailResponse {
   message: string;
   data: OrderDetail;
 }
+
+
+export interface AllOrdersResponse {
+  success: boolean;
+  message: string;
+  data: Order[];
+}

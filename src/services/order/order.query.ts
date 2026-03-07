@@ -1,7 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { addOrderApi, getOrderByIdApi, getOrdersApi } from "./order.api";
 import type { ApiResponse } from "@/api/api.types";
-import type { AddOrderBody, OrderDetailResponse, OrderResponse } from "./order.types";
+import type {
+  AddOrderBody,
+  OrderDetailResponse,
+  OrderResponse,
+} from "./order.types";
 import { queryClient } from "@/api/client";
 
 export const orderQueryKeys = {
@@ -28,6 +32,13 @@ const useGetOrderById = (id: string) => {
     queryFn: () => getOrderByIdApi(id),
     queryKey: [...orderQueryKeys.all, id],
   });
-}
+};
 
-export { useAddOrder, useGetOrders, useGetOrderById };
+const useGetAllOrders = () => {
+  return useQuery<OrderResponse>({
+    queryFn: getOrdersApi,
+    queryKey: orderQueryKeys.all,
+  });
+};
+
+export { useAddOrder, useGetOrders, useGetOrderById, useGetAllOrders };
