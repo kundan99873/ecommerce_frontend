@@ -15,7 +15,6 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { useCart } from "@/context/cartContext";
-import { useCoupon } from "@/context/couponContext";
 import { useAuth } from "@/context/authContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { useAddOrder } from "@/services/order/order.query";
@@ -33,8 +32,7 @@ type PaymentMethod = "RAZORPAY" | "COD";
 const Checkout = () => {
   const navigate = useNavigate();
 
-  const { items, totalPrice, clearCart } = useCart();
-  const { discount, appliedCoupon } = useCoupon();
+  const { items, totalPrice, clearCart, discount, appliedCoupon } = useCart();
   const { user } = useAuth();
   const { openPayment } = useRazorpay();
   const addOrderMutation = useAddOrder();

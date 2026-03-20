@@ -1,8 +1,16 @@
 import { Tag, Sparkles, Clock, DollarSign, Copy, Check } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCoupon, type Coupon } from "@/context/couponContext";
+import { useCart } from "@/context/cartContext";
+import { useGetCoupons } from "@/services/coupon/coupon.query";
+import type { Coupon } from "@/services/coupon/coupon.types";
 import { toast } from "@/hooks/useToast";
 import { useState } from "react";
 
@@ -11,14 +19,23 @@ interface CouponModalProps {
 }
 
 const CouponModal = ({ cartTotal }: CouponModalProps) => {
-  const { availableCoupons, appliedCoupon, applyCoupon } = useCoupon();
+  const { appliedCoupon, applyCoupon } = useCart();
+  const { data: couponsResponse } = useGetCoupons({
+    is_active: true,
+    limit: 100,
+  });
+  const availableCoupons = couponsResponse?.data ?? [];
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const getBestCoupon = (): string | null => {
     let best: { code: string; saving: number } | null = null;
     for (const c of availableCoupons) {
-      if (new Date(c.expiresAt) < new Date() || cartTotal < c.minOrder) continue;
-      const saving = c.type === "percentage" ? (cartTotal * c.value) / 100 : c.value;
+      if (new Date(c.end_date) < new Date()) continue;
+      if (c.min_purchase && cartTotal < c.min_purchase) continue;
+      const saving =
+        c.discount_type === "PERCENTAGE"
+          ? (cartTotal * c.discount_value) / 100
+          : c.discount_value;
       if (!best || saving > best.saving) best = { code: c.code, saving };
     }
     return best?.code ?? null;
@@ -27,12 +44,15 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
   const bestCode = getBestCoupon();
 
   const handleApply = (coupon: Coupon) => {
-    const result = applyCoupon(coupon.code, cartTotal);
-    if (result.success) {
-      toast({ title: "Coupon applied!", description: result.message });
-    } else {
-      toast({ title: "Cannot apply", description: result.message });
+    if (coupon.min_purchase && cartTotal < coupon.min_purchase) {
+      toast({
+        title: "Cannot apply",
+        description: `Minimum purchase of ${coupon.min_purchase} required.`,
+      });
+      return;
     }
+
+    applyCoupon(coupon.id);
   };
 
   const handleCopy = (code: string) => {
@@ -43,15 +63,22 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
   };
 
   const getSaving = (c: Coupon) =>
-    c.type === "percentage" ? (cartTotal * c.value) / 100 : c.value;
+    c.discount_type === "PERCENTAGE"
+      ? (cartTotal * c.discount_value) / 100
+      : c.discount_value;
 
-  const isExpired = (c: Coupon) => new Date(c.expiresAt) < new Date();
-  const isEligible = (c: Coupon) => !isExpired(c) && cartTotal >= c.minOrder;
+  const isExpired = (c: Coupon) => new Date(c.end_date) < new Date();
+  const isEligible = (c: Coupon) =>
+    !isExpired(c) && (!c.min_purchase || cartTotal >= c.min_purchase);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-xs text-primary gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs text-primary gap-1"
+        >
           <Tag className="h-3.5 w-3.5" /> View All Coupons
         </Button>
       </DialogTrigger>
@@ -72,7 +99,11 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
               <div
                 key={coupon.code}
                 className={`relative border rounded-xl overflow-hidden transition-all ${
-                  expired ? "opacity-50 bg-muted/50" : isBest ? "border-primary bg-primary/5" : "bg-card"
+                  expired
+                    ? "opacity-50 bg-muted/50"
+                    : isBest
+                      ? "border-primary bg-primary/5"
+                      : "bg-card"
                 }`}
               >
                 {isBest && !expired && (
@@ -82,12 +113,20 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                 )}
 
                 {/* Discount highlight bar */}
-                <div className={`px-4 py-2 text-center font-bold text-sm ${
-                  expired ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-                }`}>
-                  {coupon.type === "percentage" ? `${coupon.value}% OFF` : `$${coupon.value} OFF`}
+                <div
+                  className={`px-4 py-2 text-center font-bold text-sm ${
+                    expired
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {coupon.discount_type === "PERCENTAGE"
+                    ? `${coupon.discount_value}% OFF`
+                    : `$${coupon.discount_value} OFF`}
                   {eligible && !expired && (
-                    <span className="ml-2 font-normal text-xs">(Save ${getSaving(coupon).toFixed(2)})</span>
+                    <span className="ml-2 font-normal text-xs">
+                      (Save ${getSaving(coupon).toFixed(2)})
+                    </span>
                   )}
                 </div>
 
@@ -108,14 +147,22 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                       )}
                     </button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{coupon.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {coupon.description}
+                  </p>
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" /> Min: ${coupon.minOrder}
+                      <DollarSign className="h-3 w-3" />
+                      Min:{" "}
+                      {coupon.min_purchase
+                        ? `$${coupon.min_purchase}`
+                        : "No minimum"}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {expired ? "Expired" : `Until ${new Date(coupon.expiresAt).toLocaleDateString()}`}
+                      {expired
+                        ? "Expired"
+                        : `Until ${new Date(coupon.end_date).toLocaleDateString()}`}
                     </span>
                   </div>
                   <Button
@@ -125,7 +172,13 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                     onClick={() => handleApply(coupon)}
                     className="w-full mt-3 text-xs"
                   >
-                    {isApplied ? "✓ Applied" : expired ? "Expired" : !eligible ? `Min order $${coupon.minOrder}` : "Apply Coupon"}
+                    {isApplied
+                      ? "✓ Applied"
+                      : expired
+                        ? "Expired"
+                        : !eligible
+                          ? `Min order $${coupon.min_purchase}`
+                          : "Apply Coupon"}
                   </Button>
                 </div>
               </div>

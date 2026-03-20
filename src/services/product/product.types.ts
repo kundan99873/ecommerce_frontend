@@ -16,14 +16,16 @@ export interface ProductVariant {
 export type DiscountType = "FIXED" | "PERCENTAGE";
 
 export interface ProductCoupon {
+  id?: number;
+  coupon_id?: number;
   code: string;
   discount_type: DiscountType;
   discount_value: number;
   max_discount: number | null;
   description: string;
   min_purchase: number | null;
-  start_date: string; 
-  end_date: string;  
+  start_date: string;
+  end_date: string;
 }
 
 export interface Product {
@@ -65,7 +67,11 @@ export interface ProductWithoutVariantResponse {
 }
 
 export type SortOptions = "price_low" | "price_high" | "top_rated" | "newest";
-export type FilterOptions = "in_stock" | "out_of_stock" | "featured" | "trending"
+export type FilterOptions =
+  | "in_stock"
+  | "out_of_stock"
+  | "featured"
+  | "trending";
 
 export interface GetProductsQuery {
   page?: number;

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cartContext";
-import { useCoupon } from "@/context/couponContext";
 import CouponInput from "./couponInput";
 import CouponModal from "./couponModal";
 import { formatCurrency } from "@/utils/utils";
@@ -24,9 +23,10 @@ const CartDrawer = () => {
     updateQuantity,
     totalPrice,
     totalItems,
+    discount,
+    appliedCoupon,
     clearCart,
   } = useCart();
-  const { discount, appliedCoupon } = useCoupon();
   const shipping = totalPrice >= 100 ? 0 : 9.99;
   const finalTotal = totalPrice - discount + shipping;
 
@@ -164,7 +164,10 @@ const CartDrawer = () => {
                 <span>Total</span>
                 <span>{formatCurrency(finalTotal)}</span>
               </div>
-              <Button className="w-full py-5 text-sm font-semibold tracking-wide" onClick={handleCheckout}>
+              <Button
+                className="w-full py-5 text-sm font-semibold tracking-wide"
+                onClick={handleCheckout}
+              >
                 Checkout <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {shipping > 0 && (

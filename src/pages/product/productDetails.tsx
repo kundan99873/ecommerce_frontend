@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Loader2,
   Heart,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +22,12 @@ import ProductDetailSkeleton from "@/components/product/productCardSkeleton";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
 import { trackProductView } from "@/components/product/recentlyViewed";
-import ProductReviews from "@/components/product/productReview";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { addItem, loading } = useCart();
+  const { addItem, loading, items } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
 
   const { data, isLoading } = useGetProduct((slug as string) ?? skipToken);
@@ -62,11 +62,15 @@ const ProductDetail = () => {
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | undefined>(
+    undefined,
+  );
 
   /* Reset quantity & image when variant changes */
   useEffect(() => {
     setQuantity(1);
     setActiveImage(0);
+    setSelectedCouponId(undefined);
   }, [selectedVariant?.sku]);
 
   const colors = useMemo(() => {
@@ -83,6 +87,9 @@ const ProductDetail = () => {
 
   const images = selectedVariant?.images || [];
   const isOutOfStock = selectedVariant?.stock === 0;
+  const alreadyInCart = product
+    ? items.some((item) => item.slug === product.slug)
+    : false;
   const wishlisted = selectedVariant
     ? isInWishlist(selectedVariant.sku)
     : false;
@@ -291,22 +298,34 @@ const ProductDetail = () => {
             </div>
 
             <Button
-              disabled={isOutOfStock || loading}
+              disabled={isOutOfStock || loading || alreadyInCart}
               className="flex-1"
-              onClick={() => addItem(selectedVariant.sku, quantity)}
+              onClick={() =>
+                addItem(selectedVariant.sku, quantity, selectedCouponId)
+              }
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : alreadyInCart ? (
+                "Already in your cart"
               ) : (
                 "Add to Cart"
               )}
             </Button>
           </div>
 
-          {!isOutOfStock && (
+          {alreadyInCart && (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-success">
+              <CheckCircle2 className="h-4 w-4" /> This product is already in
+              your cart.
+            </p>
+          )}
+
+          {!isOutOfStock && !alreadyInCart && (
             <ProductCoupon
               price={selectedVariant.discounted_price * quantity}
               availableCoupons={product.coupons}
+              onCouponSelect={setSelectedCouponId}
             />
           )}
 

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { Heart, Loader2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Heart, Loader2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import type { Product } from "@/services/product/product.types";
@@ -14,11 +14,12 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const { addItem, addingSku } = useCart();
+  const { addItem, addingSku, items } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toggleItem, isInWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.variants[0].sku);
+  const alreadyInCart = items.some((item) => item.slug === product.slug);
 
   if (!product?.variants?.[0]?.images?.[0]?.image_url) return null;
 
@@ -96,25 +97,32 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             )}
           </div>
         </div>
-        <Button
-          size="icon"
-          variant="outline"
-          className="h-8 w-8 shrink-0 mt-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-          onClick={(e) => {
-            e.preventDefault();
-            if (!isAuthenticated) return navigate("/login");
-            addItem(product.variants[0].sku, 1);
-          }}
-          disabled={
-            !product.variants[0].stock || addingSku === product.variants[0].sku
-          }
-        >
-          {addingSku === product.variants[0].sku ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ShoppingBag className="h-4 w-4" />
-          )}
-        </Button>
+        {alreadyInCart ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success mt-1">
+            <CheckCircle2 className="h-3.5 w-3.5" /> In Cart
+          </span>
+        ) : (
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8 shrink-0 mt-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isAuthenticated) return navigate("/login");
+              addItem(product.variants[0].sku, 1);
+            }}
+            disabled={
+              !product.variants[0].stock ||
+              addingSku === product.variants[0].sku
+            }
+          >
+            {addingSku === product.variants[0].sku ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShoppingBag className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
     </motion.div>
   );

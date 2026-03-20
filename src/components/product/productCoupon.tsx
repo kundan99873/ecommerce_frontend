@@ -4,15 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 // import { useCoupon } from "@/context/couponContext";
 import { toast } from "@/hooks/useToast";
-import type { ProductCoupon } from "@/services/product/product.types";
+import type { ProductCoupon as ProductCouponType } from "@/services/product/product.types";
 import { formatCurrency } from "@/utils/utils";
 
 interface ProductCouponProps {
   price: number;
-  availableCoupons: ProductCoupon[];
+  availableCoupons: ProductCouponType[];
+  onCouponSelect?: (couponId?: number) => void;
 }
 
-const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
+const ProductCoupon = ({
+  price,
+  availableCoupons,
+  onCouponSelect,
+}: ProductCouponProps) => {
   // const { availableCoupons } = useCoupon();
   const [code, setCode] = useState("");
   const [result, setResult] = useState<{
@@ -22,12 +27,15 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
   } | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  console.log({ availableCoupons });
+
   const handleCheck = () => {
     if (!code.trim()) return;
     const coupon = availableCoupons.find(
       (c) => c.code.toUpperCase() === code.toUpperCase(),
     );
     if (!coupon) {
+      onCouponSelect?.(undefined);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -36,6 +44,7 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
       return;
     }
     if (new Date(coupon.end_date) < new Date()) {
+      onCouponSelect?.(undefined);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -44,6 +53,7 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
       return;
     }
     if (coupon.min_purchase && price < coupon.min_purchase) {
+      onCouponSelect?.(undefined);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -55,9 +65,13 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
       coupon.discount_type === "PERCENTAGE"
         ? (price * coupon.discount_value) / 100
         : coupon.discount_value;
+    const resolvedCouponId =
+      coupon.id ??
+      (coupon as ProductCouponType & { coupon_id?: number }).coupon_id;
 
     console.log({ price, disc });
     const discounted = Math.max(0, price - disc);
+    onCouponSelect?.(resolvedCouponId);
     setResult({
       valid: true,
       discountedPrice: discounted,
@@ -69,6 +83,7 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
     navigator.clipboard.writeText(couponCode);
     setCopiedCode(couponCode);
     setCode(couponCode);
+    onCouponSelect?.(undefined);
     setResult(null);
     toast({
       title: "Copied!",
@@ -123,6 +138,7 @@ const ProductCoupon = ({ price, availableCoupons }: ProductCouponProps) => {
           value={code}
           onChange={(e) => {
             setCode(e.target.value.toUpperCase());
+            onCouponSelect?.(undefined);
             setResult(null);
           }}
           onKeyDown={(e) => e.key === "Enter" && handleCheck()}

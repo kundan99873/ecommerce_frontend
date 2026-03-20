@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addToCart,
+  applyCartCoupon,
   clearCart,
   getCartItems,
+  removeCartCoupon,
   removeFromCart,
   updateCartItem,
 } from "./cart.api";
@@ -129,7 +131,12 @@ const useRemoveFromCart = () => {
 const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse, Error, { slug: string; quantity: number }, { previousCart: any }>({
+  return useMutation<
+    ApiResponse,
+    Error,
+    { slug: string; quantity: number },
+    { previousCart: any }
+  >({
     mutationFn: (body) => updateCartItem(body),
 
     onMutate: async ({ slug, quantity }) => {
@@ -206,11 +213,31 @@ const useClearCart = () => {
   });
 };
 
+const useApplyCartCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse, Error, number>({
+    mutationFn: (couponId) => applyCartCoupon(couponId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
+  });
+};
+
+const useRemoveCartCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse, Error, void>({
+    mutationFn: () => removeCartCoupon(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
+  });
+};
+
 export {
   useGetCartItems,
   useAddToCart,
   useRemoveFromCart,
   useUpdateCartItem,
+  useApplyCartCoupon,
+  useRemoveCartCoupon,
   useClearCart,
 };
 
