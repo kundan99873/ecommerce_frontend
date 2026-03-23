@@ -12,10 +12,11 @@ export const wishlistKeys = {
   all: ["wishlist"],
 };
 
-const useGetWishlist = () => {
+const useGetWishlist = (enabled = true) => {
   return useQuery<ProductResponse>({
     queryKey: wishlistKeys.all,
     queryFn: getWishlistApi,
+    enabled,
   });
 };
 

@@ -1,5 +1,5 @@
 import { useParams, Link, useSearchParams } from "react-router";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Minus,
   Plus,
@@ -15,13 +15,15 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "motion/react";
 import { useCart } from "@/context/cartContext";
 import { useWishlist } from "@/context/wishlistContext";
-import { useGetProduct } from "@/services/product/product.query";
+import {
+  useGetProduct,
+  useTrackProductView,
+} from "@/services/product/product.query";
 import { skipToken } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/utils";
 import ProductDetailSkeleton from "@/components/product/productCardSkeleton";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
-import { trackProductView } from "@/components/product/recentlyViewed";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -29,6 +31,8 @@ const ProductDetail = () => {
 
   const { addItem, loading, items } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
+  const { mutate: trackProductView } = useTrackProductView();
+  const trackedSlugRef = useRef<string | null>(null);
 
   const { data, isLoading } = useGetProduct((slug as string) ?? skipToken);
 
@@ -52,9 +56,11 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (product?.slug) {
+      if (trackedSlugRef.current === product.slug) return;
+      trackedSlugRef.current = product.slug;
       trackProductView(product.slug);
     }
-  }, [product?.slug]);
+  }, [product?.slug, trackProductView]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -62,15 +68,14 @@ const ProductDetail = () => {
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [selectedCouponId, setSelectedCouponId] = useState<number | undefined>(
-    undefined,
-  );
-
+  const [selectedCouponCode, setSelectedCouponCode] = useState<
+    string | undefined
+  >(undefined);
   /* Reset quantity & image when variant changes */
   useEffect(() => {
     setQuantity(1);
     setActiveImage(0);
-    setSelectedCouponId(undefined);
+    setSelectedCouponCode(undefined);
   }, [selectedVariant?.sku]);
 
   const colors = useMemo(() => {
@@ -87,8 +92,8 @@ const ProductDetail = () => {
 
   const images = selectedVariant?.images || [];
   const isOutOfStock = selectedVariant?.stock === 0;
-  const alreadyInCart = product
-    ? items.some((item) => item.slug === product.slug)
+  const alreadyInCart = selectedVariant
+    ? items.some((item) => item.sku === selectedVariant.sku)
     : false;
   const wishlisted = selectedVariant
     ? isInWishlist(selectedVariant.sku)
@@ -301,7 +306,7 @@ const ProductDetail = () => {
               disabled={isOutOfStock || loading || alreadyInCart}
               className="flex-1"
               onClick={() =>
-                addItem(selectedVariant.sku, quantity, selectedCouponId)
+                addItem(selectedVariant.sku, quantity, selectedCouponCode)
               }
             >
               {loading ? (
@@ -316,7 +321,7 @@ const ProductDetail = () => {
 
           {alreadyInCart && (
             <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-success">
-              <CheckCircle2 className="h-4 w-4" /> This product is already in
+              <CheckCircle2 className="h-4 w-4" /> This variant is already in
               your cart.
             </p>
           )}
@@ -325,7 +330,7 @@ const ProductDetail = () => {
             <ProductCoupon
               price={selectedVariant.discounted_price * quantity}
               availableCoupons={product.coupons}
-              onCouponSelect={setSelectedCouponId}
+              onCouponSelect={setSelectedCouponCode}
             />
           )}
 

@@ -17,7 +17,6 @@ export type DiscountType = "FIXED" | "PERCENTAGE";
 
 export interface ProductCoupon {
   id?: number;
-  coupon_id?: number;
   code: string;
   discount_type: DiscountType;
   discount_value: number;

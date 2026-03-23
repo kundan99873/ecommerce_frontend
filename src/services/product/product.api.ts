@@ -61,6 +61,21 @@ const addReviewToProduct = async (slug: string, rating: number, comment: string)
   return response.data;
 };
 
+const getRecentlyViewedProducts = async (): Promise<ProductResponse> => {
+  const response = await api.get(`/product/recently-viewed`);
+  return response.data;
+}
+
+const trackProductView = async (slug: string): Promise<ApiResponse> => {
+  const response = await api.post(`/product/recently-visited/${slug}`);
+  return response.data;
+};
+
+const getTopRatedProducts = async (): Promise<ProductResponse> => {
+  const response = await api.get(`/product/top-rated`);
+  return response.data;
+};
+
 export {
   fetchProducts,
   fetchProductBySlug,
@@ -69,4 +84,7 @@ export {
   updateProduct,
   deleteProductBySlug,
   addReviewToProduct,
+  getRecentlyViewedProducts,
+  trackProductView,
+  getTopRatedProducts,
 };

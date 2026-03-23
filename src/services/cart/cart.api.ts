@@ -17,20 +17,24 @@ const updateCartItem = async (body: CartBody): Promise<ApiResponse> => {
   return response.data;
 };
 
-const applyCartCoupon = async (coupon_id: number): Promise<ApiResponse> => {
-  const body: CartCouponBody = { coupon_id };
-  const response = await api.patch("/users/cart", body);
+const applyCartCoupon = async (coupon_code: string): Promise<ApiResponse> => {
+  const body: CartCouponBody = { coupon_code };
+  const response = await api.post("/users/cart/coupon", body);
   return response.data;
 };
 
 const removeCartCoupon = async (): Promise<ApiResponse> => {
-  const body: CartCouponBody = { coupon_id: null };
-  const response = await api.patch("/users/cart", body);
+  const response = await api.delete("/users/cart/coupon");
   return response.data;
 };
 
 const clearCart = async (): Promise<ApiResponse> => {
   const response = await api.post("/users/cart/clear");
+  return response.data;
+};
+
+const getAllCartCoupons = async (): Promise<ApiResponse> => {
+  const response = await api.get("/users/cart/coupons/view-all");
   return response.data;
 };
 
@@ -46,5 +50,6 @@ export {
   applyCartCoupon,
   removeCartCoupon,
   clearCart,
+  getAllCartCoupons,
   getCartItems,
 };

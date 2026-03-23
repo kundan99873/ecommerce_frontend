@@ -6,6 +6,7 @@ import {
   useRemoveFromWishlist,
 } from "@/services/wishlist/wishlist.query";
 import type { Product } from "@/services/product/product.types";
+import { useAuth } from "@/context/authContext";
 
 interface WishlistContextType {
   items: Product[];
@@ -25,12 +26,13 @@ const WishlistContext = createContext<WishlistContextType | undefined>(
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { data, isLoading, isFetching } = useGetWishlist();
+  const { isAuthenticated } = useAuth();
+  const { data, isLoading, isFetching } = useGetWishlist(isAuthenticated);
 
   const addMutation = useAddToWishlist();
   const removeMutation = useRemoveFromWishlist();
 
-  const items = data?.data ?? [];
+  const items = isAuthenticated ? (data?.data ?? []) : [];
 
   const addItem = useCallback(
     (slug: string) => {
@@ -85,7 +87,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
       removeItem,
       toggleItem,
       isInWishlist,
-      loading: isLoading || isFetching,
+      loading: isAuthenticated ? isLoading || isFetching : false,
       moveLoading:
         addMutation.isPending && addMutation.variables
           ? addMutation.variables
@@ -101,6 +103,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
       removeItem,
       toggleItem,
       isInWishlist,
+      isAuthenticated,
       isLoading,
       isFetching,
       addMutation.isPending,

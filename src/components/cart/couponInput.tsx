@@ -1,22 +1,35 @@
 import { useState } from "react";
-import { Tag, X } from "lucide-react";
+import { Tag, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cartContext";
 import { useGetCoupons } from "@/services/coupon/coupon.query";
 import { toast } from "@/hooks/useToast";
+import { formatCurrency } from "@/utils/utils";
 
 interface CouponInputProps {
   cartTotal: number;
 }
 
 const CouponInput = ({ cartTotal }: CouponInputProps) => {
-  const { appliedCoupon, discount, applyCoupon, removeCoupon } = useCart();
+  const {
+    appliedCoupon,
+    discount,
+    applyCoupon,
+    removeCoupon,
+    applyingCouponCode,
+  } = useCart();
   const { data: couponsResponse } = useGetCoupons({
     is_active: true,
     limit: 100,
   });
   const [code, setCode] = useState("");
+
+  const couponToApply = couponsResponse?.data.find(
+    (c) => c.code.toUpperCase() === code.trim().toUpperCase(),
+  );
+  const isApplyingCurrentCode =
+    couponToApply !== undefined && applyingCouponCode === couponToApply.code;
 
   const handleApply = () => {
     if (!code.trim()) return;
@@ -38,7 +51,7 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
       return;
     }
 
-    applyCoupon(coupon.id);
+    applyCoupon(coupon.code);
     setCode("");
   };
 
@@ -50,7 +63,7 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
           <div>
             <span className="text-sm font-medium">{appliedCoupon.code}</span>
             <span className="text-xs text-muted-foreground ml-2">
-              -${discount.toFixed(2)}
+              {formatCurrency(discount)}
             </span>
           </div>
         </div>
@@ -77,9 +90,16 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
         variant="outline"
         size="sm"
         onClick={handleApply}
-        disabled={!code.trim()}
+        disabled={!code.trim() || isApplyingCurrentCode}
       >
-        Apply
+        {isApplyingCurrentCode ? (
+          <span className="inline-flex items-center gap-1.5">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Applying...
+          </span>
+        ) : (
+          "Apply"
+        )}
       </Button>
     </div>
   );

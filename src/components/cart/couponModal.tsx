@@ -1,4 +1,12 @@
-import { Tag, Sparkles, Clock, DollarSign, Copy, Check } from "lucide-react";
+import {
+  Tag,
+  Sparkles,
+  Clock,
+  DollarSign,
+  Copy,
+  Check,
+  Loader2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cartContext";
-import { useGetCoupons } from "@/services/coupon/coupon.query";
-import type { Coupon } from "@/services/coupon/coupon.types";
+import { useGetAllCartCoupons } from "@/services/cart/cart.query";
+import type { CartAvailableCoupon } from "@/services/cart/cart.types";
 import { toast } from "@/hooks/useToast";
 import { useState } from "react";
 
@@ -19,12 +27,15 @@ interface CouponModalProps {
 }
 
 const CouponModal = ({ cartTotal }: CouponModalProps) => {
-  const { appliedCoupon, applyCoupon } = useCart();
-  const { data: couponsResponse } = useGetCoupons({
-    is_active: true,
-    limit: 100,
-  });
-  const availableCoupons = couponsResponse?.data ?? [];
+  const { appliedCoupon, applyCoupon, applyingCouponCode } = useCart();
+  const { data: couponsResponse } = useGetAllCartCoupons();
+  const couponPayload = couponsResponse?.data as
+    | CartAvailableCoupon[]
+    | { coupons?: CartAvailableCoupon[] }
+    | undefined;
+  const availableCoupons = Array.isArray(couponPayload)
+    ? couponPayload
+    : (couponPayload?.coupons ?? []);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const getBestCoupon = (): string | null => {
@@ -43,7 +54,7 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
 
   const bestCode = getBestCoupon();
 
-  const handleApply = (coupon: Coupon) => {
+  const handleApply = (coupon: CartAvailableCoupon) => {
     if (coupon.min_purchase && cartTotal < coupon.min_purchase) {
       toast({
         title: "Cannot apply",
@@ -52,7 +63,7 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
       return;
     }
 
-    applyCoupon(coupon.id);
+    applyCoupon(coupon.code);
   };
 
   const handleCopy = (code: string) => {
@@ -62,13 +73,14 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const getSaving = (c: Coupon) =>
+  const getSaving = (c: CartAvailableCoupon) =>
     c.discount_type === "PERCENTAGE"
       ? (cartTotal * c.discount_value) / 100
       : c.discount_value;
 
-  const isExpired = (c: Coupon) => new Date(c.end_date) < new Date();
-  const isEligible = (c: Coupon) =>
+  const isExpired = (c: CartAvailableCoupon) =>
+    new Date(c.end_date) < new Date();
+  const isEligible = (c: CartAvailableCoupon) =>
     !isExpired(c) && (!c.min_purchase || cartTotal >= c.min_purchase);
 
   return (
@@ -93,7 +105,10 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
             const expired = isExpired(coupon);
             const eligible = isEligible(coupon);
             const isBest = coupon.code === bestCode;
-            const isApplied = appliedCoupon?.code === coupon.code;
+            const isApplied =
+              appliedCoupon?.id === coupon.id ||
+              (!appliedCoupon && Boolean(coupon.is_applied));
+            const isApplying = applyingCouponCode === coupon.code;
 
             return (
               <div
@@ -112,7 +127,6 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                   </Badge>
                 )}
 
-                {/* Discount highlight bar */}
                 <div
                   className={`px-4 py-2 text-center font-bold text-sm ${
                     expired
@@ -147,9 +161,11 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                       )}
                     </button>
                   </div>
+
                   <p className="text-sm text-muted-foreground">
                     {coupon.description}
                   </p>
+
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
@@ -165,20 +181,28 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                         : `Until ${new Date(coupon.end_date).toLocaleDateString()}`}
                     </span>
                   </div>
+
                   <Button
                     size="sm"
                     variant={isApplied ? "secondary" : "default"}
-                    disabled={expired || !eligible || isApplied}
+                    disabled={expired || !eligible || isApplied || isApplying}
                     onClick={() => handleApply(coupon)}
                     className="w-full mt-3 text-xs"
                   >
-                    {isApplied
-                      ? "✓ Applied"
-                      : expired
-                        ? "Expired"
-                        : !eligible
-                          ? `Min order $${coupon.min_purchase}`
-                          : "Apply Coupon"}
+                    {isApplying ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Applying...
+                      </span>
+                    ) : isApplied ? (
+                      "Applied"
+                    ) : expired ? (
+                      "Expired"
+                    ) : !eligible ? (
+                      `Min order $${coupon.min_purchase}`
+                    ) : (
+                      "Apply Coupon"
+                    )}
                   </Button>
                 </div>
               </div>

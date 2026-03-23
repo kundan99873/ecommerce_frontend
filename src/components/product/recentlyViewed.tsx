@@ -1,25 +1,12 @@
-import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import { products, type Product } from "@/data/products";
 import ProductCard from "./productCard";
-
-const STORAGE_KEY = "lumiere_recently_viewed";
-const MAX_ITEMS = 8;
-
-export const trackProductView = (productId: number) => {
-  const ids: number[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  const updated = [productId, ...ids.filter((id) => id !== productId)].slice(0, MAX_ITEMS);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-};
+import { useAuth } from "@/context/authContext";
+import { useRecentlyViewedProducts } from "@/services/product/product.query";
 
 const RecentlyViewed = () => {
-  const [viewed, setViewed] = useState<Product[]>([]);
-
-  useEffect(() => {
-    const ids: number[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const items = ids.map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[];
-    setViewed(items);
-  }, []);
+  const { isAuthenticated } = useAuth();
+  const { data } = useRecentlyViewedProducts(isAuthenticated);
+  const viewed = data?.data ?? [];
 
   if (viewed.length === 0) return null;
 
@@ -31,7 +18,7 @@ const RecentlyViewed = () => {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {viewed.slice(0, 4).map((p, i) => (
-          <ProductCard key={p.id} product={p} index={i} />
+          <ProductCard key={p.slug} product={p} index={i} />
         ))}
       </div>
     </section>

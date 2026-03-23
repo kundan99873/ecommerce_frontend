@@ -6,7 +6,10 @@ import ProductCard from "@/components/product/productCard";
 // import FlashDeals from "@/components/home/flashDeals";
 import RecentlyViewed from "@/components/product/recentlyViewed";
 import TrustBadges from "@/components/home/trustBadges";
-import { useProducts } from "@/services/product/product.query";
+import {
+  useProducts,
+  useTopRatedProducts,
+} from "@/services/product/product.query";
 import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 
 const Home = () => {
@@ -18,11 +21,8 @@ const Home = () => {
     page: 1,
     filter: "featured",
   });
-  const { data: trendingProduct, isLoading: trendingLoading } = useProducts({
-    limit: 5,
-    page: 1,
-    filter: "trending",
-  });
+  const { data: topRatedProducts, isLoading: topRatedLoading } =
+    useTopRatedProducts();
 
   return (
     <>
@@ -55,22 +55,24 @@ const Home = () => {
 
       {/* <FlashDeals /> */}
 
-      {/* Trending */}
+      {/* Top Rated */}
       <section className="container mx-auto px-4 py-16">
         <div className="flex items-center gap-3 mb-8">
           <TrendingUp className="h-6 w-6 text-primary" />
           <h2 className="text-2xl md:text-3xl font-display font-bold">
-            Trending Now
+            Top Rated
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {trendingLoading
+          {topRatedLoading
             ? Array(4)
                 .fill(undefined)
                 .map((_, i) => <ProductCardSkeleton key={i} />)
-            : trendingProduct?.data.map((p, i) => (
-                <ProductCard key={p.slug} product={p} index={i} />
-              ))}
+            : topRatedProducts?.data
+                .slice(0, 4)
+                .map((p, i) => (
+                  <ProductCard key={p.slug} product={p} index={i} />
+                ))}
         </div>
       </section>
 

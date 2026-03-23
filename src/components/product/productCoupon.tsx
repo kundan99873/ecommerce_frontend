@@ -10,7 +10,7 @@ import { formatCurrency } from "@/utils/utils";
 interface ProductCouponProps {
   price: number;
   availableCoupons: ProductCouponType[];
-  onCouponSelect?: (couponId?: number) => void;
+  onCouponSelect?: (couponCode?: string) => void;
 }
 
 const ProductCoupon = ({
@@ -26,8 +26,9 @@ const ProductCoupon = ({
     message: string;
   } | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-
-  console.log({ availableCoupons });
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(
+    null,
+  );
 
   const handleCheck = () => {
     if (!code.trim()) return;
@@ -36,6 +37,7 @@ const ProductCoupon = ({
     );
     if (!coupon) {
       onCouponSelect?.(undefined);
+      setAppliedCouponCode(null);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -45,6 +47,7 @@ const ProductCoupon = ({
     }
     if (new Date(coupon.end_date) < new Date()) {
       onCouponSelect?.(undefined);
+      setAppliedCouponCode(null);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -54,6 +57,7 @@ const ProductCoupon = ({
     }
     if (coupon.min_purchase && price < coupon.min_purchase) {
       onCouponSelect?.(undefined);
+      setAppliedCouponCode(null);
       setResult({
         valid: false,
         discountedPrice: price,
@@ -65,13 +69,10 @@ const ProductCoupon = ({
       coupon.discount_type === "PERCENTAGE"
         ? (price * coupon.discount_value) / 100
         : coupon.discount_value;
-    const resolvedCouponId =
-      coupon.id ??
-      (coupon as ProductCouponType & { coupon_id?: number }).coupon_id;
 
-    console.log({ price, disc });
     const discounted = Math.max(0, price - disc);
-    onCouponSelect?.(resolvedCouponId);
+    onCouponSelect?.(coupon.code);
+    setAppliedCouponCode(coupon.code);
     setResult({
       valid: true,
       discountedPrice: discounted,
@@ -80,14 +81,34 @@ const ProductCoupon = ({
   };
 
   const handleCopy = (couponCode: string) => {
+    const coupon = availableCoupons.find((c) => c.code === couponCode);
+
     navigator.clipboard.writeText(couponCode);
     setCopiedCode(couponCode);
     setCode(couponCode);
-    onCouponSelect?.(undefined);
-    setResult(null);
+
+    if (!coupon) {
+      onCouponSelect?.(undefined);
+      setAppliedCouponCode(null);
+      setResult(null);
+    } else {
+      const disc =
+        coupon.discount_type === "PERCENTAGE"
+          ? (price * coupon.discount_value) / 100
+          : coupon.discount_value;
+      const discounted = Math.max(0, price - disc);
+      onCouponSelect?.(coupon.code);
+      setAppliedCouponCode(coupon.code);
+      setResult({
+        valid: true,
+        discountedPrice: discounted,
+        message: `You save ${formatCurrency(disc)} with ${coupon.code}`,
+      });
+    }
+
     toast({
       title: "Copied!",
-      description: `${couponCode} copied & applied to input`,
+      description: `${couponCode} copied and selected`,
     });
     setTimeout(() => setCopiedCode(null), 2000);
   };
@@ -107,28 +128,41 @@ const ProductCoupon = ({
       {/* Quick coupon suggestions */}
       {availableCoupons?.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {availableCoupons.map((c) => (
-            <button
-              key={c.code}
-              onClick={() => handleCopy(c.code)}
-              className="flex items-center gap-1.5 text-xs border border-dashed border-primary/40 bg-primary/5 rounded-lg px-3 py-1.5 hover:bg-primary/10 transition-colors group"
-            >
-              <code className="font-mono font-bold tracking-wider text-primary">
-                {c.code}
-              </code>
-              <span className="text-muted-foreground">
-                {c.discount_type === "PERCENTAGE"
-                  ? `${c.discount_value}%`
-                  : `${formatCurrency(c.discount_value)}`}{" "}
-                off
-              </span>
-              {copiedCode === c.code ? (
-                <Check className="h-3 w-3 text-primary" />
-              ) : (
-                <Copy className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
-              )}
-            </button>
-          ))}
+          {availableCoupons.map((c) => {
+            const isApplied = appliedCouponCode === c.code;
+
+            return (
+              <button
+                key={c.code}
+                onClick={() => handleCopy(c.code)}
+                disabled={isApplied}
+                className={`flex items-center gap-1.5 text-xs border border-dashed rounded-lg px-3 py-1.5 transition-colors group ${
+                  isApplied
+                    ? "border-primary bg-primary/10 cursor-not-allowed opacity-70"
+                    : "border-primary/40 bg-primary/5 hover:bg-primary/10"
+                }`}
+              >
+                <code className="font-mono font-bold tracking-wider text-primary">
+                  {c.code}
+                </code>
+                <span className="text-muted-foreground">
+                  {c.discount_type === "PERCENTAGE"
+                    ? `${c.discount_value}%`
+                    : `${formatCurrency(c.discount_value)}`}{" "}
+                  off
+                </span>
+                {isApplied ? (
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    Applied
+                  </span>
+                ) : copiedCode === c.code ? (
+                  <Check className="h-3 w-3 text-primary" />
+                ) : (
+                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -139,6 +173,7 @@ const ProductCoupon = ({
           onChange={(e) => {
             setCode(e.target.value.toUpperCase());
             onCouponSelect?.(undefined);
+            setAppliedCouponCode(null);
             setResult(null);
           }}
           onKeyDown={(e) => e.key === "Enter" && handleCheck()}
@@ -148,7 +183,7 @@ const ProductCoupon = ({
           variant="default"
           size="sm"
           onClick={handleCheck}
-          disabled={!code.trim()}
+          disabled={!code.trim() || appliedCouponCode === code}
         >
           Apply
         </Button>

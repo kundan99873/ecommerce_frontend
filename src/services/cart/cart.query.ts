@@ -3,6 +3,7 @@ import {
   addToCart,
   applyCartCoupon,
   clearCart,
+  getAllCartCoupons,
   getCartItems,
   removeCartCoupon,
   removeFromCart,
@@ -14,10 +15,11 @@ import type { ApiResponse } from "@/api/api.types";
 export const cartKeys = {
   all: ["cart"],
 };
-const useGetCartItems = () => {
+const useGetCartItems = (enabled = true) => {
   return useQuery({
     queryFn: getCartItems,
     queryKey: cartKeys.all,
+    enabled,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -216,9 +218,12 @@ const useClearCart = () => {
 const useApplyCartCoupon = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse, Error, number>({
-    mutationFn: (couponId) => applyCartCoupon(couponId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (couponCode) => applyCartCoupon(couponCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["cart_coupons"] });
+    },
   });
 };
 
@@ -227,7 +232,17 @@ const useRemoveCartCoupon = () => {
 
   return useMutation<ApiResponse, Error, void>({
     mutationFn: () => removeCartCoupon(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: cartKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["cart_coupons"] });
+    },
+  });
+};
+
+const useGetAllCartCoupons = () => {
+  return useQuery({
+    queryKey: ["cart_coupons"],
+    queryFn: getAllCartCoupons,
   });
 };
 
@@ -238,6 +253,7 @@ export {
   useUpdateCartItem,
   useApplyCartCoupon,
   useRemoveCartCoupon,
+  useGetAllCartCoupons,
   useClearCart,
 };
 

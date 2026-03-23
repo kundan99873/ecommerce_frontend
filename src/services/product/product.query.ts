@@ -7,6 +7,9 @@ import {
   deleteProductBySlug,
   fetchProductWithoutVariant,
   addReviewToProduct,
+  getRecentlyViewedProducts,
+  trackProductView,
+  getTopRatedProducts,
 } from "./product.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
@@ -97,6 +100,28 @@ const useAddReviewToProduct = () => {
   });
 };
 
+const useRecentlyViewedProducts = (enabled = true) => {
+  return useQuery<ProductResponse>({
+    queryKey: ["products", "recently-viewed"],
+    queryFn: getRecentlyViewedProducts,
+    enabled,
+  });
+};
+
+const useTopRatedProducts = (enabled = true) => {
+  return useQuery<ProductResponse>({
+    queryKey: ["products", "top-rated"],
+    queryFn: getTopRatedProducts,
+    enabled,
+  });
+};
+
+const useTrackProductView = () => {
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (slug) => trackProductView(slug),
+  });
+};
+
 export {
   useProducts,
   useGetProduct,
@@ -106,4 +131,7 @@ export {
   useInfiniteProducts,
   useGetProductWithoutVariant,
   useAddReviewToProduct,
+  useRecentlyViewedProducts,
+  useTopRatedProducts,
+  useTrackProductView,
 };

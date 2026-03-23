@@ -17,11 +17,12 @@ import {
   useUpdateCartItem,
 } from "@/services/cart/cart.query";
 import type { CartCoupon, CartItem } from "@/services/cart/cart.types";
+import { useAuth } from "@/context/authContext";
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (slug: string, quantity?: number, coupon_id?: number) => void;
-  applyCoupon: (couponId: number) => void;
+  addItem: (slug: string, quantity?: number, coupon_code?: string) => void;
+  applyCoupon: (couponCode: string) => void;
   removeCoupon: () => void;
   removeItem: (slug: string) => void;
   updateQuantity: (slug: string, quantity: number) => void;
@@ -32,6 +33,7 @@ interface CartContextType {
   discount: number;
   loading: boolean;
   addingSku: string | null;
+  applyingCouponCode: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,18 +41,24 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
 
   const {
     data: cartData,
     isLoading: cartLoading,
     isFetching,
-  } = useGetCartItems();
+  } = useGetCartItems(isAuthenticated);
   useEffect(() => {
+    if (!isAuthenticated) {
+      setItems([]);
+      return;
+    }
+
     if (cartData?.success) {
       setItems(cartData.data.items);
     }
-  }, [cartData]);
+  }, [cartData, isAuthenticated]);
 
   const addToCart = useAddToCart();
   const applyCartCoupon = useApplyCartCoupon();
@@ -60,12 +68,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearCartItem = useClearCart();
 
   const addItem = useCallback(
-    (slug: string, quantity = 1, coupon_id?: number) => {
+    (slug: string, quantity = 1, coupon_code?: string) => {
       addToCart.mutateAsync(
         {
           slug,
           quantity,
-          ...(coupon_id !== undefined ? { coupon_id } : {}),
+          ...(coupon_code !== undefined ? { coupon_code } : {}),
         },
         {
           onSuccess: (data) => {
@@ -88,8 +96,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const applyCoupon = useCallback(
-    (couponId: number) => {
-      applyCartCoupon.mutate(couponId, {
+    (couponCode: string) => {
+      applyCartCoupon.mutate(couponCode, {
         onSuccess: () => {
           toast({
             title: "Coupon applied",
@@ -127,6 +135,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const addingSku =
     addToCart.isPending && addToCart.variables
       ? addToCart.variables.slug
+      : null;
+
+  const applyingCouponCode =
+    applyCartCoupon.isPending && typeof applyCartCoupon.variables === "string"
+      ? applyCartCoupon.variables
       : null;
 
   const removeItem = useCallback(
@@ -191,9 +204,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, [clearCartItem]);
 
-  const totalItems = cartData?.data.total_items || 0;
-  const totalPrice = cartData?.data.total_price || 0;
-  const appliedCoupon = cartData?.data.used_coupon ?? null;
+  const totalItems = isAuthenticated ? (cartData?.data.total_items ?? 0) : 0;
+  const totalPrice = isAuthenticated ? (cartData?.data.total_price ?? 0) : 0;
+  const appliedCoupon = isAuthenticated
+    ? (cartData?.data.used_coupon ?? null)
+    : null;
 
   const discount = useMemo(() => {
     if (!appliedCoupon) return 0;
@@ -243,6 +258,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         updateQuantity,
         clearCart,
         totalItems,
+        applyingCouponCode,
         totalPrice,
         appliedCoupon,
         discount,
