@@ -1,6 +1,8 @@
 import { api } from "@/api/api";
 import type {
   GetProductsQuery,
+  ProductReview,
+  ProductReviewsResponse,
   ProductResponse,
   ProductWithoutVariantResponse,
   ProductWithSlugResponse,
@@ -17,7 +19,9 @@ const fetchProducts = async (
   return response.data;
 };
 
-const fetchProductBySlug = async (slug: string): Promise<ProductWithSlugResponse> => {
+const fetchProductBySlug = async (
+  slug: string,
+): Promise<ProductWithSlugResponse> => {
   const response = await api.get(`/product/${slug}`);
   return response.data;
 };
@@ -56,15 +60,22 @@ const deleteProductBySlug = async (slug: string): Promise<ApiResponse> => {
   return response.data;
 };
 
-const addReviewToProduct = async (slug: string, rating: number, comment: string): Promise<ApiResponse> => {
-  const response = await api.post(`/product/review/${slug}`, { rating, comment });
+const addReviewToProduct = async (
+  slug: string,
+  rating: number,
+  comment: string,
+): Promise<ApiResponse> => {
+  const response = await api.post(`/product/review/${slug}`, {
+    rating,
+    comment,
+  });
   return response.data;
 };
 
 const getRecentlyViewedProducts = async (): Promise<ProductResponse> => {
-  const response = await api.get(`/product/recently-viewed`);
+  const response = await api.get(`/product/recently-visited`);
   return response.data;
-}
+};
 
 const trackProductView = async (slug: string): Promise<ApiResponse> => {
   const response = await api.post(`/product/recently-visited/${slug}`);
@@ -74,6 +85,38 @@ const trackProductView = async (slug: string): Promise<ApiResponse> => {
 const getTopRatedProducts = async (): Promise<ProductResponse> => {
   const response = await api.get(`/product/top-rated`);
   return response.data;
+};
+
+const getProductReviews = async (
+  slug: string,
+  page = 1,
+  limit = 10,
+): Promise<ProductReviewsResponse> => {
+  const response = await api.get(`/product/${slug}/reviews`, {
+    params: { page, limit },
+  });
+
+  const payload = response.data;
+  const reviews: ProductReview[] = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload?.data?.reviews)
+      ? payload.data.reviews
+      : Array.isArray(payload?.reviews)
+        ? payload.reviews
+        : [];
+
+  const totalCounts =
+    payload?.totalCounts ??
+    payload?.data?.totalCounts ??
+    payload?.pagination?.total ??
+    payload?.data?.pagination?.total;
+
+  return {
+    success: payload?.success ?? true,
+    message: payload?.message ?? "",
+    data: reviews,
+    totalCounts,
+  };
 };
 
 export {
@@ -87,4 +130,5 @@ export {
   getRecentlyViewedProducts,
   trackProductView,
   getTopRatedProducts,
+  getProductReviews,
 };

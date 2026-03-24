@@ -10,10 +10,15 @@ import {
   getRecentlyViewedProducts,
   trackProductView,
   getTopRatedProducts,
+  getProductReviews,
 } from "./product.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
-import type { GetProductsQuery, ProductResponse } from "./product.types";
+import type {
+  GetProductsQuery,
+  ProductResponse,
+  ProductReviewsResponse,
+} from "./product.types";
 import { orderQueryKeys } from "../order/order.query";
 
 export const productsKeys = {
@@ -54,8 +59,10 @@ const useAddProduct = () => {
 const useUpdateProduct = () => {
   return useMutation<ApiResponse, Error, { data: FormData; slug: string }>({
     mutationFn: ({ data, slug }) => updateProduct({ data, slug }),
-    onSuccess: (_, { slug }) =>
-      queryClient.invalidateQueries({ queryKey: productsKeys.detail(slug) }),
+    onSuccess: (_, { slug }) => {
+      queryClient.invalidateQueries({ queryKey: productsKeys.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: productsKeys.all });
+    },
   });
 };
 
@@ -119,6 +126,38 @@ const useTopRatedProducts = (enabled = true) => {
 const useTrackProductView = () => {
   return useMutation<ApiResponse, Error, string>({
     mutationFn: (slug) => trackProductView(slug),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["products", "recently-viewed"],
+      });
+    },
+  });
+};
+
+const useInfiniteProductReviews = (
+  slug: string,
+  limit = 10,
+  enabled = true,
+) => {
+  return useInfiniteQuery<ProductReviewsResponse>({
+    queryKey: ["products", "reviews", slug, limit],
+    initialPageParam: 1,
+    enabled: enabled && slug !== "",
+    queryFn: ({ pageParam }) =>
+      getProductReviews(slug, Number(pageParam), limit),
+    getNextPageParam: (lastPage, allPages) => {
+      const knownTotal = lastPage.totalCounts;
+
+      if (typeof knownTotal === "number") {
+        const loadedCount = allPages.reduce(
+          (sum, page) => sum + page.data.length,
+          0,
+        );
+        return loadedCount < knownTotal ? allPages.length + 1 : undefined;
+      }
+
+      return lastPage.data.length === limit ? allPages.length + 1 : undefined;
+    },
   });
 };
 
@@ -134,4 +173,5 @@ export {
   useRecentlyViewedProducts,
   useTopRatedProducts,
   useTrackProductView,
+  useInfiniteProductReviews,
 };

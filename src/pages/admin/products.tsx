@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
 import { productService } from "@/services/productService";
 import ProductFormModal from "@/components/admin/product/productFormModal";
@@ -39,6 +38,7 @@ import { formatCurrency } from "@/utils/utils";
 import type { StockType } from "@/components/admin/product/product.types";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
 import ProductDetailModal from "@/components/admin/product/productDetailModal";
+import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
 
 const PAGE_SIZE = 5;
 
@@ -259,11 +259,7 @@ const AdminProducts = () => {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
+              <AdminTableSkeleton columns={7} rows={5} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

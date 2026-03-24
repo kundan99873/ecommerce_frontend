@@ -13,7 +13,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
 import CouponFormModal from "@/components/admin/coupon/couponFormModal";
 import { format } from "date-fns";
@@ -27,6 +26,7 @@ import {
 import type { Coupon } from "@/services/coupon/coupon.types";
 import { useDebounce } from "@/hooks/useDebounce";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
+import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
 
 const PAGE_SIZE = 10;
 
@@ -169,11 +169,7 @@ const AdminCoupons = () => {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
+              <AdminTableSkeleton columns={7} rows={4} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

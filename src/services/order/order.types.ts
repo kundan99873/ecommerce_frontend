@@ -4,6 +4,10 @@ export interface AddOrderBody {
   payment_method?: string;
 }
 
+export interface UpdateOrderStatusBody {
+  status: Order["status"];
+}
+
 interface OrderItem {
   name: string;
   slug: string;
@@ -70,7 +74,6 @@ export interface OrderDetailResponse {
   message: string;
   data: OrderDetail;
 }
-
 
 export interface AllOrdersResponse {
   success: boolean;

@@ -27,6 +27,18 @@ export interface ProductCoupon {
   end_date: string;
 }
 
+export interface ProductReview {
+  id?: number;
+  rating: number;
+  comment: string;
+  created_at?: string;
+  user?: {
+    id?: number;
+    name?: string;
+    avatar_url?: string;
+  };
+}
+
 export interface Product {
   name: string;
   description: string;
@@ -37,6 +49,8 @@ export interface Product {
   brand: string;
   slug: string;
   is_active: boolean;
+  rating?: number;
+  reviews?: number;
   variants: ProductVariant[];
 }
 
@@ -93,13 +107,23 @@ export interface ProductDetail {
   brand: string;
   slug: string;
   is_active: boolean;
+  rating?: number;
+  reviews?: number;
   variants: ProductVariant[];
   coupons: ProductCoupon[];
   selected_variant: ProductVariant;
+  product_reviews?: ProductReview[];
 }
 
 export interface ProductWithSlugResponse {
   success: boolean;
   data: ProductDetail;
   message: string;
+}
+
+export interface ProductReviewsResponse {
+  success: boolean;
+  data: ProductReview[];
+  message: string;
+  totalCounts?: number;
 }

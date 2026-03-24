@@ -20,10 +20,28 @@ export default function AddReviewToOrderProduct({
   const addReview = useAddReviewToProduct();
 
   const handleSubmitReview = async () => {
+    const trimmedComment = comment.trim();
+
+    if (rating < 1) {
+      toast({
+        title: "Please add a rating",
+        description: "Select at least 1 star before submitting.",
+      });
+      return;
+    }
+
+    if (!trimmedComment) {
+      toast({
+        title: "Please add a comment",
+        description: "Write a short review before submitting.",
+      });
+      return;
+    }
+
     const response = await addReview.mutateAsync({
       slug: product.slug,
       rating,
-      comment,
+      comment: trimmedComment,
     });
 
     if (response.success) {
@@ -48,7 +66,11 @@ export default function AddReviewToOrderProduct({
             <p className="text-sm font-medium mb-2">Rating</p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
-                <button key={s} onClick={() => setRating(s)}>
+                <button
+                  key={s}
+                  onClick={() => setRating(s)}
+                  disabled={addReview.isPending}
+                >
                   <Star
                     className={`h-5 w-5 ${s <= rating ? "fill-primary text-primary" : "text-border"}`}
                   />
@@ -63,6 +85,7 @@ export default function AddReviewToOrderProduct({
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your experience..."
               rows={3}
+              disabled={addReview.isPending}
             />
           </div>
           <div className="flex gap-2">
@@ -80,10 +103,16 @@ export default function AddReviewToOrderProduct({
               variant="outline"
               size="sm"
               onClick={() => setReviewingProduct(null)}
+              disabled={addReview.isPending}
             >
               Cancel
             </Button>
           </div>
+          {addReview.isPending && (
+            <p className="text-xs text-muted-foreground">
+              Submitting review...
+            </p>
+          )}
         </div>
       )}
     </div>

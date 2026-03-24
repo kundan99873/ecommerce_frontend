@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,56 +12,88 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/useToast";
-import { orders as initialOrders, type Order } from "@/data/products";
 import OrderDetailModal from "@/components/admin/order/orderDetailModal";
-import { useGetAllOrders } from "@/services/order/order.query";
+import {
+  useGetAllOrders,
+  useUpdateOrderStatus,
+} from "@/services/order/order.query";
+import type { Order } from "@/services/order/order.types";
 import dayjs from "dayjs";
 import { formatCurrency } from "@/utils/utils";
+import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
 
 const statuses = [
   "all",
-  "processing",
-  "packed",
-  "shipped",
-  "out_for_delivery",
-  "delivered",
-  "cancelled",
+  "PENDING",
+  "PROCESSING",
+  "PACKED",
+  "SHIPPED",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "CANCELLED",
 ] as const;
 const statusColors: Record<string, string> = {
-  delivered: "bg-success text-success-foreground",
+  DELIVERED: "bg-success text-success-foreground",
   PENDING: "bg-success text-success-foreground",
-  shipped: "bg-primary text-primary-foreground",
-  processing: "bg-secondary text-secondary-foreground",
-  packed: "bg-secondary text-secondary-foreground",
-  out_for_delivery: "bg-primary/80 text-primary-foreground",
-  cancelled: "bg-destructive text-destructive-foreground",
+  SHIPPED: "bg-primary text-primary-foreground",
+  PROCESSING: "bg-secondary text-secondary-foreground",
+  PACKED: "bg-secondary text-secondary-foreground",
+  OUT_FOR_DELIVERY: "bg-primary/80 text-primary-foreground",
+  CANCELLED: "bg-destructive text-destructive-foreground",
 };
 
 const PAGE_SIZE = 10;
 
 const AdminOrders = () => {
-  const [orderList, setOrderList] = useState(initialOrders);
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [detail, setDetail] = useState<Order | null>(null);
+  const [updatingOrderNumber, setUpdatingOrderNumber] = useState<string | null>(
+    null,
+  );
 
-  const { data } = useGetAllOrders();
+  const { data, isLoading } = useGetAllOrders();
+  const updateOrderStatusMutation = useUpdateOrderStatus();
 
   const filtered = useMemo(() => {
-    if (statusFilter === "all") return orderList;
-    return orderList.filter((o) => o.status === statusFilter);
-  }, [orderList, statusFilter]);
+    const allOrders = data?.data ?? [];
+    if (statusFilter === "all") return allOrders;
+    return allOrders.filter((o) => o.status === statusFilter);
+  }, [data?.data, statusFilter]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const updateStatus = (id: string, status: Order["status"]) => {
-    setOrderList((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status } : o)),
-    );
-    if (detail?.id === id)
-      setDetail((prev) => (prev ? { ...prev, status } : prev));
-    toast({ title: `Order ${id} updated to ${status}` });
+  const updateStatus = async (orderNumber: string, status: Order["status"]) => {
+    setUpdatingOrderNumber(orderNumber);
+    try {
+      const response = await updateOrderStatusMutation.mutateAsync({
+        orderNumber,
+        data: { status },
+      });
+
+      if (response.success) {
+        if (detail?.order_number === orderNumber) {
+          setDetail((prev) => (prev ? { ...prev, status } : prev));
+        }
+        toast({
+          title: "Order status updated",
+          description: response.message,
+        });
+      } else {
+        toast({
+          title: "Failed to update status",
+          description: response.message,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to update status",
+        description: error?.message || "Something went wrong",
+      });
+    } finally {
+      setUpdatingOrderNumber(null);
+    }
   };
 
   const downloadInvoice = (id: string) => {
@@ -88,13 +120,15 @@ const AdminOrders = () => {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {statuses.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s === "all" ? "All Statuses" : s.replace(/_/g, " ")}
+                  {s === "all"
+                    ? "All Statuses"
+                    : s.replace(/_/g, " ").toLowerCase()}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -103,94 +137,112 @@ const AdminOrders = () => {
 
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="p-3 text-left">Order ID</th>
-                    <th className="p-3 text-left">Date</th>
-                    <th className="p-3 text-center">Items</th>
-                    <th className="p-3 text-right">Total</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-center">Payment</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.data.map((o) => (
-                    <tr
-                      key={o.order_number}
-                      className="border-b hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="p-3 font-medium">{o.order_number}</td>
-                      <td className="p-3 text-muted-foreground">
-                        {dayjs(o.purchase_date).format("YYYY-MM-DD")}
-                      </td>
-                      <td className="p-3 text-center">
-                        {/* {o.items.reduce((s, i) => s + i.quantity, 0)} */}
-                        {o.items.map((i) => (
-                          <>
-                            <div className="grid grid-cols-4">
-                              <img
-                                src={i.images[0].image_url}
-                                className="h-14 rounded-xl"
-                              />
-                              <div className="ml-2 text-left col-span-3">
-                                <p className="text-sm font-medium">
-                                  {i.name.length > 20
-                                    ? i.name.slice(0, 20) + "..."
-                                    : i.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Qty: {i.quantity}
-                                </p>
-                                <p>{formatCurrency(i.price * i.quantity)}</p>
-                              </div>
-                            </div>
-                            <SelectSeparator />
-                          </>
-                        ))}
-                      </td>
-                      <td className="p-3 text-right font-medium">
-                        {formatCurrency(o.total_amount)}
-                      </td>
-                      <td className="p-3 text-center">
-                        <Badge
-                          className={statusColors[o.status] || "bg-secondary"}
-                        >
-                          {o.status.replace(/_/g, " ")}
-                        </Badge>
-                      </td>
-                      <td className="p-3 text-center">
-                        <Badge variant="outline" className="text-xs">
-                          {o.status === "CANCELLED" ? "Refunded" : "Paid"}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setDetail(o)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => downloadInvoice(o.order_number)}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+            {isLoading ? (
+              <AdminTableSkeleton columns={7} rows={5} />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="p-3 text-left">Order ID</th>
+                      <th className="p-3 text-left">Date</th>
+                      <th className="p-3 text-center">Items</th>
+                      <th className="p-3 text-right">Total</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-center">Payment</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {paged.length ? (
+                      paged.map((o) => (
+                        <tr
+                          key={o.order_number}
+                          className="border-b hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-3 font-medium">{o.order_number}</td>
+                          <td className="p-3 text-muted-foreground">
+                            {dayjs(o.purchase_date).format("YYYY-MM-DD")}
+                          </td>
+                          <td className="p-3 text-center">
+                            {o.items.map((i) => (
+                              <>
+                                <div className="grid grid-cols-4">
+                                  <img
+                                    src={i.images[0].image_url}
+                                    className="h-14 rounded-xl"
+                                  />
+                                  <div className="ml-2 text-left col-span-3">
+                                    <p className="text-sm font-medium">
+                                      {i.name.length > 20
+                                        ? i.name.slice(0, 20) + "..."
+                                        : i.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Qty: {i.quantity}
+                                    </p>
+                                    <p>
+                                      {formatCurrency(i.price * i.quantity)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <SelectSeparator />
+                              </>
+                            ))}
+                          </td>
+                          <td className="p-3 text-right font-medium">
+                            {formatCurrency(o.total_amount)}
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge
+                              className={
+                                statusColors[o.status] || "bg-secondary"
+                              }
+                            >
+                              {o.status.replace(/_/g, " ").toLowerCase()}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-center">
+                            <Badge variant="outline" className="text-xs">
+                              {o.status === "CANCELLED" ? "Refunded" : "Paid"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setDetail(o)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => downloadInvoice(o.order_number)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="p-6 text-center text-muted-foreground"
+                        >
+                          No orders found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 border-t">
                 <p className="text-sm text-muted-foreground">
@@ -230,6 +282,10 @@ const AdminOrders = () => {
         }}
         onUpdateStatus={updateStatus}
         onDownloadInvoice={downloadInvoice}
+        isUpdatingStatus={
+          updateOrderStatusMutation.isPending &&
+          updatingOrderNumber === detail?.order_number
+        }
       />
     </>
   );

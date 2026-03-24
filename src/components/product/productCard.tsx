@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { CheckCircle2, Heart, Loader2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Heart, Loader2, ShoppingBag, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import type { Product } from "@/services/product/product.types";
@@ -86,6 +86,11 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           <p className="text-xs text-muted-foreground mt-0.5">
             {product.category.name}
           </p>
+          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+            <span>{(product.rating ?? 0).toFixed(1)}</span>
+            <span>({product.reviews ?? 0} reviews)</span>
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm font-semibold text-foreground">
               {formatCurrency(product.variants[0].discounted_price)}

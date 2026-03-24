@@ -9,6 +9,7 @@ import {
   Loader2,
   Heart,
   CheckCircle2,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { useCart } from "@/context/cartContext";
 import { useWishlist } from "@/context/wishlistContext";
 import {
   useGetProduct,
+  useInfiniteProductReviews,
   useTrackProductView,
 } from "@/services/product/product.query";
 import { skipToken } from "@tanstack/react-query";
@@ -24,6 +26,8 @@ import { formatCurrency } from "@/utils/utils";
 import ProductDetailSkeleton from "@/components/product/productCardSkeleton";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
+import CustomerReviews from "@/components/product/customerReviews";
+import type { ProductReview } from "@/services/product/product.types";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
@@ -37,6 +41,15 @@ const ProductDetail = () => {
   const { data, isLoading } = useGetProduct((slug as string) ?? skipToken);
 
   const product = data?.data;
+  const reviewsLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const {
+    data: reviewsData,
+    fetchNextPage: fetchNextReviews,
+    hasNextPage: hasMoreReviews,
+    isFetchingNextPage: isFetchingMoreReviews,
+    isLoading: reviewsLoading,
+  } = useInfiniteProductReviews(product?.slug ?? "", 10, !!product?.slug);
 
   const urlColor = searchParams.get("color");
   const urlSize = searchParams.get("size");
@@ -65,6 +78,23 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
+
+  useEffect(() => {
+    if (!reviewsLoadMoreRef.current || !hasMoreReviews) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreReviews) {
+          fetchNextReviews();
+        }
+      },
+      { threshold: 1 },
+    );
+
+    observer.observe(reviewsLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [fetchNextReviews, hasMoreReviews]);
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
@@ -140,6 +170,28 @@ const ProductDetail = () => {
     );
   }
 
+  const fallbackProductReviews =
+    product.product_reviews ??
+    ((product as any).reviews_list as ProductReview[] | undefined) ??
+    [];
+
+  const paginatedReviews =
+    reviewsData?.pages.flatMap((page) => page.data ?? []) ?? [];
+  const productReviews =
+    reviewsData?.pages.length && reviewsData.pages.length > 0
+      ? paginatedReviews
+      : fallbackProductReviews;
+
+  const totalReviews =
+    reviewsData?.pages?.[0]?.totalCounts ??
+    product.reviews ??
+    productReviews.length;
+  const averageRating =
+    productReviews.length > 0
+      ? productReviews.reduce((sum, review) => sum + review.rating, 0) /
+        productReviews.length
+      : (product.rating ?? 0);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Link
@@ -199,6 +251,18 @@ const ProductDetail = () => {
                 {product.category.name}
               </p>
               <h1 className="text-2xl font-bold mt-1">{product.name}</h1>
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${star <= Math.round(averageRating) ? "fill-primary text-primary" : "text-muted-foreground/30"}`}
+                    />
+                  ))}
+                </div>
+                <span>{averageRating.toFixed(1)}</span>
+                <span>({totalReviews} reviews)</span>
+              </div>
             </div>
 
             <button
@@ -342,7 +406,13 @@ const ProductDetail = () => {
 
       <hr className="my-6" />
 
-      {/* <ProductReviews productId={} /> */}
+      <CustomerReviews
+        reviewsLoading={reviewsLoading}
+        reviews={productReviews}
+        isFetchingMoreReviews={isFetchingMoreReviews}
+        hasMoreReviews={hasMoreReviews}
+        loadMoreRef={reviewsLoadMoreRef}
+      />
     </div>
   );
 };

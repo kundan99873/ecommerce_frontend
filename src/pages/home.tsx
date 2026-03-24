@@ -76,6 +76,8 @@ const Home = () => {
         </div>
       </section>
 
+      <RecentlyViewed />
+
       {/* Free Shipping Banner */}
       <section className="container mx-auto px-4 pb-16">
         <div className="bg-secondary rounded-2xl p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -96,7 +98,6 @@ const Home = () => {
       </section>
 
       <TrustBadges />
-      <RecentlyViewed />
 
       {/* <Newsletter /> */}
     </>

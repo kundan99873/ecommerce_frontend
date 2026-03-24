@@ -1,10 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { addOrderApi, getOrderByIdApi, getOrdersApi } from "./order.api";
+import {
+  addOrderApi,
+  getOrderByIdApi,
+  getOrdersApi,
+  updateOrderStatusApi,
+} from "./order.api";
 import type { ApiResponse } from "@/api/api.types";
 import type {
   AddOrderBody,
   OrderDetailResponse,
   OrderResponse,
+  UpdateOrderStatusBody,
 } from "./order.types";
 import { queryClient } from "@/api/client";
 
@@ -41,4 +47,26 @@ const useGetAllOrders = () => {
   });
 };
 
-export { useAddOrder, useGetOrders, useGetOrderById, useGetAllOrders };
+const useUpdateOrderStatus = () => {
+  return useMutation<
+    ApiResponse,
+    Error,
+    {
+      orderNumber: string;
+      data: UpdateOrderStatusBody;
+    }
+  >({
+    mutationFn: ({ orderNumber, data }) =>
+      updateOrderStatusApi(orderNumber, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: orderQueryKeys.all }),
+  });
+};
+
+export {
+  useAddOrder,
+  useGetOrders,
+  useGetOrderById,
+  useGetAllOrders,
+  useUpdateOrderStatus,
+};

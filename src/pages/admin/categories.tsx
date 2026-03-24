@@ -3,7 +3,6 @@ import { Plus, Edit2, Trash2, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
 import CategoryFormModal, {
   type CategoryFormValues,
@@ -17,6 +16,7 @@ import {
 import dayjs from "dayjs";
 import type { Category } from "@/services/category/category.types";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
+import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
 
 const AdminCategories = () => {
   const [search, setSearch] = useState("");
@@ -115,11 +115,7 @@ const AdminCategories = () => {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
+              <AdminTableSkeleton columns={6} rows={4} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

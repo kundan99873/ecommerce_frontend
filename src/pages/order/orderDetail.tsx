@@ -116,6 +116,12 @@ const OrderDetail = () => {
             <div className="md:col-span-2 space-y-3">
               <h2 className="font-display font-bold text-lg">Items</h2>
               {orderData?.items.map((product) => {
+                const reviewFlag = (product as { review?: unknown }).review;
+                const isReviewSubmitted =
+                  reviewFlag === true ||
+                  reviewFlag === "true" ||
+                  reviewFlag === 1;
+
                 return (
                   <div
                     key={product.slug}
@@ -143,7 +149,7 @@ const OrderDetail = () => {
                           ${product.price * product.quantity}
                         </p>
 
-                        {product?.review ? (
+                        {isReviewSubmitted ? (
                           <p className="text-xs text-success mt-2">
                             ✓ Review submitted
                           </p>

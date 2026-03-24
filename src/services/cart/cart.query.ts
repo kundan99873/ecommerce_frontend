@@ -32,11 +32,11 @@ const useAddToCart = () => {
   return useMutation<ApiResponse, Error, CartBody, { previousCart: any }>({
     mutationFn: addToCart,
     onMutate: async (newItem) => {
-      await queryClient.cancelQueries({ queryKey: ["cart"] });
+      await queryClient.cancelQueries({ queryKey: cartKeys.all });
 
-      const previousCart = queryClient.getQueryData(["cart"]);
+      const previousCart = queryClient.getQueryData(cartKeys.all);
 
-      queryClient.setQueryData(["cart"], (old: any) => {
+      queryClient.setQueryData(cartKeys.all, (old: any) => {
         if (!old?.data) return old;
 
         const existing = old.data.items.find(
@@ -78,12 +78,12 @@ const useAddToCart = () => {
 
     onError: (_err, _vars, context) => {
       if (context?.previousCart) {
-        queryClient.setQueryData(["cart"], context.previousCart);
+        queryClient.setQueryData(cartKeys.all, context.previousCart);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: cartKeys.all });
     },
   });
 };

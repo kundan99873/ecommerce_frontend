@@ -1,5 +1,5 @@
 import { api } from "@/api/api";
-import type { AddOrderBody } from "./order.types";
+import type { AddOrderBody, UpdateOrderStatusBody } from "./order.types";
 
 const addOrderApi = async (data: AddOrderBody) => {
   const response = await api.post("/order", data);
@@ -21,4 +21,18 @@ const getAllOrdersApi = async () => {
   return response.data;
 };
 
-export { addOrderApi, getOrdersApi, getOrderByIdApi, getAllOrdersApi };
+const updateOrderStatusApi = async (
+  orderNumber: string,
+  data: UpdateOrderStatusBody,
+) => {
+  const response = await api.patch(`/order/${orderNumber}/status`, data);
+  return response.data;
+};
+
+export {
+  addOrderApi,
+  getOrdersApi,
+  getOrderByIdApi,
+  getAllOrdersApi,
+  updateOrderStatusApi,
+};

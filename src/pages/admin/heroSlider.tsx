@@ -3,7 +3,6 @@ import { Plus, Edit2, Trash2, Search, EyeOff, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/useToast";
 import {
   useAddHeroSlide,
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
 
 const HeroSliders = () => {
   const [search, setSearch] = useState("");
@@ -37,7 +37,12 @@ const HeroSliders = () => {
 
   const { data, isLoading } = useGetHeroSlides({
     search: debouncedSearch,
-    is_active: activeFilter === "active" ? true : activeFilter === "inactive" ? false : undefined,
+    is_active:
+      activeFilter === "active"
+        ? true
+        : activeFilter === "inactive"
+          ? false
+          : undefined,
   });
 
   const addHeroSliderMutation = useAddHeroSlide();
@@ -165,11 +170,7 @@ const HeroSliders = () => {
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
+              <AdminTableSkeleton columns={6} rows={4} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
