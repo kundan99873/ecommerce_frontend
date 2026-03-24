@@ -196,15 +196,15 @@ const AdminOrders = () => {
                           <td className="p-3 text-center">
                             <Badge
                               className={
-                                statusColors[o.status] || "bg-secondary"
+                                `capitalize ${statusColors[o.status] || "bg-secondary"}`
                               }
                             >
                               {o.status.replace(/_/g, " ").toLowerCase()}
                             </Badge>
                           </td>
                           <td className="p-3 text-center">
-                            <Badge variant="outline" className="text-xs">
-                              {o.status === "CANCELLED" ? "Refunded" : "Paid"}
+                            <Badge variant="outline" className="text-xs ">
+                              {o.payment_status}
                             </Badge>
                           </td>
                           <td className="p-3">

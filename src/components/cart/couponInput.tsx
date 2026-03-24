@@ -18,6 +18,8 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
     applyCoupon,
     removeCoupon,
     applyingCouponCode,
+    isApplyingCoupon,
+    isRemovingCoupon,
   } = useCart();
   const { data: couponsResponse } = useGetCoupons({
     is_active: true,
@@ -67,12 +69,20 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
             </span>
           </div>
         </div>
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={removeCoupon}
-          className="text-muted-foreground hover:text-destructive"
+          disabled={isRemovingCoupon}
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
         >
-          <X className="h-4 w-4" />
-        </button>
+          {isRemovingCoupon ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <X className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     );
   }
@@ -90,9 +100,9 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
         variant="outline"
         size="sm"
         onClick={handleApply}
-        disabled={!code.trim() || isApplyingCurrentCode}
+        disabled={!code.trim() || isApplyingCurrentCode || isApplyingCoupon}
       >
-        {isApplyingCurrentCode ? (
+        {isApplyingCurrentCode || isApplyingCoupon ? (
           <span className="inline-flex items-center gap-1.5">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             Applying...

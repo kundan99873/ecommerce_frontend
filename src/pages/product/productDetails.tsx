@@ -23,7 +23,7 @@ import {
 } from "@/services/product/product.query";
 import { skipToken } from "@tanstack/react-query";
 import { formatCurrency } from "@/utils/utils";
-import ProductDetailSkeleton from "@/components/product/productCardSkeleton";
+import ProductDetailSkeleton from "@/pages/product/productDetailSkeleton";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
 import CustomerReviews from "@/components/product/customerReviews";
@@ -177,20 +177,27 @@ const ProductDetail = () => {
 
   const paginatedReviews =
     reviewsData?.pages.flatMap((page) => page.data ?? []) ?? [];
+  const firstReviewsPage = reviewsData?.pages?.[0];
+
   const productReviews =
     reviewsData?.pages.length && reviewsData.pages.length > 0
       ? paginatedReviews
       : fallbackProductReviews;
 
   const totalReviews =
-    reviewsData?.pages?.[0]?.totalCounts ??
+    firstReviewsPage?.totalReviews ??
+    firstReviewsPage?.totalCounts ??
     product.reviews ??
     productReviews.length;
   const averageRating =
-    productReviews.length > 0
-      ? productReviews.reduce((sum, review) => sum + review.rating, 0) /
-        productReviews.length
-      : (product.rating ?? 0);
+    typeof firstReviewsPage?.averageRating === "number" &&
+    firstReviewsPage.averageRating > 0
+      ? firstReviewsPage.averageRating
+      : productReviews.length > 0
+        ? productReviews.reduce((sum, review) => sum + review.rating, 0) /
+          productReviews.length
+        : (product.rating ?? 0);
+  const hasReviews = totalReviews > 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -251,18 +258,20 @@ const ProductDetail = () => {
                 {product.category.name}
               </p>
               <h1 className="text-2xl font-bold mt-1">{product.name}</h1>
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-4 w-4 ${star <= Math.round(averageRating) ? "fill-primary text-primary" : "text-muted-foreground/30"}`}
-                    />
-                  ))}
+              {hasReviews && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${star <= Math.round(averageRating) ? "fill-primary text-primary" : "text-muted-foreground/30"}`}
+                      />
+                    ))}
+                  </div>
+                  <span>{averageRating.toFixed(1)}</span>
+                  <span>({totalReviews} reviews)</span>
                 </div>
-                <span>{averageRating.toFixed(1)}</span>
-                <span>({totalReviews} reviews)</span>
-              </div>
+              )}
             </div>
 
             <button
@@ -404,15 +413,22 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      <hr className="my-6" />
+      {hasReviews && (
+        <>
+          <hr className="my-6" />
 
-      <CustomerReviews
-        reviewsLoading={reviewsLoading}
-        reviews={productReviews}
-        isFetchingMoreReviews={isFetchingMoreReviews}
-        hasMoreReviews={hasMoreReviews}
-        loadMoreRef={reviewsLoadMoreRef}
-      />
+          <CustomerReviews
+            reviewsLoading={reviewsLoading}
+            reviews={productReviews}
+            averageRating={averageRating}
+            totalReviews={totalReviews}
+            ratingBreakdown={firstReviewsPage?.ratingBreakdown}
+            isFetchingMoreReviews={isFetchingMoreReviews}
+            hasMoreReviews={hasMoreReviews}
+            loadMoreRef={reviewsLoadMoreRef}
+          />
+        </>
+      )}
     </div>
   );
 };

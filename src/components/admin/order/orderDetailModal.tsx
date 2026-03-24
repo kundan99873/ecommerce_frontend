@@ -87,7 +87,7 @@ const OrderDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto overflow-x-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto overflow-x-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             Order {order.order_number}

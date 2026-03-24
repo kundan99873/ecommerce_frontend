@@ -33,7 +33,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.category.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q)
+          p.brand.toLowerCase().includes(q),
       )
       .slice(0, 6);
   }, [query]);
@@ -66,7 +66,10 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {query && (
-            <button onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground">
+            <button
+              onClick={() => setQuery("")}
+              className="text-muted-foreground hover:text-foreground"
+            >
               <X className="h-4 w-4" />
             </button>
           )}
@@ -145,9 +148,14 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                       className="h-12 w-10 rounded-lg object-cover shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {product.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {product.brand} · {product.category}
+                        {product.brand} ·{" "}
+                        {typeof product.category === "string"
+                          ? product.category
+                          : product.category?.name}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

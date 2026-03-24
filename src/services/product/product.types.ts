@@ -40,6 +40,7 @@ export interface ProductReview {
 }
 
 export interface Product {
+  id: number;
   name: string;
   description: string;
   category: {
@@ -51,6 +52,8 @@ export interface Product {
   is_active: boolean;
   rating?: number;
   reviews?: number;
+  average_rating?: number;
+  total_reviews?: number;
   variants: ProductVariant[];
 }
 
@@ -98,6 +101,7 @@ export interface GetProductsQuery {
 }
 
 export interface ProductDetail {
+  id: number;
   name: string;
   description: string;
   category: {
@@ -109,6 +113,8 @@ export interface ProductDetail {
   is_active: boolean;
   rating?: number;
   reviews?: number;
+  average_rating?: number;
+  total_reviews?: number;
   variants: ProductVariant[];
   coupons: ProductCoupon[];
   selected_variant: ProductVariant;
@@ -126,4 +132,7 @@ export interface ProductReviewsResponse {
   data: ProductReview[];
   message: string;
   totalCounts?: number;
+  totalReviews?: number;
+  averageRating?: number;
+  ratingBreakdown?: Record<string, number>;
 }

@@ -34,6 +34,8 @@ interface CartContextType {
   loading: boolean;
   addingSku: string | null;
   applyingCouponCode: string | null;
+  isApplyingCoupon: boolean;
+  isRemovingCoupon: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -141,6 +143,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     applyCartCoupon.isPending && typeof applyCartCoupon.variables === "string"
       ? applyCartCoupon.variables
       : null;
+  const isApplyingCoupon = applyCartCoupon.isPending;
+  const isRemovingCoupon = removeCartCoupon.isPending;
 
   const removeItem = useCallback(
     (slug: string) => {
@@ -259,6 +263,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         clearCart,
         totalItems,
         applyingCouponCode,
+        isApplyingCoupon,
+        isRemovingCoupon,
         totalPrice,
         appliedCoupon,
         discount,

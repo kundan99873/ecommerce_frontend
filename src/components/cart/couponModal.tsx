@@ -2,10 +2,10 @@ import {
   Tag,
   Sparkles,
   Clock,
-  DollarSign,
   Copy,
   Check,
   Loader2,
+  IndianRupee,
 } from "lucide-react";
 import {
   Dialog,
@@ -21,6 +21,8 @@ import { useGetAllCartCoupons } from "@/services/cart/cart.query";
 import type { CartAvailableCoupon } from "@/services/cart/cart.types";
 import { toast } from "@/hooks/useToast";
 import { useState } from "react";
+import { formatCurrency } from "@/utils/utils";
+import dayjs from "dayjs";
 
 interface CouponModalProps {
   cartTotal: number;
@@ -40,15 +42,26 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
 
   const getBestCoupon = (): string | null => {
     let best: { code: string; saving: number } | null = null;
+
     for (const c of availableCoupons) {
       if (new Date(c.end_date) < new Date()) continue;
       if (c.min_purchase && cartTotal < c.min_purchase) continue;
-      const saving =
-        c.discount_type === "PERCENTAGE"
-          ? (cartTotal * c.discount_value) / 100
-          : c.discount_value;
-      if (!best || saving > best.saving) best = { code: c.code, saving };
+
+      let saving = 0;
+
+      if (c.discount_type === "PERCENTAGE") {
+        const discount = (cartTotal * c.discount_value) / 100;
+
+        saving = c.max_discount ? Math.min(discount, c.max_discount) : discount;
+      } else {
+        saving = c.discount_value;
+      }
+
+      if (!best || saving > best.saving) {
+        best = { code: c.code, saving };
+      }
     }
+
     return best?.code ?? null;
   };
 
@@ -73,10 +86,15 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const getSaving = (c: CartAvailableCoupon) =>
-    c.discount_type === "PERCENTAGE"
-      ? (cartTotal * c.discount_value) / 100
-      : c.discount_value;
+  const getSaving = (c: CartAvailableCoupon) => {
+    if (c.discount_type === "PERCENTAGE") {
+      const discount = (cartTotal * c.discount_value) / 100;
+
+      return c.max_discount ? Math.min(discount, c.max_discount) : discount;
+    }
+
+    return c.discount_value;
+  };
 
   const isExpired = (c: CartAvailableCoupon) =>
     new Date(c.end_date) < new Date();
@@ -139,7 +157,7 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
                     : `$${coupon.discount_value} OFF`}
                   {eligible && !expired && (
                     <span className="ml-2 font-normal text-xs">
-                      (Save ${getSaving(coupon).toFixed(2)})
+                      (Save {formatCurrency(getSaving(coupon))})
                     </span>
                   )}
                 </div>
@@ -168,17 +186,17 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
 
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
+                      <IndianRupee className="h-3 w-3" />
                       Min:{" "}
                       {coupon.min_purchase
-                        ? `$${coupon.min_purchase}`
+                        ? `${formatCurrency(coupon.min_purchase)}`
                         : "No minimum"}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {expired
                         ? "Expired"
-                        : `Until ${new Date(coupon.end_date).toLocaleDateString()}`}
+                        : `Until ${dayjs(coupon.end_date).format("Do MMM YYYY")}`}
                     </span>
                   </div>
 

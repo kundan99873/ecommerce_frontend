@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -15,6 +15,7 @@ import CouponInput from "./couponInput";
 import CouponModal from "./couponModal";
 import { formatCurrency } from "@/utils/utils";
 import { useState } from "react";
+import { useAuth } from "@/context/authContext";
 
 const CartDrawer = () => {
   const {
@@ -27,6 +28,7 @@ const CartDrawer = () => {
     appliedCoupon,
     clearCart,
   } = useCart();
+  const { isAuthenticated } = useAuth();
   const shipping = totalPrice >= 100 ? 0 : 9.99;
   const finalTotal = totalPrice - discount + shipping;
 
@@ -54,7 +56,7 @@ const CartDrawer = () => {
         <SheetHeader className="mt-4">
           <SheetTitle className="text-xl flex items-center gap-2 ">
             Shopping Cart ({totalItems})
-            {totalItems == 0 && (
+            {totalItems !== 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -67,13 +69,23 @@ const CartDrawer = () => {
           </SheetTitle>
         </SheetHeader>
 
-        {items.length === 0 ? (
+        {items.length === 0 && isAuthenticated ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <ShoppingBag className="h-12 w-12 text-muted-foreground/40" />
             <p className="mt-3 text-muted-foreground">Your cart is empty</p>
             <Link to="/products">
               <Button variant="outline" className="mt-4" size="sm">
                 Start Shopping
+              </Button>
+            </Link>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <User className="h-12 w-12 text-muted-foreground/40" />
+            <p className="mt-3 text-muted-foreground">Please Login</p>
+            <Link to="/login">
+              <Button variant="outline" className="mt-4" size="sm">
+                Login
               </Button>
             </Link>
           </div>

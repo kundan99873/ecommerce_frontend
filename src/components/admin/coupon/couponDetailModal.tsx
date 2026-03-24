@@ -1,13 +1,26 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Percent, DollarSign, Globe, Tag, Hash, ShoppingCart } from "lucide-react";
-import type { AdminCoupon } from "@/services/couponService";
+import {
+  Calendar,
+  Percent,
+  DollarSign,
+  Globe,
+  Tag,
+  Hash,
+  ShoppingCart,
+} from "lucide-react";
+import type { Coupon } from "@/services/coupon/coupon.types";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
 interface Props {
-  coupon: AdminCoupon | null;
+  coupon: Coupon | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -17,12 +30,19 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
 
   const isExpired = new Date(coupon.end_date) < new Date();
   const isUpcoming = new Date(coupon.start_date) > new Date();
+  const statusLabel = isExpired
+    ? "Expired"
+    : isUpcoming
+      ? "Upcoming"
+      : "Running";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Coupon Details</DialogTitle>
+          <DialogTitle className="font-display text-xl">
+            Coupon Details
+          </DialogTitle>
         </DialogHeader>
 
         <motion.div
@@ -34,7 +54,9 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
           <div className="bg-muted/50 rounded-xl p-5 text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-background border-2 border-dashed border-primary/40">
               <Tag className="h-4 w-4 text-primary" />
-              <span className="font-mono font-bold text-xl tracking-wider">{coupon.code}</span>
+              <span className="font-mono font-bold text-xl tracking-wider">
+                {coupon.code}
+              </span>
             </div>
             <div className="flex items-center justify-center gap-2">
               <Badge variant={coupon.is_active ? "default" : "secondary"}>
@@ -52,7 +74,9 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
 
           {/* Description */}
           {coupon.description && (
-            <p className="text-sm text-muted-foreground text-center">{coupon.description}</p>
+            <p className="text-sm text-muted-foreground text-center">
+              {coupon.description}
+            </p>
           )}
 
           <Separator />
@@ -69,9 +93,13 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
                 <p className="text-xs text-muted-foreground">Discount</p>
               </div>
               <p className="text-2xl font-bold">
-                {coupon.discount_type === "PERCENTAGE" ? `${coupon.discount_value}%` : `$${coupon.discount_value}`}
+                {coupon.discount_type === "PERCENTAGE"
+                  ? `${coupon.discount_value}%`
+                  : `$${coupon.discount_value}`}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">{coupon.discount_type}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {coupon.discount_type}
+              </p>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <div className="flex items-center justify-center gap-1 mb-1">
@@ -81,7 +109,9 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
               <p className="text-2xl font-bold">
                 {coupon.min_purchase ? `$${coupon.min_purchase}` : "—"}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Minimum order value</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Minimum order value
+              </p>
             </div>
           </div>
 
@@ -94,12 +124,16 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
             <div className="flex items-center justify-between text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Start Date</p>
-                <p className="font-medium">{format(new Date(coupon.start_date), "MMM d, yyyy")}</p>
+                <p className="font-medium">
+                  {format(new Date(coupon.start_date), "MMM d, yyyy")}
+                </p>
               </div>
               <span className="text-muted-foreground">→</span>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">End Date</p>
-                <p className="font-medium">{format(new Date(coupon.end_date), "MMM d, yyyy")}</p>
+                <p className="font-medium">
+                  {format(new Date(coupon.end_date), "MMM d, yyyy")}
+                </p>
               </div>
             </div>
           </div>
@@ -111,19 +145,159 @@ const CouponDetailModal = ({ coupon, open, onOpenChange }: Props) => {
                 <Hash className="h-3.5 w-3.5 text-primary" />
                 <p className="text-xs text-muted-foreground">Max Uses</p>
               </div>
-              <p className="text-lg font-bold">{coupon.max_uses ?? "Unlimited"}</p>
+              <p className="text-lg font-bold">
+                {coupon.max_uses ?? "Unlimited"}
+              </p>
             </div>
             <div className="bg-muted/50 rounded-lg p-3 text-center">
               <p className="text-xs text-muted-foreground mb-1">Scope</p>
-              <p className="text-lg font-bold">{coupon.is_global ? "All Products" : "Selected"}</p>
+              <p className="text-lg font-bold">
+                {coupon.is_global ? "All Products" : "Selected"}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <p className="text-sm font-semibold mb-3">Coupon Information</p>
+            <div className="rounded-lg border overflow-hidden">
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Coupon ID
+                </p>
+                <p className="p-3 text-sm font-medium">#{coupon.id}</p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Code
+                </p>
+                <p className="p-3 text-sm font-mono font-medium">
+                  {coupon.code}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Description
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.description || "-"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Discount Type
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.discount_type}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Discount Value
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.discount_type === "PERCENTAGE"
+                    ? `${coupon.discount_value}%`
+                    : `$${coupon.discount_value}`}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Minimum Purchase
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.min_purchase
+                    ? `$${coupon.min_purchase}`
+                    : "No minimum"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Maximum Uses
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.max_uses ?? "Unlimited"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Is Active
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.is_active ? "Yes" : "No"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Is Global
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.is_global ? "Yes" : "No"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Product IDs
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {coupon.product_ids?.length
+                    ? coupon.product_ids.join(", ")
+                    : coupon.is_global
+                      ? "Applies to all products"
+                      : "Not provided"}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Current Status
+                </p>
+                <p className="p-3 text-sm font-medium">{statusLabel}</p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Start Date
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {format(new Date(coupon.start_date), "MMM d, yyyy p")}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  End Date
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {format(new Date(coupon.end_date), "MMM d, yyyy p")}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 border-b">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Created At
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {format(new Date(coupon.created_at), "MMM d, yyyy p")}
+                </p>
+              </div>
+              <div className="grid grid-cols-2">
+                <p className="p-3 text-xs text-muted-foreground bg-muted/30">
+                  Updated At
+                </p>
+                <p className="p-3 text-sm font-medium">
+                  {format(new Date(coupon.updated_at), "MMM d, yyyy p")}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Meta */}
           <Separator />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Created: {format(new Date(coupon.created_at), "MMM d, yyyy")}</span>
-            <span>Updated: {format(new Date(coupon.updated_at), "MMM d, yyyy")}</span>
+            <span>
+              Created: {format(new Date(coupon.created_at), "MMM d, yyyy")}
+            </span>
+            <span>
+              Updated: {format(new Date(coupon.updated_at), "MMM d, yyyy")}
+            </span>
           </div>
         </motion.div>
       </DialogContent>

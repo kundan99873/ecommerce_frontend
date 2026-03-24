@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Info,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import type { Coupon } from "@/services/coupon/coupon.types";
 import { useDebounce } from "@/hooks/useDebounce";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
 import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
+import CouponDetailModal from "@/components/admin/coupon/couponDetailModal";
 
 const PAGE_SIZE = 10;
 
@@ -37,6 +39,7 @@ const AdminCoupons = () => {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [activeTarget, setActiveTarget] = useState<Coupon | null>(null);
+  const [viewCoupon, setViewCoupon] = useState<Coupon | null>(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -244,6 +247,15 @@ const AdminCoupons = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={() => setViewCoupon(c)}
+                                title="View Coupon Details"
+                              >
+                                <Info className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 onClick={() => setActiveTarget(c)}
                               >
                                 {c.is_active ? (
@@ -348,6 +360,14 @@ const AdminCoupons = () => {
         btnText="Change Status"
         loadingText="Changing..."
         loading={updateCouponMutation.isPending}
+      />
+
+      <CouponDetailModal
+        coupon={viewCoupon}
+        open={viewCoupon !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewCoupon(null);
+        }}
       />
     </>
   );

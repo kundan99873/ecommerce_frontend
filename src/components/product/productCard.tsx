@@ -18,10 +18,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toggleItem, isInWishlist } = useWishlist();
-  const wishlisted = isInWishlist(product.variants[0].sku);
+  const primaryVariant = product.variants[0];
+  const wishlisted = isInWishlist(primaryVariant.sku);
   const alreadyInCart = items.some((item) => item.slug === product.slug);
+  const discountPercent =
+    primaryVariant.original_price > 0
+      ? Math.round(
+          (1 -
+            primaryVariant.discounted_price / primaryVariant.original_price) *
+            100,
+        )
+      : 0;
+  const productRating = product.average_rating ?? product.rating ?? 0;
+  const productReviews = product.total_reviews ?? product.reviews ?? 0;
 
-  if (!product?.variants?.[0]?.images?.[0]?.image_url) return null;
+  if (!primaryVariant?.images?.[0]?.image_url) return null;
 
   return (
     <motion.div
@@ -29,105 +40,133 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.4 }}
-      className="group"
+      className="group h-full"
     >
-      <Link
-        to={`/product/${product.slug}?color=${product.variants[0].color}${product.variants[0].size ? `&size=${product.variants[0].size}` : ""}`}
-        className="block"
-      >
-        <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-secondary">
-          <img
-            src={product.variants[0].images[0].image_url}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          {/* {product.originalPrice && ( */}
-          <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
-            -
-            {Math.round(
-              (1 -
-                product.variants[0].discounted_price /
-                  product.variants[0].original_price) *
-                100,
-            )}
-            %
-          </span>
-          {/* )} */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              toggleItem(product.variants[0].sku);
-            }}
-            className={`absolute top-3 right-3 p-2 rounded-full transition-all cursor-pointer ${
-              wishlisted
-                ? "bg-destructive text-destructive-foreground"
-                : "bg-background/70 backdrop-blur-sm text-foreground hover:bg-background"
-            }`}
-          >
-            <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
-          </button>
-          {!product.variants[0].stock && (
-            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-              <span className="text-sm font-semibold text-foreground">
-                Out of Stock
+      <div className="h-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <Link
+          to={`/product/${product.slug}?color=${primaryVariant.color}${primaryVariant.size ? `&size=${primaryVariant.size}` : ""}`}
+          className="block"
+        >
+          <div className="relative aspect-4/5 overflow-hidden bg-muted/40">
+            <img
+              src={primaryVariant.images[0].image_url}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-108"
+              loading="lazy"
+            />
+
+            <div className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-black/35 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/55 via-black/25 to-transparent" />
+
+            {discountPercent > 0 && (
+              <span className="absolute top-3 left-3 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+                Save {discountPercent}%
               </span>
+            )}
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                toggleItem(primaryVariant.sku);
+              }}
+              className={`absolute top-3 right-3 p-2 rounded-full transition-all cursor-pointer ${
+                wishlisted
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-background/80 backdrop-blur text-foreground hover:bg-background"
+              }`}
+              aria-label="Toggle wishlist"
+            >
+              <Heart
+                className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`}
+              />
+            </button>
+
+            <div className="absolute left-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[11px] text-white backdrop-blur">
+              <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
+              <span>{productRating.toFixed(1)}</span>
+              <span className="text-white/75">({productReviews})</span>
             </div>
-          )}
-        </div>
-      </Link>
-      <div className="mt-3 flex items-start justify-between gap-2">
-        <div>
+
+            {!primaryVariant.stock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-sm font-semibold text-white backdrop-blur">
+                  Out of Stock
+                </span>
+              </div>
+            )}
+          </div>
+        </Link>
+
+        <div className="p-3 sm:p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center rounded-full border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              {product.category.name}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {product.brand}
+            </span>
+          </div>
+
           <Link to={`/product/${product.slug}`}>
-            <h3 className="text-sm font-medium text-foreground leading-tight hover:text-primary transition-colors">
+            <h3 className="line-clamp-2 min-h-10 text-sm sm:text-[15px] font-semibold leading-snug text-foreground transition-colors hover:text-primary">
               {product.name}
             </h3>
           </Link>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {product.category.name}
-          </p>
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-            <span>{(product.rating ?? 0).toFixed(1)}</span>
-            <span>({product.reviews ?? 0} reviews)</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm font-semibold text-foreground">
-              {formatCurrency(product.variants[0].discounted_price)}
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {primaryVariant.color}
             </span>
-            {product.variants[0].original_price && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatCurrency(product.variants[0].original_price)}
+            {primaryVariant.size && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                Size {primaryVariant.size}
               </span>
             )}
           </div>
+
+          <div className="flex justify-between items-center">
+            <div className="mt-3 flex items-baseline  gap-2">
+              <span className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+                {formatCurrency(primaryVariant.discounted_price)}
+              </span>
+              {primaryVariant.original_price >
+                primaryVariant.discounted_price && (
+                <span className="text-xs text-muted-foreground line-through">
+                  {formatCurrency(primaryVariant.original_price)}
+                </span>
+              )}
+            </div>
+            <Button
+              size={alreadyInCart ? "sm" : "icon"}
+              variant={alreadyInCart ? "secondary" : "outline"}
+              className={
+                alreadyInCart
+                  ? "h-8 rounded-full px-3 text-xs sm:h-9 sm:px-3.5 sm:text-sm hover:bg-primary hover:text-primary-foreground"
+                  : "h-8 w-8 sm:h-9 sm:w-9 rounded-full hover:bg-primary hover:text-primary-foreground"
+              }
+              onClick={(e) => {
+                e.preventDefault();
+                if (alreadyInCart) return;
+                if (!isAuthenticated) return navigate("/login");
+                addItem(primaryVariant.sku, 1);
+              }}
+              disabled={
+                !primaryVariant.stock || addingSku === primaryVariant.sku
+              }
+              aria-label={alreadyInCart ? "Go to cart" : "Add to cart"}
+            >
+              {addingSku === primaryVariant.sku ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : alreadyInCart ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> In Cart
+                </span>
+              ) : (
+                <ShoppingBag className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
-        {alreadyInCart ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success mt-1">
-            <CheckCircle2 className="h-3.5 w-3.5" /> In Cart
-          </span>
-        ) : (
-          <Button
-            size="icon"
-            variant="outline"
-            className="h-8 w-8 shrink-0 mt-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              if (!isAuthenticated) return navigate("/login");
-              addItem(product.variants[0].sku, 1);
-            }}
-            disabled={
-              !product.variants[0].stock ||
-              addingSku === product.variants[0].sku
-            }
-          >
-            {addingSku === product.variants[0].sku ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ShoppingBag className="h-4 w-4" />
-            )}
-          </Button>
-        )}
       </div>
     </motion.div>
   );

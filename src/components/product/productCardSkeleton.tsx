@@ -2,38 +2,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const ProductCardSkeleton = () => {
   return (
-    <div className="group animate-pulse">
-      {/* Image Section */}
-      <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-secondary">
-        <Skeleton className="h-full w-full" />
-
-        {/* Discount badge skeleton */}
-        <Skeleton className="absolute top-3 left-3 h-5 w-10 rounded" />
-
-        {/* Optional stock overlay skeleton */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Skeleton className="h-4 w-24 rounded" />
+    <div className="group h-full animate-pulse">
+      <div className="h-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+        <div className="relative aspect-4/5 overflow-hidden bg-secondary">
+          <Skeleton className="h-full w-full" />
+          <Skeleton className="absolute top-3 left-3 h-6 w-20 rounded-full" />
+          <Skeleton className="absolute top-3 right-3 h-8 w-8 rounded-full" />
+          <Skeleton className="absolute left-3 bottom-3 h-6 w-20 rounded-full" />
         </div>
-      </div>
 
-      {/* Content Section */}
-      <div className="mt-3 flex items-start justify-between gap-2">
-        <div className="space-y-2 w-full">
-          {/* Product Name */}
-          <Skeleton className="h-4 w-3/4 rounded" />
+        <div className="p-3 sm:p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-4 w-12 rounded" />
+          </div>
 
-          {/* Category */}
-          <Skeleton className="h-3 w-1/2 rounded" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-4/5 rounded" />
+            <Skeleton className="h-4 w-3/5 rounded" />
+          </div>
 
-          {/* Price */}
-          <div className="flex items-center gap-2 mt-1">
-            <Skeleton className="h-4 w-16 rounded" />
-            <Skeleton className="h-3 w-12 rounded" />
+          <div className="mt-2.5 flex items-center gap-2">
+            <Skeleton className="h-5 w-14 rounded-full" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <Skeleton className="h-5 w-20 rounded" />
+            <Skeleton className="h-4 w-14 rounded" />
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-8 w-18 rounded-full" />
           </div>
         </div>
-
-        {/* Button */}
-        <Skeleton className="h-8 w-8 rounded-md shrink-0 mt-1" />
       </div>
     </div>
   );

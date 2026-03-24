@@ -107,15 +107,29 @@ const getProductReviews = async (
 
   const totalCounts =
     payload?.totalCounts ??
+    payload?.data?.total ??
+    payload?.data?.total_reviews ??
     payload?.data?.totalCounts ??
     payload?.pagination?.total ??
     payload?.data?.pagination?.total;
+
+  const averageRating =
+    payload?.average_rating ?? payload?.data?.average_rating ?? 0;
+
+  const totalReviews =
+    payload?.total_reviews ?? payload?.data?.total_reviews ?? totalCounts;
+
+  const ratingBreakdown =
+    payload?.rating_breakdown ?? payload?.data?.rating_breakdown ?? {};
 
   return {
     success: payload?.success ?? true,
     message: payload?.message ?? "",
     data: reviews,
     totalCounts,
+    totalReviews,
+    averageRating,
+    ratingBreakdown,
   };
 };
 
