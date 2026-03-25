@@ -75,24 +75,24 @@ const Checkout = () => {
     try {
       setProcessing(true);
 
-      const order = await addOrderMutation.mutateAsync({
-        address_id: Number(selectedAddress.id),
-        coupon_code: appliedCoupon?.code,
-        payment_method: paymentMethod,
-      });
-
-      if (!order?.success) {
-        toast({
-          title: "Order Failed",
-          description: order?.message || "Please try again.",
-        });
-        setProcessing(false);
-        return;
-      }
-
       /* ---------------- COD FLOW ---------------- */
 
       if (paymentMethod === "COD") {
+        const order = await addOrderMutation.mutateAsync({
+          address_id: Number(selectedAddress.id),
+          coupon_code: appliedCoupon?.code,
+          payment_method: paymentMethod,
+        });
+
+        if (!order?.success) {
+          toast({
+            title: "Order Failed",
+            description: order?.message || "Please try again.",
+          });
+          setProcessing(false);
+          return;
+        }
+
         clearCart();
         setPlaced(true);
 
@@ -109,8 +109,8 @@ const Checkout = () => {
 
       /* ---------------- RAZORPAY FLOW ---------------- */
 
-      openPayment({
-        amount: Math.round(finalTotal * 100), // convert to paise
+      await openPayment({
+        amount: finalTotal,
         name: "E-Commerce Store",
         description: "Order Payment",
         email: user?.email ?? "",
@@ -120,7 +120,19 @@ const Checkout = () => {
           try {
             console.log("Payment Success:", response);
 
-            // 🔐 Ideally verify payment here
+            const order = await addOrderMutation.mutateAsync({
+              address_id: Number(selectedAddress.id),
+              coupon_code: appliedCoupon?.code,
+              payment_method: "RAZORPAY",
+            });
+
+            if (!order?.success) {
+              toast({
+                title: "Order Failed",
+                description: order?.message || "Please try again.",
+              });
+              return;
+            }
 
             clearCart();
             setPlaced(true);
@@ -141,10 +153,15 @@ const Checkout = () => {
           }
         },
 
-        onFailure: () => {
+        onFailure: (response) => {
+          const reason =
+            response?.error ||
+            response?.description ||
+            "Payment popup could not complete. Please try again.";
+
           toast({
             title: "Payment Failed",
-            description: "Please try again.",
+            description: reason,
           });
           setProcessing(false);
         },

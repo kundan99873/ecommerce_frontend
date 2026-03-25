@@ -136,3 +136,19 @@ export interface ProductReviewsResponse {
   averageRating?: number;
   ratingBreakdown?: Record<string, number>;
 }
+
+export type SearchData = {
+  searches: {
+    search_query: string;
+    category_filter?: string;
+    brand_filter?: string;
+    created_at: string;
+  }[];
+};
+
+export interface searchApiResponse {
+  success: boolean;
+  data: SearchData;
+  message: string;
+  totalCounts: number;
+}

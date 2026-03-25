@@ -34,16 +34,39 @@ export const useRazorpay = () => {
   // Function to start payment
   const openPayment = useCallback(
     async (options: RazorpayOptions) => {
+      if (!RAZORPAY_KEY) {
+        if (options.onFailure) {
+          options.onFailure({
+            error:
+              "Missing Razorpay key. Set VITE_RAZORPAY_KEY in your .env file.",
+          });
+        }
+        return;
+      }
+
       const res = await loadRazorpayScript();
 
       if (!res) {
-        alert("Razorpay SDK failed to load. Are you online?");
+        if (options.onFailure) {
+          options.onFailure({
+            error: "Razorpay SDK failed to load. Check internet/ad-blocker.",
+          });
+        }
+        return;
+      }
+
+      if (!window.Razorpay) {
+        if (options.onFailure) {
+          options.onFailure({
+            error: "Razorpay SDK is unavailable in window context.",
+          });
+        }
         return;
       }
 
       const paymentOptions = {
         key: RAZORPAY_KEY,
-        amount: options.amount * 100, // in paise
+        amount: Math.round(options.amount * 100), // rupees to paise
         currency: options.currency || "INR",
         name: options.name,
         description: options.description,
@@ -68,6 +91,16 @@ export const useRazorpay = () => {
       };
 
       const paymentObject = new window.Razorpay(paymentOptions);
+      paymentObject.on("payment.failed", (response: any) => {
+        if (options.onFailure) {
+          options.onFailure({
+            error:
+              response?.error?.description ||
+              response?.error?.reason ||
+              "Payment failed",
+          });
+        }
+      });
       paymentObject.open();
     },
     [loadRazorpayScript],

@@ -1,5 +1,5 @@
 import { api } from "@/api/api";
-import type { AddAddressBody } from "./user.types";
+import type { AddAddressBody, GetAllUsersParam, GetAllUsersResponse, GetUserDetailsForAdminResponse } from "./user.types";
 
 const AddAddressApi = async (data: AddAddressBody) => {
   const response = await api.post("/user/address", data);
@@ -21,4 +21,15 @@ const UpdateAddressApi = async (id: string, data: AddAddressBody) => {
   return response.data;
 };
 
-export { AddAddressApi, GetAddressesApi, DeleteAddressApi, UpdateAddressApi };
+const getAllUsers = async (params: GetAllUsersParam): Promise<GetAllUsersResponse> => {
+  const response = await api.get("/admin/users", { params });
+  return response.data;
+};
+
+const getUserByUserIdForAdmin = async (id: number): Promise<GetUserDetailsForAdminResponse> => {
+  const response = await api.get(`/admin/users/${id}`);
+  return response.data;
+};
+
+
+export { AddAddressApi, GetAddressesApi, DeleteAddressApi, UpdateAddressApi, getAllUsers, getUserByUserIdForAdmin };

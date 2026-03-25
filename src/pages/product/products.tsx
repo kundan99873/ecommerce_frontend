@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router";
 import ProductCard from "@/components/product/productCard";
 import { products } from "@/data/products";
 import { Input } from "@/components/ui/input";
-import { Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { Clock, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,7 +22,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "motion/react";
-import { useInfiniteProducts } from "@/services/product/product.query";
+import {
+  useGetRecentSearches,
+  useInfiniteProducts,
+} from "@/services/product/product.query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useGetCategory } from "@/services/category/category.query";
 import ProductCardSkeleton from "@/components/product/productCardSkeleton";
@@ -35,22 +38,40 @@ type SortOption = "default" | "price-asc" | "price-desc" | "rating" | "newest";
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
-  const [search, setSearch] = useState("");
+  const searchFromParams = searchParams.get("search") || "";
+  const [search, setSearch] = useState(searchFromParams);
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const debouncedSearch = useDebounce(search);
+  const trimmedDebouncedSearch = debouncedSearch.trim();
+  const effectiveSearch =
+    trimmedDebouncedSearch.length >= 3 ? trimmedDebouncedSearch : undefined;
+
+  useEffect(() => {
+    setSearch((prev) => (prev === searchFromParams ? prev : searchFromParams));
+  }, [searchFromParams]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteProducts({
-      search: debouncedSearch,
+      search: effectiveSearch,
       limit: 8,
       category: activeCategory !== "all" ? activeCategory : undefined,
       is_product_listing_page: true,
     });
+  const { data: recentSearchData } = useGetRecentSearches();
+  const recentSearches =
+    recentSearchData?.data.searches
+      ?.map((item) => item.search_query?.trim())
+      .filter((value): value is string => Boolean(value)) ?? [];
+  const filteredRecentSearches = recentSearches.filter((item) =>
+    item.toLowerCase().includes(search.trim().toLowerCase()),
+  );
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage) return;
@@ -68,6 +89,20 @@ const Products = () => {
 
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage]);
+
+  useEffect(() => {
+    const onClickOutside = (event: MouseEvent) => {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchFocused(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   const { data: categoryData } = useGetCategory();
   console.log({ categoryData });
@@ -110,6 +145,19 @@ const Products = () => {
     setMinRating(0);
     setInStockOnly(false);
     setSearchParams({});
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      nextParams.set("search", value);
+    } else {
+      nextParams.delete("search");
+    }
+
+    setSearchParams(nextParams);
   };
 
   const hasActiveFilters =
@@ -201,7 +249,11 @@ const Products = () => {
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setSearchParams({})}
+              onClick={() => {
+                const nextParams = new URLSearchParams(searchParams);
+                nextParams.delete("category");
+                setSearchParams(nextParams);
+              }}
               className={`px-4 py-2 text-sm rounded-full cursor-pointer border transition-colors ${
                 activeCategory === "all"
                   ? "bg-foreground text-background border-foreground"
@@ -213,7 +265,11 @@ const Products = () => {
             {categoryData?.data.map((cat) => (
               <button
                 key={cat.slug}
-                onClick={() => setSearchParams({ category: cat.slug })}
+                onClick={() => {
+                  const nextParams = new URLSearchParams(searchParams);
+                  nextParams.set("category", cat.slug);
+                  setSearchParams(nextParams);
+                }}
                 className={`px-4 py-2 text-sm rounded-full cursor-pointer border transition-colors ${
                   activeCategory === cat.slug
                     ? "bg-foreground text-background border-foreground"
@@ -225,14 +281,39 @@ const Products = () => {
             ))}
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+            <div ref={searchBoxRef} className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
                 className="pl-9"
               />
+
+              {isSearchFocused && filteredRecentSearches.length > 0 && (
+                <div className="absolute z-20 mt-2 w-full rounded-lg border bg-background shadow-md">
+                  <p className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Recent Searches
+                  </p>
+                  <div className="pb-2">
+                    {filteredRecentSearches.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => {
+                          handleSearchChange(term);
+                          setIsSearchFocused(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                      >
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <Select
               value={sortBy}

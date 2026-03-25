@@ -19,6 +19,7 @@ import type {
   GetProductsQuery,
   ProductResponse,
   ProductReviewsResponse,
+  searchApiResponse,
 } from "./product.types";
 import { orderQueryKeys } from "../order/order.query";
 
@@ -27,10 +28,14 @@ export const productsKeys = {
   detail: (slug: string) => ["products", slug],
 };
 
-const useProducts = (params?: GetProductsQuery) => {
+const useProducts = (
+  params?: GetProductsQuery,
+  options?: { enabled?: boolean },
+) => {
   return useQuery<ProductResponse>({
     queryFn: () => fetchProducts(params),
     queryKey: [...productsKeys.all, params],
+    enabled: options?.enabled,
   });
 };
 
@@ -163,11 +168,11 @@ const useInfiniteProductReviews = (
 };
 
 const useGetRecentSearches = () => {
-  return useQuery<string[]>({
+  return useQuery<searchApiResponse>({
     queryKey: ["products", "search", "recent"],
     queryFn: getRecentSearches,
   });
-}
+};
 
 export {
   useProducts,

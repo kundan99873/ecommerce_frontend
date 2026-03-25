@@ -3,8 +3,11 @@ import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, TrendingUp, Clock, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { products } from "@/data/products";
-import { useGetRecentSearches } from "@/services/product/product.query";
+import {
+  useGetRecentSearches,
+  useProducts,
+} from "@/services/product/product.query";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface SearchModalProps {
   open: boolean;
@@ -12,15 +15,41 @@ interface SearchModalProps {
 }
 
 const TRENDING = ["Cashmere", "Leather", "Sneakers", "Gold"];
-const RECENT_SEARCHES = ["Merino Wool", "Chelsea Boots"];
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const debouncedQuery = useDebounce(query, 350);
+  const canSearch = debouncedQuery.trim().length >= 3;
 
   const { data } = useGetRecentSearches();
-  console.log({ data: data });
+  const { data: searchData, isFetching: isSearching } = useProducts(
+    {
+      search: debouncedQuery.trim(),
+      limit: 6,
+      page: 1,
+    },
+    { enabled: canSearch },
+  );
+
+  const recentSearches = useMemo(() => {
+    const searches = data?.data?.searches ?? [];
+
+    return Array.from(
+      new Set(
+        searches
+          .map((item: { search_query: string }) => item.search_query?.trim())
+          .filter((term): term is string => Boolean(term)),
+      ),
+    );
+  }, [data]);
+
+  const filteredRecentSearches = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return recentSearches;
+    return recentSearches.filter((item) => item.toLowerCase().includes(term));
+  }, [query, recentSearches]);
 
   useEffect(() => {
     if (open) {
@@ -29,22 +58,14 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
     }
   }, [open]);
 
-  const results = useMemo(() => {
-    if (query.length < 2) return [];
-    const q = query.toLowerCase();
-    return products
-      .filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q),
-      )
-      .slice(0, 6);
-  }, [query]);
+  const results = useMemo(
+    () => (canSearch ? (searchData?.data ?? []) : []),
+    [canSearch, searchData],
+  );
 
-  const goToProduct = (id: number) => {
+  const goToProduct = (slug: string) => {
     onOpenChange(false);
-    navigate(`/product/${id}`);
+    navigate(`/product/${slug}`);
   };
 
   const goToShop = () => {
@@ -63,7 +84,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && query.length >= 2) goToShop();
+              if (e.key === "Enter" && query.trim().length >= 3) goToShop();
               if (e.key === "Escape") onOpenChange(false);
             }}
             placeholder="Search products, brands, categories..."
@@ -81,7 +102,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
 
         <div className="max-h-[60vh] overflow-y-auto">
           <AnimatePresence mode="wait">
-            {query.length < 2 ? (
+            {query.length < 3 ? (
               <motion.div
                 key="suggestions"
                 initial={{ opacity: 0 }}
@@ -90,13 +111,13 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 className="p-4 space-y-5"
               >
                 {/* Recent */}
-                {RECENT_SEARCHES.length > 0 && (
+                {filteredRecentSearches.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                       Recent Searches
                     </p>
                     <div className="space-y-1">
-                      {RECENT_SEARCHES.map((s) => (
+                      {filteredRecentSearches.map((s) => (
                         <button
                           key={s}
                           onClick={() => setQuery(s)}
@@ -137,41 +158,49 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 exit={{ opacity: 0 }}
                 className="py-2"
               >
-                {results.map((product, i) => (
-                  <motion.button
-                    key={product.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    onClick={() => goToProduct(product.id)}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-muted transition-colors text-left"
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-12 w-10 rounded-lg object-cover shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.brand} ·{" "}
-                        {typeof product.category === "string"
-                          ? product.category
-                          : product.category?.name}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold">${product.price}</p>
-                      {product.originalPrice && (
-                        <p className="text-xs text-muted-foreground line-through">
-                          ${product.originalPrice}
-                        </p>
-                      )}
-                    </div>
-                  </motion.button>
-                ))}
+                {results.map((product, i) =>
+                  (() => {
+                    const primaryVariant = product.variants?.[0];
+                    const image = primaryVariant?.images?.[0]?.image_url;
+                    if (!primaryVariant || !image) return null;
+
+                    return (
+                      <motion.button
+                        key={product.slug}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => goToProduct(product.slug)}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-muted transition-colors text-left"
+                      >
+                        <img
+                          src={image}
+                          alt={product.name}
+                          className="h-12 w-10 rounded-lg object-cover shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.brand} · {product.category.name}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold">
+                            ${primaryVariant.discounted_price}
+                          </p>
+                          {primaryVariant.original_price >
+                            primaryVariant.discounted_price && (
+                            <p className="text-xs text-muted-foreground line-through">
+                              ${primaryVariant.original_price}
+                            </p>
+                          )}
+                        </div>
+                      </motion.button>
+                    );
+                  })(),
+                )}
 
                 <button
                   onClick={goToShop}
@@ -180,6 +209,18 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   View all results for "{query}"
                   <ArrowRight className="h-4 w-4" />
                 </button>
+              </motion.div>
+            ) : canSearch && isSearching ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="px-4 py-12 text-center"
+              >
+                <p className="text-sm font-medium text-muted-foreground">
+                  Searching...
+                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -191,7 +232,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
               >
                 <Search className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
                 <p className="text-sm font-medium text-muted-foreground">
-                  No products found for "{query}"
+                  No products found for "{debouncedQuery}"
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Try a different search term

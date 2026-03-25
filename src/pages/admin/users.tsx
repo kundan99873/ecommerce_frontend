@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Search,
   Shield,
@@ -20,69 +19,44 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/useToast";
-import { mockUsers, type AdminUser } from "@/data/adminData";
 import UserDetailModal from "@/components/admin/user/userDetailModal";
 import AdminTableSkeleton from "@/components/admin/common/adminTableSkeleton";
+import { useGetAllUsers } from "@/services/user/user.query";
+import { useDebounce } from "@/hooks/useDebounce";
+import { formatCurrency } from "@/utils/utils";
 
 const PAGE_SIZE = 10;
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [detailUserId, setDetailUserId] = useState<string | null>(null);
+  const [detailUserId, setDetailUserId] = useState<number | null>(null);
+  const debouncedSearch = useDebounce(search, 400);
 
-  const { data: usersData, isLoading } = useQuery<AdminUser[]>({
-    queryKey: ["admin-users"],
-    queryFn: async () => mockUsers,
+  const { data, isLoading, isFetching } = useGetAllUsers({
+    page,
+    limit: PAGE_SIZE,
+    search: debouncedSearch.trim() || undefined,
+    role: roleFilter === "all" ? undefined : roleFilter,
   });
 
-  useEffect(() => {
-    if (usersData) {
-      setUsers(usersData);
-    }
-  }, [usersData]);
-
-  const filtered = useMemo(() => {
-    let list = users;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (u) =>
-          u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
-      );
-    }
-    if (roleFilter !== "all") list = list.filter((u) => u.role === roleFilter);
-    return list;
-  }, [users, search, roleFilter]);
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paged = data?.data ?? [];
+  const totalUsers = data?.totalCounts ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalUsers / PAGE_SIZE));
 
   const toggleBlock = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? ({
-              ...u,
-              status: u.status === "active" ? "blocked" : "active",
-            } as AdminUser)
-          : u,
-      ),
-    );
-    toast({ title: "User status updated" });
+    toast({
+      title: "Not Implemented",
+      description: `Block/unblock for user ${id} is not connected yet.`,
+    });
   };
 
   const changeRole = (id: string, role: "admin" | "user") => {
-    const adminCount = users.filter((u) => u.role === "admin").length;
-    const target = users.find((u) => u.id === id);
-    if (target?.role === "admin" && role === "user" && adminCount <= 1) {
-      toast({ title: "Cannot remove last admin" });
-      return;
-    }
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
-    toast({ title: `Role changed to ${role}` });
+    toast({
+      title: "Not Implemented",
+      description: `Change role to ${role} for user ${id} is not connected yet.`,
+    });
   };
 
   return (
@@ -90,9 +64,7 @@ const AdminUsers = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-display font-bold">Users</h1>
-          <p className="text-muted-foreground text-sm">
-            {filtered.length} users
-          </p>
+          <p className="text-muted-foreground text-sm">{totalUsers} users</p>
         </div>
 
         <Card>
@@ -132,7 +104,7 @@ const AdminUsers = () => {
 
         <Card>
           <CardContent className="p-0">
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <AdminTableSkeleton columns={6} rows={6} />
             ) : (
               <div className="overflow-x-auto">
@@ -168,33 +140,35 @@ const AdminUsers = () => {
                         </td>
                         <td className="p-3 text-center">
                           <Select
-                            value={u.role}
-                            onValueChange={(v) =>
-                              changeRole(u.id, v as "admin" | "user")
-                            }
+                            value={u.role?.toLowerCase()}
+                            onValueChange={(v) => {
+                              changeRole(String(u.id), v as "admin" | "user");
+                            }}
                           >
                             <SelectTrigger className="h-7 w-24 mx-auto text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="customer">Customer</SelectItem>
                             </SelectContent>
                           </Select>
                         </td>
                         <td className="p-3 text-center">
                           <Badge
                             variant={
-                              u.status === "active" ? "default" : "destructive"
+                              u.status?.toLowerCase() === "active"
+                                ? "default"
+                                : "destructive"
                             }
                             className="text-xs"
                           >
                             {u.status}
                           </Badge>
                         </td>
-                        <td className="p-3 text-right">{u.orders}</td>
+                        <td className="p-3 text-right">{u.total_orders}</td>
                         <td className="p-3 text-right font-medium">
-                          ${u.spent.toLocaleString()}
+                          {formatCurrency(u.total_spent)}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center justify-end gap-1">
@@ -202,9 +176,9 @@ const AdminUsers = () => {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => toggleBlock(u.id)}
+                              onClick={() => toggleBlock(String(u.id))}
                             >
-                              {u.status === "active" ? (
+                              {u.status?.toLowerCase() === "active" ? (
                                 <ShieldOff className="h-4 w-4" />
                               ) : (
                                 <Shield className="h-4 w-4" />

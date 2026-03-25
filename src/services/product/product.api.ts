@@ -6,6 +6,7 @@ import type {
   ProductResponse,
   ProductWithoutVariantResponse,
   ProductWithSlugResponse,
+  searchApiResponse,
 } from "./product.types";
 import type { ApiResponse } from "@/api/api.types";
 import { cleanQueryParams } from "@/utils/utils";
@@ -133,7 +134,7 @@ const getProductReviews = async (
   };
 };
 
-const getRecentSearches = async (): Promise<string[]> => {
+const getRecentSearches = async (): Promise<searchApiResponse> => {
   const response = await api.get(`/product/search/recent`);
   return response.data;
 }

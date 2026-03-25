@@ -17,9 +17,12 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addItem, addingSku, items } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { toggleItem, isInWishlist } = useWishlist();
+  const { toggleItem, isInWishlist, moveLoading, removeLoading } =
+    useWishlist();
   const primaryVariant = product.variants[0];
   const wishlisted = isInWishlist(primaryVariant.sku);
+  const isWishlistLoading =
+    moveLoading === primaryVariant.sku || removeLoading === primaryVariant.sku;
   const alreadyInCart = items.some((item) => item.slug === product.slug);
   const discountPercent =
     primaryVariant.original_price > 0
@@ -67,6 +70,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             <button
               onClick={(e) => {
                 e.preventDefault();
+                if (isWishlistLoading) return;
                 toggleItem(primaryVariant.sku);
               }}
               className={`absolute top-3 right-3 p-2 rounded-full transition-all cursor-pointer ${
@@ -74,11 +78,16 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                   ? "bg-destructive text-destructive-foreground"
                   : "bg-background/80 backdrop-blur text-foreground hover:bg-background"
               }`}
+              disabled={isWishlistLoading}
               aria-label="Toggle wishlist"
             >
-              <Heart
-                className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`}
-              />
+              {isWishlistLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Heart
+                  className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`}
+                />
+              )}
             </button>
 
             <div className="absolute left-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[11px] text-white backdrop-blur">

@@ -34,7 +34,8 @@ const ProductDetail = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { addItem, loading, items } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
+  const { toggleItem, isInWishlist, moveLoading, removeLoading } =
+    useWishlist();
   const { mutate: trackProductView } = useTrackProductView();
   const trackedSlugRef = useRef<string | null>(null);
 
@@ -127,6 +128,10 @@ const ProductDetail = () => {
     : false;
   const wishlisted = selectedVariant
     ? isInWishlist(selectedVariant.sku)
+    : false;
+  const isWishlistLoading = selectedVariant
+    ? moveLoading === selectedVariant.sku ||
+      removeLoading === selectedVariant.sku
     : false;
 
   const updateUrl = useCallback(
@@ -275,14 +280,22 @@ const ProductDetail = () => {
             </div>
 
             <button
-              onClick={() => toggleItem(selectedVariant.sku)}
+              onClick={() => {
+                if (isWishlistLoading) return;
+                toggleItem(selectedVariant.sku);
+              }}
               className={`p-2 rounded-full ${
                 wishlisted ? "bg-destructive text-white" : "bg-background"
               }`}
+              disabled={isWishlistLoading}
             >
-              <Heart
-                className={`h-5 w-5 ${wishlisted ? "fill-current" : ""}`}
-              />
+              {isWishlistLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Heart
+                  className={`h-5 w-5 ${wishlisted ? "fill-current" : ""}`}
+                />
+              )}
             </button>
           </div>
 
