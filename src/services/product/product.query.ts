@@ -11,6 +11,7 @@ import {
   trackProductView,
   getTopRatedProducts,
   getProductReviews,
+  getRecentSearches,
 } from "./product.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
@@ -161,6 +162,13 @@ const useInfiniteProductReviews = (
   });
 };
 
+const useGetRecentSearches = () => {
+  return useQuery<string[]>({
+    queryKey: ["products", "search", "recent"],
+    queryFn: getRecentSearches,
+  });
+}
+
 export {
   useProducts,
   useGetProduct,
@@ -174,4 +182,5 @@ export {
   useTopRatedProducts,
   useTrackProductView,
   useInfiniteProductReviews,
+  useGetRecentSearches,
 };

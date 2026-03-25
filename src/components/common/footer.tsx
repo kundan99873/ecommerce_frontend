@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-display text-lg font-bold mb-3">LUMIÈRE</h3>
+            <h3 className="font-display text-lg font-bold mb-3">SHOPNOW</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Curated essentials for the modern wardrobe. Quality materials, timeless design.
             </p>
@@ -45,7 +45,7 @@ const Footer = () => {
             <h4 className="font-body text-sm font-semibold mb-3">Support</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>help@lumiere.com</p>
-              <p>Free shipping on orders $100+</p>
+              <p>Free shipping on orders Rs.1000+</p>
               <p>30-day returns</p>
             </div>
           </div>

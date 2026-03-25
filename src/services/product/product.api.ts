@@ -133,6 +133,11 @@ const getProductReviews = async (
   };
 };
 
+const getRecentSearches = async (): Promise<string[]> => {
+  const response = await api.get(`/product/search/recent`);
+  return response.data;
+}
+
 export {
   fetchProducts,
   fetchProductBySlug,
@@ -145,4 +150,5 @@ export {
   trackProductView,
   getTopRatedProducts,
   getProductReviews,
+  getRecentSearches,
 };

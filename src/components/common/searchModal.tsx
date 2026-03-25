@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, TrendingUp, Clock, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { products } from "@/data/products";
+import { useGetRecentSearches } from "@/services/product/product.query";
 
 interface SearchModalProps {
   open: boolean;
@@ -17,6 +18,9 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useGetRecentSearches();
+  console.log({ data: data });
 
   useEffect(() => {
     if (open) {
