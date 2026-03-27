@@ -5,6 +5,8 @@ import {
   GetAddressesApi,
   getAllUsers,
   getUserByUserIdForAdmin,
+  getUserProfile,
+  updateUserProfileApi,
   UpdateAddressApi,
 } from "./user.api";
 import { queryClient } from "@/api/client";
@@ -62,11 +64,27 @@ const useGetAllUsers = (params?: GetAllUsersParam) => {
   });
 };
 
+const useGetUserProfile = () => {
+  return useQuery<GetUserDetailsForAdminResponse>({
+    queryKey: ["admin-user-details"],
+    queryFn: getUserProfile,
+  });
+};
 const useGetUserByUserIdForAdmin = (id: number | null) => {
   return useQuery<GetUserDetailsForAdminResponse>({
     queryKey: ["admin-user-details", id],
     queryFn: () => getUserByUserIdForAdmin(id!),
     enabled: !!id,
+  });
+};
+
+const useUpdateUserProfile = () => {
+  return useMutation<ApiResponse, Error, FormData>({
+    mutationFn: updateUserProfileApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user-details"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 };
 
@@ -77,4 +95,6 @@ export {
   useUpdateAddress,
   useGetAllUsers,
   useGetUserByUserIdForAdmin,
+  useGetUserProfile,
+  useUpdateUserProfile,
 };

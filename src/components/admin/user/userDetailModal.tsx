@@ -158,12 +158,18 @@ const UserDetailModal = ({ userId, onOpenChange }: UserDetailModalProps) => {
                 ) : (
                   <div className="space-y-3">
                     {orders.map((o: any) => (
-                      <div key={o.order_number} className="rounded-lg border p-3">
+                      <div
+                        key={o.order_number}
+                        className="rounded-lg border p-3"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="text-xs font-mono text-muted-foreground">
                             {o.order_number}
                           </p>
-                          <Badge variant="outline" className="text-xs capitalize">
+                          <Badge
+                            variant="outline"
+                            className="text-xs capitalize"
+                          >
                             {o.status}
                           </Badge>
                         </div>
@@ -175,7 +181,9 @@ const UserDetailModal = ({ userId, onOpenChange }: UserDetailModalProps) => {
                               : "-"}
                           </p>
                           <p className="font-semibold">
-                            {formatCurrency(o.final_amount ?? o.total_amount ?? 0)}
+                            {formatCurrency(
+                              o.final_amount ?? o.total_amount ?? 0,
+                            )}
                           </p>
                         </div>
 
@@ -233,21 +241,28 @@ const UserDetailModal = ({ userId, onOpenChange }: UserDetailModalProps) => {
                   <div className="space-y-2">
                     {wishlist.map((item: any) => (
                       <div
-                        key={item.id}
+                        key={item.sku ?? item.id}
                         className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
                       >
                         <img
-                          src={item.variants?.[0]?.images?.[0]?.image_url}
+                          src={item.image}
                           alt={item.name}
                           className="h-10 w-10 rounded object-cover"
                         />
-                        <p className="flex-1 text-sm font-medium">
-                          {item.name}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {item.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.color ? `${item.color}` : ""}
+                            {item.color && item.size ? ` • ` : ""}
+                            {item.size ? `${item.size}` : ""}
+                            {(item.color || item.size) && item.sku ? ` • ` : ""}
+                            {item.sku ? `SKU: ${item.sku}` : ""}
+                          </p>
+                        </div>
                         <p className="text-sm font-medium">
-                          {formatCurrency(
-                            item.variants?.[0]?.discounted_price ?? 0,
-                          )}
+                          {formatCurrency(item.price ?? 0)}
                         </p>
                       </div>
                     ))}
@@ -264,10 +279,14 @@ const UserDetailModal = ({ userId, onOpenChange }: UserDetailModalProps) => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2 text-sm">
                       <p>
-                        Items: <span className="font-semibold">{totalCartItems}</span>
+                        Items:{" "}
+                        <span className="font-semibold">{totalCartItems}</span>
                       </p>
                       <p>
-                        Total: <span className="font-semibold">{formatCurrency(totalCartAmount)}</span>
+                        Total:{" "}
+                        <span className="font-semibold">
+                          {formatCurrency(totalCartAmount)}
+                        </span>
                       </p>
                     </div>
 
@@ -282,16 +301,22 @@ const UserDetailModal = ({ userId, onOpenChange }: UserDetailModalProps) => {
                           className="h-10 w-10 rounded object-cover"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="truncate text-sm font-medium">{item.name}</p>
+                          <p className="truncate text-sm font-medium">
+                            {item.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             Qty: {item.quantity}
                             {item.color ? ` • ${item.color}` : ""}
                             {item.size ? ` • ${item.size}` : ""}
                           </p>
-                          <p className="text-xs text-muted-foreground">SKU: {item.sku ?? "-"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            SKU: {item.sku ?? "-"}
+                          </p>
                         </div>
                         <p className="text-sm font-medium">
-                          {formatCurrency(item.subtotal ?? item.price * item.quantity)}
+                          {formatCurrency(
+                            item.subtotal ?? item.price * item.quantity,
+                          )}
                         </p>
                       </div>
                     ))}

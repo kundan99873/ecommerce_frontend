@@ -1,5 +1,11 @@
 import { api } from "@/api/api";
-import type { AddAddressBody, GetAllUsersParam, GetAllUsersResponse, GetUserDetailsForAdminResponse } from "./user.types";
+import type { ApiResponse } from "@/api/api.types";
+import type {
+  AddAddressBody,
+  GetAllUsersParam,
+  GetAllUsersResponse,
+  GetUserDetailsForAdminResponse,
+} from "./user.types";
 
 const AddAddressApi = async (data: AddAddressBody) => {
   const response = await api.post("/user/address", data);
@@ -21,15 +27,39 @@ const UpdateAddressApi = async (id: string, data: AddAddressBody) => {
   return response.data;
 };
 
-const getAllUsers = async (params: GetAllUsersParam): Promise<GetAllUsersResponse> => {
+const getAllUsers = async (
+  params: GetAllUsersParam,
+): Promise<GetAllUsersResponse> => {
   const response = await api.get("/admin/users", { params });
   return response.data;
 };
 
-const getUserByUserIdForAdmin = async (id: number): Promise<GetUserDetailsForAdminResponse> => {
+const getUserProfile = async (): Promise<GetUserDetailsForAdminResponse> => {
+  const response = await api.get(`/user/profile`);
+  return response.data;
+};
+
+const updateUserProfileApi = async (data: FormData): Promise<ApiResponse> => {
+  const response = await api.patch(`/user/profile`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+const getUserByUserIdForAdmin = async (
+  id: number,
+): Promise<GetUserDetailsForAdminResponse> => {
   const response = await api.get(`/admin/users/${id}`);
   return response.data;
 };
 
-
-export { AddAddressApi, GetAddressesApi, DeleteAddressApi, UpdateAddressApi, getAllUsers, getUserByUserIdForAdmin };
+export {
+  AddAddressApi,
+  GetAddressesApi,
+  DeleteAddressApi,
+  UpdateAddressApi,
+  getAllUsers,
+  getUserByUserIdForAdmin,
+  getUserProfile,
+  updateUserProfileApi,
+};

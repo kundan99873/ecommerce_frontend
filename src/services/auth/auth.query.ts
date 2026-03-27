@@ -1,12 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  changePassword,
+  forgotPassword,
   getLoggedInUserDetails,
   googleLogin,
   loginUser,
   logoutUser,
   registerUser,
+  resetPassword,
 } from "./auth.api";
 import { queryClient } from "@/api/client";
+import type { ApiResponse } from "@/api/api.types";
 import type { LoginBody, LoginResponse, UserResponse } from "./auth.types";
 
 const useUserLogin = () => {
@@ -70,10 +74,35 @@ const useLoggedInUser = () =>
     queryKey: ["me"],
   });
 
+const useChangePassword = () => {
+  return useMutation<
+    ApiResponse,
+    Error,
+    { current_password: string; new_password: string }
+  >({
+    mutationFn: (data) => changePassword(data),
+  });
+};
+
+const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: (email: string) => forgotPassword(email),
+  });
+}
+
+const useResetPassword = () => {
+  return useMutation({
+    mutationFn: (data: { token: string; new_password: string }) => resetPassword(data),
+  });
+}
+
 export {
   useGoogleLogin,
   useUserRegister,
   useLoggedInUser,
   useUserLogin,
   useUserLogout,
+  useChangePassword,
+  useForgotPassword,
+  useResetPassword,
 };
