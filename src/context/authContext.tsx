@@ -1,6 +1,8 @@
 import React, { createContext, useContext } from "react";
 import {
+  useForgotPassword,
   useLoggedInUser,
+  useResetPassword,
   useUserLogin,
   useUserLogout,
 } from "@/services/auth/auth.query";
@@ -14,8 +16,12 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<ApiResponse>;
+  forgotPassword: (email: string) => Promise<ApiResponse>;
+  resetPassword: (token: string, newPassword: string) => Promise<ApiResponse>;
   loginLoading: boolean;
   logoutLoading: boolean;
+  forgotPasswordLoading: boolean;
+  resetPasswordLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,6 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const { data: user, isError, isLoading, isFetching } = useLoggedInUser();
   const loginMutation = useUserLogin();
   const logoutMutation = useUserLogout();
+  const forgotPasswordMutation = useForgotPassword();
+  const resetPasswordMutation = useResetPassword();
 
   const value: AuthContextType = {
     user: user?.data ?? null,
@@ -33,11 +41,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading,
     login: (email, password) => loginMutation.mutateAsync({ email, password }),
     logout: () => logoutMutation.mutateAsync(),
+    forgotPassword: (email) => forgotPasswordMutation.mutateAsync(email),
+    resetPassword: (token, newPassword) =>
+      resetPasswordMutation.mutateAsync({ token, new_password: newPassword }),
     loginLoading: loginMutation.isPending,
     logoutLoading: logoutMutation.isPending,
+    forgotPasswordLoading: forgotPasswordMutation.isPending,
+    resetPasswordLoading: resetPasswordMutation.isPending,
   };
 
-  if(isLoading || isFetching) return <PageLoader />;
+  if (isLoading || isFetching) return <PageLoader />;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
