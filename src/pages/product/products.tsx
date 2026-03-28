@@ -29,6 +29,7 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { useGetCategory } from "@/services/category/category.query";
 import ProductCardSkeleton from "@/components/product/productCardSkeleton";
+import { useAuth } from "@/context/authContext";
 
 const maxPrice = Math.max(...products.map((p) => p.price));
 // const brands = [...new Set(products.map((p) => p.category))]; // using category as brand proxy
@@ -36,6 +37,7 @@ const maxPrice = Math.max(...products.map((p) => p.price));
 type SortOption = "default" | "price-asc" | "price-desc" | "rating" | "newest";
 
 const Products = () => {
+  const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
   const searchFromParams = searchParams.get("search") || "";
@@ -64,7 +66,7 @@ const Products = () => {
       category: activeCategory !== "all" ? activeCategory : undefined,
       is_product_listing_page: true,
     });
-  const { data: recentSearchData } = useGetRecentSearches();
+  const { data: recentSearchData } = useGetRecentSearches(isAuthenticated);
   const recentSearches =
     recentSearchData?.data.searches
       ?.map((item) => item.search_query?.trim())

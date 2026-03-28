@@ -8,6 +8,7 @@ dayjs.extend(advancedFormat);
 
 const ProtectedRoute = lazy(() => import("./protectedRouter"));
 const ProtectedAdminRoute = lazy(() => import("./protectedAdminRouter"));
+const UnProtectedRoute = lazy(() => import("./unProtectedRouter"));
 
 const Layout = lazy(() => import("@/components/common/layout"));
 const AdminLayout = lazy(() => import("@/components/admin/common/layout"));
@@ -50,11 +51,6 @@ const router = createBrowserRouter([
       { path: "product/:id", Component: ProductDetail },
       { path: "cart", Component: Cart },
 
-      { path: "login", Component: Login },
-      { path: "register", Component: Register },
-      { path: "forgot-password", Component: ForgotPassword },
-      { path: "reset-password", Component: ResetPassword },
-
       {
         Component: ProtectedRoute,
         children: [
@@ -85,6 +81,16 @@ const router = createBrowserRouter([
           { path: "analytics", Component: AdminAnalytics },
         ],
       },
+    ],
+  },
+
+  {
+    Component: UnProtectedRoute,
+    children: [
+      { path: "/login", Component: Login },
+      { path: "/register", Component: Register },
+      { path: "/forgot-password", Component: ForgotPassword },
+      { path: "/reset-password", Component: ResetPassword },
     ],
   },
 

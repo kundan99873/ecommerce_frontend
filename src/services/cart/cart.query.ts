@@ -239,10 +239,11 @@ const useRemoveCartCoupon = () => {
   });
 };
 
-const useGetAllCartCoupons = () => {
+const useGetAllCartCoupons = (enabled = true) => {
   return useQuery({
     queryKey: ["cart_coupons"],
     queryFn: getAllCartCoupons,
+    enabled,
   });
 };
 

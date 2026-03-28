@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft, Mail, Loader2, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Loader2,
+  CheckCircle,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,48 +61,61 @@ const ForgotPassword = () => {
   };
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-12 max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_15%,hsl(var(--primary)/0.24)_0%,transparent_35%),radial-gradient(circle_at_92%_85%,hsl(var(--chart-2)/0.24)_0%,transparent_35%),linear-gradient(160deg,hsl(var(--background))_0%,hsl(var(--muted)/0.35)_100%)] px-4 py-8">
+      <div className="pointer-events-none absolute inset-0 opacity-60">
+        <div className="absolute -top-14 -right-10 h-52 w-52 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-teal-500/20 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex min-h-screen items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="w-full max-w-md rounded-2xl border border-border/60 bg-card/90 p-6 shadow-2xl backdrop-blur sm:p-8"
         >
           <Link
             to="/login"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to login
           </Link>
 
           {sent ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 mx-auto text-success" />
-              <h1 className="text-2xl font-display font-bold mt-4">
+            <div className="py-6 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15">
+                <CheckCircle className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h1 className="mt-4 text-2xl font-display font-bold tracking-tight">
                 Check your email
               </h1>
-              <p className="text-muted-foreground mt-2">
-                We've sent a password reset link to <strong>{email}</strong>
+              <p className="mt-2 text-sm text-muted-foreground">
+                We&apos;ve sent a password reset link to{" "}
+                <strong>{email}</strong>
               </p>
-              <Link to="/reset-password">
-                <Button variant="outline" className="mt-6">
-                  Enter Reset Code
+              <Link to="/login">
+                <Button variant="outline" className="mt-6 w-full">
+                  Back to Login
                 </Button>
               </Link>
             </div>
           ) : (
             <>
-              <div>
-                <h1 className="text-3xl font-display font-bold">
+              <div className="mt-5 space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Recover Account
+                </div>
+                <h1 className="text-3xl font-display font-bold tracking-tight">
                   Forgot Password
                 </h1>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground">
                   Enter your email to receive a reset link
                 </p>
               </div>
-              <form onSubmit={handleSubmit} className="space-y-4">
+
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 {error && (
-                  <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg">
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                     {error}
                   </div>
                 )}
@@ -108,6 +127,7 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
+                    className="h-11 rounded-xl"
                     required
                   />
                 </div>
@@ -117,9 +137,9 @@ const ForgotPassword = () => {
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <Mail className="h-4 w-4 mr-2" />
+                    <Mail className="mr-2 h-4 w-4" />
                   )}
                   Send Reset Link
                 </Button>
@@ -128,7 +148,7 @@ const ForgotPassword = () => {
           )}
         </motion.div>
       </div>
-    </>
+    </div>
   );
 };
 

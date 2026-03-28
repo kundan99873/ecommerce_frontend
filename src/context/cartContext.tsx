@@ -71,6 +71,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const addItem = useCallback(
     (slug: string, quantity = 1, coupon_code?: string) => {
+      if (!isAuthenticated) {
+        toast({
+          title: "Please login",
+          description: "Login to manage your cart.",
+        });
+        return;
+      }
+
       addToCart.mutateAsync(
         {
           slug,
@@ -94,11 +102,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       );
     },
-    [addToCart],
+    [addToCart, isAuthenticated],
   );
 
   const applyCoupon = useCallback(
     (couponCode: string) => {
+      if (!isAuthenticated) {
+        toast({
+          title: "Please login",
+          description: "Login to apply cart coupons.",
+        });
+        return;
+      }
+
       applyCartCoupon.mutate(couponCode, {
         onSuccess: () => {
           toast({
@@ -114,10 +130,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
     },
-    [applyCartCoupon],
+    [applyCartCoupon, isAuthenticated],
   );
 
   const removeCoupon = useCallback(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please login",
+        description: "Login to manage your cart coupons.",
+      });
+      return;
+    }
+
     removeCartCoupon.mutate(undefined, {
       onSuccess: () => {
         toast({
@@ -132,7 +156,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       },
     });
-  }, [removeCartCoupon]);
+  }, [removeCartCoupon, isAuthenticated]);
 
   const addingSku =
     addToCart.isPending && addToCart.variables
@@ -148,6 +172,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const removeItem = useCallback(
     (slug: string) => {
+      if (!isAuthenticated) {
+        toast({
+          title: "Please login",
+          description: "Login to manage your cart.",
+        });
+        return;
+      }
+
       removeFromCart.mutate(slug, {
         onSuccess: () => {
           toast({
@@ -163,11 +195,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
     },
-    [removeFromCart],
+    [removeFromCart, isAuthenticated],
   );
 
   const updateQuantity = useCallback(
     (slug: string, quantity: number) => {
+      if (!isAuthenticated) {
+        toast({
+          title: "Please login",
+          description: "Login to update your cart.",
+        });
+        return;
+      }
+
       const item = items.find((i) => i.sku === slug);
       if (!item) return;
       updateCartItem.mutate(
@@ -188,10 +228,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       );
     },
-    [items, updateCartItem],
+    [items, updateCartItem, isAuthenticated],
   );
 
   const clearCart = useCallback(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please login",
+        description: "Login to clear your cart.",
+      });
+      return;
+    }
+
     clearCartItem.mutate(undefined, {
       onSuccess: () => {
         toast({
@@ -206,7 +254,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       },
     });
-  }, [clearCartItem]);
+  }, [clearCartItem, isAuthenticated]);
 
   const totalItems = isAuthenticated ? (cartData?.data.total_items ?? 0) : 0;
   const totalPrice = isAuthenticated ? (cartData?.data.total_price ?? 0) : 0;

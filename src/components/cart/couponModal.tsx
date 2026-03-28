@@ -23,14 +23,16 @@ import { toast } from "@/hooks/useToast";
 import { useState } from "react";
 import { formatCurrency } from "@/utils/utils";
 import dayjs from "dayjs";
+import { useAuth } from "@/context/authContext";
 
 interface CouponModalProps {
   cartTotal: number;
 }
 
 const CouponModal = ({ cartTotal }: CouponModalProps) => {
+  const { isAuthenticated } = useAuth();
   const { appliedCoupon, applyCoupon, applyingCouponCode } = useCart();
-  const { data: couponsResponse } = useGetAllCartCoupons();
+  const { data: couponsResponse } = useGetAllCartCoupons(isAuthenticated);
   const couponPayload = couponsResponse?.data as
     | CartAvailableCoupon[]
     | { coupons?: CartAvailableCoupon[] }

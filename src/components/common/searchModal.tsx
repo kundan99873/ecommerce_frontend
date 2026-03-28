@@ -8,6 +8,7 @@ import {
   useProducts,
 } from "@/services/product/product.query";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useAuth } from "@/context/authContext";
 
 interface SearchModalProps {
   open: boolean;
@@ -17,13 +18,14 @@ interface SearchModalProps {
 const TRENDING = ["Cashmere", "Leather", "Sneakers", "Gold"];
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
+  const { isAuthenticated } = useAuth();
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 350);
   const canSearch = debouncedQuery.trim().length >= 3;
 
-  const { data } = useGetRecentSearches();
+  const { data } = useGetRecentSearches(isAuthenticated);
   const { data: searchData, isFetching: isSearching } = useProducts(
     {
       search: debouncedQuery.trim(),

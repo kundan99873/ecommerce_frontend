@@ -8,6 +8,7 @@ import {
   logoutUser,
   registerUser,
   resetPassword,
+  verifyResetToken,
 } from "./auth.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
@@ -46,11 +47,13 @@ const useUserLogout = () => {
     mutationFn: () => logoutUser(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
-      queryClient.invalidateQueries({
+      queryClient.removeQueries({ queryKey: ["cart"] });
+      queryClient.removeQueries({ queryKey: ["wishlist"] });
+      queryClient.removeQueries({
         queryKey: ["products", "recently-viewed"],
       });
+      queryClient.removeQueries({ queryKey: ["products", "search", "recent"] });
+      queryClient.removeQueries({ queryKey: ["cart_coupons"] });
     },
   });
 };
@@ -88,13 +91,20 @@ const useForgotPassword = () => {
   return useMutation({
     mutationFn: (email: string) => forgotPassword(email),
   });
-}
+};
 
 const useResetPassword = () => {
   return useMutation({
-    mutationFn: (data: { token: string; new_password: string }) => resetPassword(data),
+    mutationFn: (data: { token: string; new_password: string }) =>
+      resetPassword(data),
   });
-}
+};
+
+const useVerifyResetToken = () => {
+  return useMutation({
+    mutationFn: (data: { token: string }) => verifyResetToken(data),
+  });
+};
 
 export {
   useGoogleLogin,
@@ -105,4 +115,5 @@ export {
   useChangePassword,
   useForgotPassword,
   useResetPassword,
+  useVerifyResetToken,
 };

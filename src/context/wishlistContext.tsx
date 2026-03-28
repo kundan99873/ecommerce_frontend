@@ -36,6 +36,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const addItem = useCallback(
     (slug: string) => {
+      if (!isAuthenticated) {
+        toast({ title: "Please login to use wishlist" });
+        return;
+      }
+
       addMutation.mutate(slug, {
         onSuccess: () => {
           toast({ title: "Added to wishlist" });
@@ -45,11 +50,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
     },
-    [addMutation],
+    [addMutation, isAuthenticated],
   );
 
   const removeItem = useCallback(
     (slug: string) => {
+      if (!isAuthenticated) {
+        toast({ title: "Please login to use wishlist" });
+        return;
+      }
+
       removeMutation.mutate(slug, {
         onSuccess: () => {
           toast({ title: "Removed from wishlist" });
@@ -59,7 +69,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       });
     },
-    [removeMutation],
+    [removeMutation, isAuthenticated],
   );
 
   const toggleItem = useCallback(

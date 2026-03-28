@@ -167,10 +167,11 @@ const useInfiniteProductReviews = (
   });
 };
 
-const useGetRecentSearches = () => {
+const useGetRecentSearches = (enabled = true) => {
   return useQuery<searchApiResponse>({
     queryKey: ["products", "search", "recent"],
     queryFn: getRecentSearches,
+    enabled,
   });
 };
 
