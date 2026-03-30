@@ -88,6 +88,16 @@ const getTopRatedProducts = async (): Promise<ProductResponse> => {
   return response.data;
 };
 
+const getSimilarProducts = async (
+  slug: string,
+  limit = 6,
+): Promise<ProductResponse> => {
+  const response = await api.get(`/product/${slug}/similar`, {
+    params: { limit },
+  });
+  return response.data;
+};
+
 const getProductReviews = async (
   slug: string,
   page = 1,
@@ -98,30 +108,25 @@ const getProductReviews = async (
   });
 
   const payload = response.data;
-  const reviews: ProductReview[] = Array.isArray(payload?.data)
-    ? payload.data
-    : Array.isArray(payload?.data?.reviews)
-      ? payload.data.reviews
-      : Array.isArray(payload?.reviews)
-        ? payload.reviews
-        : [];
+  const data = payload?.data;
+
+  const reviews: ProductReview[] = Array.isArray(data?.reviews)
+    ? data.reviews
+    : [];
 
   const totalCounts =
-    payload?.totalCounts ??
-    payload?.data?.total ??
-    payload?.data?.total_reviews ??
-    payload?.data?.totalCounts ??
-    payload?.pagination?.total ??
-    payload?.data?.pagination?.total;
+    typeof data?.total === "number" ? data.total : reviews.length;
 
   const averageRating =
-    payload?.average_rating ?? payload?.data?.average_rating ?? 0;
+    typeof data?.average_rating === "number" ? data.average_rating : 0;
 
   const totalReviews =
-    payload?.total_reviews ?? payload?.data?.total_reviews ?? totalCounts;
+    typeof data?.total_reviews === "number" ? data.total_reviews : totalCounts;
 
   const ratingBreakdown =
-    payload?.rating_breakdown ?? payload?.data?.rating_breakdown ?? {};
+    data?.rating_breakdown && typeof data.rating_breakdown === "object"
+      ? data.rating_breakdown
+      : {};
 
   return {
     success: payload?.success ?? true,
@@ -137,7 +142,7 @@ const getProductReviews = async (
 const getRecentSearches = async (): Promise<searchApiResponse> => {
   const response = await api.get(`/product/search/recent`);
   return response.data;
-}
+};
 
 export {
   fetchProducts,
@@ -150,6 +155,7 @@ export {
   getRecentlyViewedProducts,
   trackProductView,
   getTopRatedProducts,
+  getSimilarProducts,
   getProductReviews,
   getRecentSearches,
 };

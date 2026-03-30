@@ -19,6 +19,7 @@ import { useWishlist } from "@/context/wishlistContext";
 import {
   useGetProduct,
   useInfiniteProductReviews,
+  useSimilarProducts,
   useTrackProductView,
 } from "@/services/product/product.query";
 import { skipToken } from "@tanstack/react-query";
@@ -26,7 +27,9 @@ import { formatCurrency } from "@/utils/utils";
 import ProductDetailSkeleton from "@/pages/product/productDetailSkeleton";
 import PincodeCheck from "@/components/product/pinCodeCheck";
 import ProductCoupon from "@/components/product/productCoupon";
-import CustomerReviews from "@/components/product/customerReviews";
+import CustomerReviews from "@/components/product/customer-reviews";
+import ProductCard from "@/components/product/productCard";
+import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 import type { ProductReview } from "@/services/product/product.types";
 
 const ProductDetail = () => {
@@ -42,6 +45,11 @@ const ProductDetail = () => {
   const { data, isLoading } = useGetProduct((slug as string) ?? skipToken);
 
   const product = data?.data;
+  const { data: similarProductsData, isLoading: similarProductsLoading } =
+    useSimilarProducts(product?.slug ?? "", 6, !!product?.slug);
+  const similarProducts =
+    similarProductsData?.data?.filter((item) => item.slug !== product?.slug) ??
+    [];
   const reviewsLoadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -442,6 +450,30 @@ const ProductDetail = () => {
           />
         </>
       )}
+
+      <section className="mt-14">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-display font-bold">You may also like</h2>
+          <Link
+            to="/products"
+            className="text-sm text-primary hover:underline underline-offset-4"
+          >
+            View more
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {similarProductsLoading
+            ? Array(4)
+                .fill(undefined)
+                .map((_, index) => <ProductCardSkeleton key={index} />)
+            : similarProducts
+                .slice(0, 6)
+                .map((item, index) => (
+                  <ProductCard key={item.slug} product={item} index={index} />
+                ))}
+        </div>
+      </section>
     </div>
   );
 };

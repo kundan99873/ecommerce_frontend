@@ -10,6 +10,7 @@ import {
   getRecentlyViewedProducts,
   trackProductView,
   getTopRatedProducts,
+  getSimilarProducts,
   getProductReviews,
   getRecentSearches,
 } from "./product.api";
@@ -129,6 +130,14 @@ const useTopRatedProducts = (enabled = true) => {
   });
 };
 
+const useSimilarProducts = (slug: string, limit = 6, enabled = true) => {
+  return useQuery<ProductResponse>({
+    queryKey: ["products", "similar", slug, limit],
+    queryFn: () => getSimilarProducts(slug, limit),
+    enabled: enabled && slug !== "",
+  });
+};
+
 const useTrackProductView = () => {
   return useMutation<ApiResponse, Error, string>({
     mutationFn: (slug) => trackProductView(slug),
@@ -186,6 +195,7 @@ export {
   useAddReviewToProduct,
   useRecentlyViewedProducts,
   useTopRatedProducts,
+  useSimilarProducts,
   useTrackProductView,
   useInfiniteProductReviews,
   useGetRecentSearches,
