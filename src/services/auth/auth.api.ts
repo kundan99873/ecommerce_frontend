@@ -18,6 +18,16 @@ const logoutUser = async () => {
   return response.data;
 };
 
+const logoutSessionByDevice = async (deviceId: string) => {
+  const response = await api.post(`/auth/sessions/device/${deviceId}`);
+  return response.data;
+};
+
+const logoutOtherSessions = async () => {
+  const response = await api.post("/auth/sessions/logout-others");
+  return response.data;
+};
+
 const googleLogin = async (token: string) => {
   const response = await api.post(`/auth/google-login`, {
     token,
@@ -30,7 +40,10 @@ const getLoggedInUserDetails = async () => {
   return response.data;
 };
 
-const changePassword = async (data: { current_password: string; new_password: string }) => {
+const changePassword = async (data: {
+  current_password: string;
+  new_password: string;
+}) => {
   const response = await api.post(`/auth/change-password`, data);
   return response.data;
 };
@@ -45,7 +58,7 @@ const resetPassword = async (data: { token: string; new_password: string }) => {
   return response.data;
 };
 
-const verifyResetToken = async (data: { token: string; }) => {
+const verifyResetToken = async (data: { token: string }) => {
   const response = await api.post(`/auth/reset-password`, data);
   return response.data;
 };
@@ -55,6 +68,8 @@ export {
   loginUser,
   googleLogin,
   logoutUser,
+  logoutSessionByDevice,
+  logoutOtherSessions,
   getLoggedInUserDetails,
   changePassword,
   forgotPassword,

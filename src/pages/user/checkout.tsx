@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -36,14 +36,35 @@ const Checkout = () => {
   const { user } = useAuth();
   const { openPayment } = useRazorpay();
   const addOrderMutation = useAddOrder();
+  const isOrderLoading = addOrderMutation.isPending;
 
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("RAZORPAY");
   const [processing, setProcessing] = useState(false);
-  const [placed, setPlaced] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
 
-  if (items.length === 0 && !placed) {
+  useEffect(() => {
+    if (!successOpen) return;
+
+    setRedirectCountdown(5);
+
+    const intervalId = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(intervalId);
+          navigate("/");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [successOpen, navigate]);
+
+  if (items.length === 0 && !successOpen) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold">Your cart is empty</h1>
@@ -94,14 +115,13 @@ const Checkout = () => {
         }
 
         clearCart();
-        setPlaced(true);
+        setSuccessOpen(true);
+        setConfirmOpen(false);
 
         toast({
-          title: "Order Confirmed",
-          description: "Cash on Delivery selected.",
+          title: "Order Placed Successfully",
+          description: "Redirecting to home page in 5 seconds.",
         });
-
-        setTimeout(() => navigate("/"), 5000);
 
         setProcessing(false);
         return;
@@ -124,6 +144,7 @@ const Checkout = () => {
               address_id: Number(selectedAddress.id),
               coupon_code: appliedCoupon?.code,
               payment_method: "RAZORPAY",
+              payment_id: response?.razorpay_payment_id,
             });
 
             if (!order?.success) {
@@ -135,14 +156,13 @@ const Checkout = () => {
             }
 
             clearCart();
-            setPlaced(true);
+            setSuccessOpen(true);
+            setConfirmOpen(false);
 
             toast({
-              title: "Payment Successful",
-              description: "Redirecting to home page...",
+              title: "Order Placed Successfully",
+              description: "Redirecting to home page in 5 seconds.",
             });
-
-            setTimeout(() => navigate("/"), 5000);
           } catch {
             toast({
               title: "Verification Failed",
@@ -175,28 +195,81 @@ const Checkout = () => {
     }
   };
 
-  /* ---------------- SUCCESS PAGE ---------------- */
-
-  if (placed) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="container mx-auto px-4 py-20 text-center"
-      >
-        <CheckCircle className="h-16 w-16 mx-auto text-green-600" />
-        <h1 className="text-3xl font-bold mt-4">Order Confirmed!</h1>
-        <p className="text-muted-foreground mt-2">
-          You will be redirected shortly.
-        </p>
-      </motion.div>
-    );
-  }
-
   /* ---------------- MAIN CHECKOUT UI ---------------- */
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {isOrderLoading && (
+        <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-sm rounded-2xl border border-primary/20 bg-card/95 shadow-2xl p-6"
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="absolute -inset-1 rounded-full border border-primary/30 animate-ping" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Placing your order</p>
+                <p className="text-xs text-muted-foreground">
+                  Hold on while we confirm everything.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <motion.div
+                className="h-full w-1/3 rounded-full bg-primary"
+                animate={{ x: ["-120%", "360%"] }}
+                transition={{
+                  duration: 1.3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+
+            <div className="mt-4 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-primary/80 animate-bounce [animation-delay:-0.2s]" />
+              <span className="h-2 w-2 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.1s]" />
+              <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" />
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" /> Order Placed
+            </DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            Your order is placed successfully. Redirecting to home page in{" "}
+            <strong>{redirectCountdown}</strong> second
+            {redirectCountdown === 1 ? "" : "s"}.
+          </p>
+
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-2">
+            <motion.div
+              className="h-full bg-green-600"
+              initial={{ width: "100%" }}
+              animate={{ width: "0%" }}
+              transition={{ duration: 5, ease: "linear" }}
+              key={
+                successOpen
+                  ? "success-progress-open"
+                  : "success-progress-closed"
+              }
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid md:grid-cols-5 gap-8">
@@ -232,10 +305,17 @@ const Checkout = () => {
 
           <Button
             className="w-full py-6 font-semibold"
-            disabled={!selectedAddress || processing}
+            disabled={!selectedAddress || processing || isOrderLoading}
             onClick={() => setConfirmOpen(true)}
           >
-            Place Order — {formatCurrency(finalTotal)}
+            {processing || isOrderLoading ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              <>Place Order - {formatCurrency(finalTotal)}</>
+            )}
           </Button>
         </div>
 
@@ -305,18 +385,26 @@ const Checkout = () => {
           </p>
 
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={processing || isOrderLoading}
+            >
               Cancel
             </Button>
 
             <Button
-              disabled={processing}
-              onClick={() => {
-                setConfirmOpen(false);
-                handlePlaceOrder();
-              }}
+              disabled={processing || isOrderLoading}
+              onClick={handlePlaceOrder}
             >
-              {processing ? "Processing..." : "Confirm Order"}
+              {processing || isOrderLoading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                "Confirm Order"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@ export interface AddOrderBody {
   address_id: number;
   coupon_code?: string;
   payment_method?: string;
+  payment_id?: string;
 }
 
 export interface UpdateOrderStatusBody {

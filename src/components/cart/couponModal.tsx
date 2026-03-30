@@ -121,113 +121,119 @@ const CouponModal = ({ cartTotal }: CouponModalProps) => {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 max-h-[60vh] overflow-y-auto py-2">
-          {availableCoupons.map((coupon) => {
-            const expired = isExpired(coupon);
-            const eligible = isEligible(coupon);
-            const isBest = coupon.code === bestCode;
-            const isApplied =
-              appliedCoupon?.id === coupon.id ||
-              (!appliedCoupon && Boolean(coupon.is_applied));
-            const isApplying = applyingCouponCode === coupon.code;
+          {availableCoupons.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Coupon is not available
+            </p>
+          ) : (
+            availableCoupons.map((coupon) => {
+              const expired = isExpired(coupon);
+              const eligible = isEligible(coupon);
+              const isBest = coupon.code === bestCode;
+              const isApplied =
+                appliedCoupon?.id === coupon.id ||
+                (!appliedCoupon && Boolean(coupon.is_applied));
+              const isApplying = applyingCouponCode === coupon.code;
 
-            return (
-              <div
-                key={coupon.code}
-                className={`relative border rounded-xl overflow-hidden transition-all ${
-                  expired
-                    ? "opacity-50 bg-muted/50"
-                    : isBest
-                      ? "border-primary bg-primary/5"
-                      : "bg-card"
-                }`}
-              >
-                {isBest && !expired && (
-                  <Badge className="absolute top-0 right-0 rounded-none rounded-bl-lg bg-primary text-primary-foreground text-[10px] gap-1">
-                    <Sparkles className="h-3 w-3" /> Best Value
-                  </Badge>
-                )}
-
+              return (
                 <div
-                  className={`px-4 py-2 text-center font-bold text-sm ${
+                  key={coupon.code}
+                  className={`relative border rounded-xl overflow-hidden transition-all ${
                     expired
-                      ? "bg-muted text-muted-foreground"
-                      : "bg-primary/10 text-primary"
+                      ? "opacity-50 bg-muted/50"
+                      : isBest
+                        ? "border-primary bg-primary/5"
+                        : "bg-card"
                   }`}
                 >
-                  {coupon.discount_type === "PERCENTAGE"
-                    ? `${coupon.discount_value}% OFF`
-                    : `$${coupon.discount_value} OFF`}
-                  {eligible && !expired && (
-                    <span className="ml-2 font-normal text-xs">
-                      (Save {formatCurrency(getSaving(coupon))})
-                    </span>
+                  {isBest && !expired && (
+                    <Badge className="absolute top-0 right-0 rounded-none rounded-bl-lg bg-primary text-primary-foreground text-[10px] gap-1">
+                      <Sparkles className="h-3 w-3" /> Best Value
+                    </Badge>
                   )}
-                </div>
 
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <code className="font-mono font-bold text-sm tracking-widest bg-secondary px-3 py-1 rounded-md border border-dashed border-border">
-                      {coupon.code}
-                    </code>
-                    <button
-                      onClick={() => handleCopy(coupon.code)}
-                      className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                      title="Copy code"
-                    >
-                      {copiedCode === coupon.code ? (
-                        <Check className="h-3.5 w-3.5 text-primary" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    {coupon.description}
-                  </p>
-
-                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <IndianRupee className="h-3 w-3" />
-                      Min:{" "}
-                      {coupon.min_purchase
-                        ? `${formatCurrency(coupon.min_purchase)}`
-                        : "No minimum"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {expired
-                        ? "Expired"
-                        : `Until ${dayjs(coupon.end_date).format("Do MMM YYYY")}`}
-                    </span>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    variant={isApplied ? "secondary" : "default"}
-                    disabled={expired || !eligible || isApplied || isApplying}
-                    onClick={() => handleApply(coupon)}
-                    className="w-full mt-3 text-xs"
+                  <div
+                    className={`px-4 py-2 text-center font-bold text-sm ${
+                      expired
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-primary/10 text-primary"
+                    }`}
                   >
-                    {isApplying ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Applying...
+                    {coupon.discount_type === "PERCENTAGE"
+                      ? `${coupon.discount_value}% OFF`
+                      : `$${coupon.discount_value} OFF`}
+                    {eligible && !expired && (
+                      <span className="ml-2 font-normal text-xs">
+                        (Save {formatCurrency(getSaving(coupon))})
                       </span>
-                    ) : isApplied ? (
-                      "Applied"
-                    ) : expired ? (
-                      "Expired"
-                    ) : !eligible ? (
-                      `Min order $${coupon.min_purchase}`
-                    ) : (
-                      "Apply Coupon"
                     )}
-                  </Button>
+                  </div>
+
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <code className="font-mono font-bold text-sm tracking-widest bg-secondary px-3 py-1 rounded-md border border-dashed border-border">
+                        {coupon.code}
+                      </code>
+                      <button
+                        onClick={() => handleCopy(coupon.code)}
+                        className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        title="Copy code"
+                      >
+                        {copiedCode === coupon.code ? (
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground">
+                      {coupon.description}
+                    </p>
+
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <IndianRupee className="h-3 w-3" />
+                        Min:{" "}
+                        {coupon.min_purchase
+                          ? `${formatCurrency(coupon.min_purchase)}`
+                          : "No minimum"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {expired
+                          ? "Expired"
+                          : `Until ${dayjs(coupon.end_date).format("Do MMM YYYY")}`}
+                      </span>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant={isApplied ? "secondary" : "default"}
+                      disabled={expired || !eligible || isApplied || isApplying}
+                      onClick={() => handleApply(coupon)}
+                      className="w-full mt-3 text-xs"
+                    >
+                      {isApplying ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Applying...
+                        </span>
+                      ) : isApplied ? (
+                        "Applied"
+                      ) : expired ? (
+                        "Expired"
+                      ) : !eligible ? (
+                        `Min order $${coupon.min_purchase}`
+                      ) : (
+                        "Apply Coupon"
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </DialogContent>
     </Dialog>

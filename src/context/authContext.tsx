@@ -14,7 +14,11 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<LoginResponse>;
+  login: (
+    email: string,
+    password: string,
+    forceLogoutDeviceId?: string,
+  ) => Promise<LoginResponse>;
   logout: () => Promise<ApiResponse>;
   forgotPassword: (email: string) => Promise<ApiResponse>;
   resetPassword: (token: string, newPassword: string) => Promise<ApiResponse>;
@@ -39,7 +43,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     user: user?.data ?? null,
     isAuthenticated: !!user && !isError,
     isLoading,
-    login: (email, password) => loginMutation.mutateAsync({ email, password }),
+    login: (email, password, forceLogoutDeviceId) =>
+      loginMutation.mutateAsync({
+        email,
+        password,
+        force_logout_device_id: forceLogoutDeviceId,
+      }),
     logout: () => logoutMutation.mutateAsync(),
     forgotPassword: (email) => forgotPasswordMutation.mutateAsync(email),
     resetPassword: (token, newPassword) =>

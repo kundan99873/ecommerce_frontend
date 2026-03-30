@@ -5,6 +5,8 @@ import {
   getLoggedInUserDetails,
   googleLogin,
   loginUser,
+  logoutOtherSessions,
+  logoutSessionByDevice,
   logoutUser,
   registerUser,
   resetPassword,
@@ -55,6 +57,18 @@ const useUserLogout = () => {
       queryClient.removeQueries({ queryKey: ["products", "search", "recent"] });
       queryClient.removeQueries({ queryKey: ["cart_coupons"] });
     },
+  });
+};
+
+const useLogoutSessionByDevice = () => {
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (deviceId: string) => logoutSessionByDevice(deviceId),
+  });
+};
+
+const useLogoutOtherSessions = () => {
+  return useMutation<ApiResponse, Error>({
+    mutationFn: () => logoutOtherSessions(),
   });
 };
 
@@ -112,6 +126,8 @@ export {
   useLoggedInUser,
   useUserLogin,
   useUserLogout,
+  useLogoutSessionByDevice,
+  useLogoutOtherSessions,
   useChangePassword,
   useForgotPassword,
   useResetPassword,

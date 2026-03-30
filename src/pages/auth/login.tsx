@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Eye, EyeOff, LogIn, Loader2, ShieldCheck } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Laptop,
+  LogIn,
+  Loader2,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +17,15 @@ import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/useToast";
 import { motion } from "motion/react";
 import GoogleLoginBtn from "@/components/user/auth/googleLoginBtn";
-import type { LoginResponse } from "@/services/auth/auth.types";
+import type { DeviceSession, LoginResponse } from "@/services/auth/auth.types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import dayjs from "dayjs";
 
 const Login = () => {
   const { login, loginLoading, isAuthenticated } = useAuth();
@@ -22,23 +38,26 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
+  const [activeSessions, setActiveSessions] = useState<DeviceSession[]>([]);
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState("");
+  const [managingDeviceId, setManagingDeviceId] = useState<string | null>(null);
 
   if (isAuthenticated) {
     navigate(from, { replace: true });
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
-      return;
-    }
+  const attemptLogin = async (forceLogoutDeviceId?: string) => {
     try {
-      const response: LoginResponse = await login(email, password);
-      console.log({ response });
+      const response: LoginResponse = await login(
+        email,
+        password,
+        forceLogoutDeviceId,
+      );
+
       if (response.success) {
+        setSessionModalOpen(false);
         toast({
           title: "Welcome back!",
           description: "You have been logged in successfully.",
@@ -48,11 +67,75 @@ const Login = () => {
         setError(response.message || "Invalid email or password");
       }
     } catch (error: any) {
+      const statusCode = error?.response?.status;
+      const responseData = error?.response?.data as LoginResponse | undefined;
+
+      if (
+        statusCode === 403 &&
+        Array.isArray(responseData?.data) &&
+        responseData.data.length > 0
+      ) {
+        setError("");
+        setActiveSessions(responseData.data);
+        setSessionMessage(
+          responseData.message ||
+            "You are already logged in on maximum allowed devices.",
+        );
+        setSessionModalOpen(true);
+        return;
+      }
+
       setError(
-        error?.response?.data?.message ||
+        responseData?.message ||
           "An error occurred during login. Please try again.",
       );
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    await attemptLogin();
+  };
+
+  const handleLogoutDeviceAndRetry = async (deviceId: string) => {
+    try {
+      setManagingDeviceId(deviceId);
+      toast({
+        title: "Trying to login...",
+        description: "Using selected device for force logout and sign in.",
+      });
+
+      await attemptLogin(deviceId);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Please try again.");
+    } finally {
+      setManagingDeviceId(null);
+    }
+  };
+
+  const getDeviceLabel = (session: DeviceSession) => {
+    const ua = session.user_agent?.toLowerCase() || "";
+    const fallbackName = session.device_name?.trim() || "Unknown Device";
+
+    if (
+      ua.includes("android") ||
+      ua.includes("iphone") ||
+      ua.includes("mobile")
+    ) {
+      return "Mobile Device";
+    }
+
+    if (ua.includes("windows") || ua.includes("mac") || ua.includes("linux")) {
+      return "Desktop Device";
+    }
+
+    return fallbackName;
   };
 
   return (
@@ -174,6 +257,88 @@ const Login = () => {
           </p>
         </motion.div>
       </div>
+
+      <Dialog open={sessionModalOpen} onOpenChange={setSessionModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Device Limit Reached</DialogTitle>
+            <DialogDescription>
+              {sessionMessage ||
+                "You are already logged in on maximum allowed devices."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {activeSessions.map((session) => {
+              const isMobile =
+                session.user_agent?.toLowerCase().includes("android") ||
+                session.user_agent?.toLowerCase().includes("iphone") ||
+                session.user_agent?.toLowerCase().includes("mobile");
+
+              const isRowLoading =
+                loginLoading && managingDeviceId === session.device_id;
+
+              return (
+                <div
+                  key={session.id}
+                  className="rounded-xl border border-border bg-card/60 p-3"
+                >
+                  <div className="flex h-full flex-col justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      {isMobile ? (
+                        <Smartphone className="h-4 w-4 text-primary mt-0.5" />
+                      ) : (
+                        <Laptop className="h-4 w-4 text-primary mt-0.5" />
+                      )}
+
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">
+                          {getDeviceLabel(session)}
+                        </p>
+                        <p className="text-xs text-muted-foreground break-all">
+                          Last used:{" "}
+                          {session.last_used_at
+                            ? dayjs(session.last_used_at).format(
+                                "DD MMM YYYY, hh:mm A",
+                              )
+                            : "Unknown"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      disabled={loginLoading}
+                      onClick={() =>
+                        handleLogoutDeviceAndRetry(session.device_id)
+                      }
+                    >
+                      {isRowLoading ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Logging out...
+                        </span>
+                      ) : (
+                        "Logout This Device"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setSessionModalOpen(false)}
+            disabled={loginLoading}
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
