@@ -25,6 +25,13 @@ export interface DeviceSession {
   ip_address?: string;
   created_at?: string;
   last_used_at?: string;
+  is_current?: boolean;
+}
+
+export interface LoggedInDevicesResponse {
+  success: boolean;
+  message?: string;
+  data: DeviceSession[];
 }
 
 export interface User {

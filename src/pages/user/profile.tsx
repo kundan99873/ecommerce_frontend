@@ -5,7 +5,6 @@ import {
   MapPin,
   Package,
   Lock,
-  Camera,
   Plus,
   Pencil,
   Trash2,
@@ -14,6 +13,11 @@ import {
   Heart,
   Ticket,
   ShoppingCart,
+  Monitor,
+  Smartphone,
+  Globe,
+  ShieldCheck,
+  LogOutIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,16 +25,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import ImageUpload from "@/components/common/imageUpload";
 import {
   Dialog,
@@ -45,6 +39,12 @@ import { toast } from "@/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "motion/react";
 import dayjs from "dayjs";
+import ConfirmDialog from "@/components/admin/common/confirmModal";
+import ProfileHeader from "@/components/user/profile/profileHeader";
+import OrdersStatCard from "@/components/user/profile/ordersStatCard";
+import TotalSpendStatCard from "@/components/user/profile/totalSpendStatCard";
+import WishlistStatCard from "@/components/user/profile/wishlistStatCard";
+import AddressesStatCard from "@/components/user/profile/addressesStatCard";
 import {
   useAddAddress,
   useDeleteAddress,
@@ -52,7 +52,13 @@ import {
   useUpdateAddress,
   useUpdateUserProfile,
 } from "@/services/user/user.query";
-import { useChangePassword } from "@/services/auth/auth.query";
+import {
+  useChangePassword,
+  useLoggedInDevices,
+  useLogoutOtherSessions,
+  useLogoutSessionByDevice,
+} from "@/services/auth/auth.query";
+import type { DeviceSession } from "@/services/auth/auth.types";
 import type { AddAddressBody, Address } from "@/services/user/user.types";
 import { formatCurrency } from "@/utils/utils";
 
@@ -79,12 +85,19 @@ const Profile = () => {
   const updateAddressMutation = useUpdateAddress();
   const deleteAddressMutation = useDeleteAddress();
   const changePasswordMutation = useChangePassword();
+  const { data: devicesData, isLoading: devicesLoading } = useLoggedInDevices();
+  const logoutDeviceMutation = useLogoutSessionByDevice();
+  const logoutOtherSessionsMutation = useLogoutOtherSessions();
   const updateProfileMutation = useUpdateUserProfile();
 
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [logoutAllDevicesDialogOpen, setLogoutAllDevicesDialogOpen] =
+    useState(false);
+  const [deviceToLogout, setDeviceToLogout] = useState<string | null>(null);
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(
     null,
   );
@@ -99,6 +112,7 @@ const Profile = () => {
   const summary = profile?.summary;
   const addresses = profile?.address_details ?? [];
   const orders = profile?.order_details ?? [];
+  const deviceSessions = devicesData?.data ?? [];
   const memberSince =
     (profile as { created_at?: string } | undefined)?.created_at ??
     new Date().toISOString();
@@ -222,6 +236,7 @@ const Profile = () => {
       setCurrentPass("");
       setNewPass("");
       setConfirmPass("");
+      setPasswordModalOpen(false);
     } catch (error) {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response
@@ -303,6 +318,78 @@ const Profile = () => {
     });
   };
 
+  const getDeviceDisplayName = (session: DeviceSession) => {
+    const ua = session.user_agent?.toLowerCase() ?? "";
+
+    if (session.device_name?.trim()) {
+      return session.device_name;
+    }
+
+    if (
+      ua.includes("iphone") ||
+      ua.includes("android") ||
+      ua.includes("mobile")
+    ) {
+      return "Mobile Device";
+    }
+
+    if (ua.includes("windows")) return "Windows Device";
+    if (ua.includes("mac os") || ua.includes("macintosh")) return "Mac Device";
+    if (ua.includes("linux")) return "Linux Device";
+
+    return "Unknown Device";
+  };
+
+  const getDeviceIcon = (session: DeviceSession) => {
+    const ua = session.user_agent?.toLowerCase() ?? "";
+    if (
+      ua.includes("iphone") ||
+      ua.includes("android") ||
+      ua.includes("mobile")
+    ) {
+      return Smartphone;
+    }
+    return Monitor;
+  };
+
+  const handleLogoutDevice = async (deviceId: string) => {
+    try {
+      const response = await logoutDeviceMutation.mutateAsync(deviceId);
+      toast({
+        title: "Session logged out",
+        description:
+          response.message || "The selected device has been logged out.",
+      });
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Unable to logout this device right now.";
+
+      toast({ title: "Action failed", description: message });
+    } finally {
+      setDeviceToLogout(null);
+    }
+  };
+
+  const handleLogoutAllDevices = async () => {
+    try {
+      const response = await logoutOtherSessionsMutation.mutateAsync();
+      toast({
+        title: "Other devices logged out",
+        description:
+          response.message ||
+          "All other sessions were logged out successfully.",
+      });
+      setLogoutAllDevicesDialogOpen(false);
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Unable to logout all devices right now.";
+
+      toast({ title: "Action failed", description: message });
+    }
+  };
+
   if (isLoading || isFetching) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-10">
@@ -347,84 +434,27 @@ const Profile = () => {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <div className="mb-8 flex items-center gap-4">
-          <div className="relative h-20 w-20">
-            <div className="h-20 w-20 overflow-hidden rounded-full bg-secondary">
-              {personalInfo.avatar_url ? (
-                <img
-                  src={personalInfo.avatar_url}
-                  alt={personalInfo.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl font-display font-bold text-muted-foreground">
-                  {personalInfo.name?.charAt(0) || "U"}
-                </div>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setAvatarModalOpen(true)}
-              className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-primary-foreground"
-              aria-label="Update profile icon"
-            >
-              <Camera className="h-3 w-3" />
-            </button>
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-display font-bold">
-              {personalInfo.name}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {personalInfo.email}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Member since {dayjs(memberSince).format("Do MMM YYYY")}
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-            onClick={handleLogout}
-            disabled={logoutLoading}
-          >
-            {logoutLoading ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : (
-              <LogOut className="mr-1 h-4 w-4" />
-            )}
-            Sign Out
-          </Button>
-        </div>
+        <ProfileHeader
+          name={personalInfo.name}
+          email={personalInfo.email}
+          avatarUrl={personalInfo.avatar_url}
+          memberSince={dayjs(memberSince).format("Do MMM YYYY")}
+          logoutLoading={logoutLoading}
+          onOpenAvatarModal={() => setAvatarModalOpen(true)}
+          onLogout={handleLogout}
+        />
 
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div className="rounded-lg border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">Orders</p>
-            <p className="text-xl font-semibold">
-              {summary?.total_orders ?? orders.length}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">Total Spend</p>
-            <p className="text-xl font-semibold">
-              {formatCurrency(summary?.total_spend ?? 0)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">Wishlist</p>
-            <p className="text-xl font-semibold">
-              {summary?.total_wishlist_items ?? 0}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">Addresses</p>
-            <p className="text-xl font-semibold">
-              {summary?.total_addresses ?? addresses.length}
-            </p>
-          </div>
+          <OrdersStatCard
+            totalOrders={summary?.total_orders ?? orders.length}
+          />
+          <TotalSpendStatCard totalSpend={summary?.total_spend ?? 0} />
+          <WishlistStatCard
+            totalWishlistItems={summary?.total_wishlist_items ?? 0}
+          />
+          <AddressesStatCard
+            totalAddresses={summary?.total_addresses ?? addresses.length}
+          />
         </div>
 
         <Tabs defaultValue="profile">
@@ -577,46 +607,131 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="security" className="mt-6">
-            <div className="max-w-md space-y-4 rounded-lg border bg-card p-6">
-              <h2 className="text-lg font-display font-bold">
-                Change Password
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <Label>Current Password</Label>
-                  <Input
-                    type="password"
-                    value={currentPass}
-                    onChange={(e) => setCurrentPass(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>New Password</Label>
-                  <Input
-                    type="password"
-                    value={newPass}
-                    onChange={(e) => setNewPass(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Confirm New Password</Label>
-                  <Input
-                    type="password"
-                    value={confirmPass}
-                    onChange={(e) => setConfirmPass(e.target.value)}
-                  />
-                </div>
-                <Button
-                  onClick={handleChangePassword}
-                  disabled={changePasswordMutation.isPending}
-                >
-                  {changePasswordMutation.isPending ? (
-                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Update Password
+            <div className="space-y-6">
+              <div className="max-w-md space-y-4 rounded-lg border bg-card p-6">
+                <h2 className="text-lg font-display font-bold">
+                  Change Password
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  For security, update your password regularly.
+                </p>
+                <Button onClick={() => setPasswordModalOpen(true)}>
+                  Change Password
                 </Button>
               </div>
+
               <Separator />
+
+              <div className="space-y-4 rounded-lg border bg-card p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-display font-bold">
+                      Manage Devices
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Review active sessions and sign out from any device.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setLogoutAllDevicesDialogOpen(true)}
+                    disabled={
+                      logoutOtherSessionsMutation.isPending ||
+                      deviceSessions.length <= 1
+                    }
+                  >
+                    {logoutOtherSessionsMutation.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOutIcon className="mr-1 h-4 w-4" />
+                    )}
+                    Logout All Devices
+                  </Button>
+                </div>
+
+                {devicesLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                ) : deviceSessions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No active sessions found.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {deviceSessions.map((session) => {
+                      const DeviceIcon = getDeviceIcon(session);
+
+                      return (
+                        <div
+                          key={session.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex items-center gap-2">
+                              <DeviceIcon className="h-4 w-4 text-muted-foreground" />
+                              <p className="truncate text-sm font-semibold">
+                                {getDeviceDisplayName(session)}
+                              </p>
+                              {session.is_current ? (
+                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                                  <ShieldCheck className="mr-1 h-3 w-3" />{" "}
+                                  Current
+                                </Badge>
+                              ) : null}
+                            </div>
+
+                            <div className="space-y-0.5 text-xs text-muted-foreground">
+                              <p className="truncate">
+                                IP: {session.ip_address || "N/A"}
+                              </p>
+                              <p>
+                                Last used:{" "}
+                                {session.last_used_at
+                                  ? dayjs(session.last_used_at).format(
+                                      "MMM D, YYYY h:mm A",
+                                    )
+                                  : "N/A"}
+                              </p>
+                              <p>
+                                Signed in:{" "}
+                                {session.created_at
+                                  ? dayjs(session.created_at).format(
+                                      "MMM D, YYYY h:mm A",
+                                    )
+                                  : "N/A"}
+                              </p>
+                              {session.user_agent ? (
+                                <p className="truncate inline-flex items-center gap-1">
+                                  <Globe className="h-3 w-3" />{" "}
+                                  {session.user_agent}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeviceToLogout(session.device_id)}
+                            disabled={logoutDeviceMutation.isPending}
+                          >
+                            {logoutDeviceMutation.isPending ? (
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            ) : (
+                              <LogOut className="mr-1 h-4 w-4" />
+                            )}
+                            Logout Device
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="text-xs text-muted-foreground">
                 Profile stats: {summary?.total_wishlist_items ?? 0}{" "}
                 <Heart className="inline h-3 w-3" /> wishlist,{" "}
@@ -630,6 +745,103 @@ const Profile = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        <Dialog
+          open={passwordModalOpen}
+          onOpenChange={(open) => {
+            setPasswordModalOpen(open);
+            if (!open) {
+              setCurrentPass("");
+              setNewPass("");
+              setConfirmPass("");
+            }
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>
+                Enter your current password and set a new one.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <div>
+                <Label>Current Password</Label>
+                <Input
+                  type="password"
+                  value={currentPass}
+                  onChange={(e) => setCurrentPass(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>New Password</Label>
+                <Input
+                  type="password"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Confirm New Password</Label>
+                <Input
+                  type="password"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setPasswordModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleChangePassword}
+                disabled={changePasswordMutation.isPending}
+              >
+                {changePasswordMutation.isPending ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : null}
+                Update Password
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <ConfirmDialog
+          open={logoutAllDevicesDialogOpen}
+          onOpenChange={setLogoutAllDevicesDialogOpen}
+          onConfirm={handleLogoutAllDevices}
+          loading={logoutOtherSessionsMutation.isPending}
+          title="Logout all devices?"
+          description="This will sign you out from all other active devices. Your current session will remain active."
+          btnText="Confirm Logout"
+          loadingText="Logging out..."
+        />
+
+        <ConfirmDialog
+          open={Boolean(deviceToLogout)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeviceToLogout(null);
+            }
+          }}
+          onConfirm={() => {
+            if (!deviceToLogout) return;
+            handleLogoutDevice(deviceToLogout);
+          }}
+          loading={logoutDeviceMutation.isPending}
+          title="Logout this device?"
+          description="This will end the selected session and the device will need to login again."
+          btnText="Confirm Logout"
+          loadingText="Logging out..."
+        />
 
         <Dialog
           open={addressModalOpen}
@@ -779,37 +991,20 @@ const Profile = () => {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog
+        <ConfirmDialog
           open={Boolean(addressToDelete)}
           onOpenChange={(open) => {
             if (!open) {
               setAddressToDelete(null);
             }
           }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete address?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This address will be removed from
-                your profile.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                type="button"
-                onClick={handleDeleteAddress}
-                disabled={deleteAddressMutation.isPending}
-              >
-                {deleteAddressMutation.isPending && (
-                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                )}
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          onConfirm={handleDeleteAddress}
+          loading={deleteAddressMutation.isPending}
+          title="Delete address?"
+          description="This action cannot be undone. This address will be removed from your profile."
+          btnText="Delete"
+          loadingText="Deleting..."
+        />
 
         <Dialog
           open={avatarModalOpen}

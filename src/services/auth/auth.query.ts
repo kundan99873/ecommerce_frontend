@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   changePassword,
   forgotPassword,
+  getLoggedInDevices,
   getLoggedInUserDetails,
   googleLogin,
   loginUser,
@@ -14,7 +15,12 @@ import {
 } from "./auth.api";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
-import type { LoginBody, LoginResponse, UserResponse } from "./auth.types";
+import type {
+  LoggedInDevicesResponse,
+  LoginBody,
+  LoginResponse,
+  UserResponse,
+} from "./auth.types";
 
 const useUserLogin = () => {
   return useMutation<LoginResponse, Error, LoginBody>({
@@ -63,14 +69,32 @@ const useUserLogout = () => {
 const useLogoutSessionByDevice = () => {
   return useMutation<ApiResponse, Error, string>({
     mutationFn: (deviceId: string) => logoutSessionByDevice(deviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth", "logged-in-devices"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 };
 
 const useLogoutOtherSessions = () => {
   return useMutation<ApiResponse, Error>({
     mutationFn: () => logoutOtherSessions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["auth", "logged-in-devices"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 };
+
+const useLoggedInDevices = () =>
+  useQuery<LoggedInDevicesResponse>({
+    queryFn: () => getLoggedInDevices(),
+    queryKey: ["auth", "logged-in-devices"],
+  });
 
 const useUserRegister = () =>
   useMutation({
@@ -124,6 +148,7 @@ export {
   useGoogleLogin,
   useUserRegister,
   useLoggedInUser,
+  useLoggedInDevices,
   useUserLogin,
   useUserLogout,
   useLogoutSessionByDevice,

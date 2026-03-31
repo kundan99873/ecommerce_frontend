@@ -1,5 +1,10 @@
 import { api } from "@/api/api";
-import type { LoginBody, LoginResponse, UserResponse } from "./auth.types";
+import type {
+  LoggedInDevicesResponse,
+  LoginBody,
+  LoginResponse,
+  UserResponse,
+} from "./auth.types";
 
 const registerUser = async (body: FormData) => {
   const response = await api.post("/auth/register", body, {
@@ -40,6 +45,13 @@ const getLoggedInUserDetails = async () => {
   return response.data;
 };
 
+const getLoggedInDevices = async () => {
+  const response = await api.get<LoggedInDevicesResponse>(
+    `/auth/logged-in-devices`,
+  );
+  return response.data;
+};
+
 const changePassword = async (data: {
   current_password: string;
   new_password: string;
@@ -71,6 +83,7 @@ export {
   logoutSessionByDevice,
   logoutOtherSessions,
   getLoggedInUserDetails,
+  getLoggedInDevices,
   changePassword,
   forgotPassword,
   resetPassword,
