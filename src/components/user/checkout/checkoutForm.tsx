@@ -42,10 +42,13 @@ const CheckoutForm = ({
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      email: user?.email || "",
       first_name: user?.name || "",
       last_name: "",
-      address: "",
+      phone_number: "",
+      phone_code: "+1",
+      line1: "",
+      line2: "",
+      landmark: "",
       city: "",
       state: "",
       country: "",
@@ -55,8 +58,7 @@ const CheckoutForm = ({
 
   const [locationLoading, setLocationLoading] = useState(false);
 
-  const handleAutoDetectLocation = async (e) => {
-    // console.log(e.)
+  const handleAutoDetectLocation = async () => {
     setLocationLoading(true);
     try {
       const coords = await getCurrentLocation();
@@ -65,7 +67,7 @@ const CheckoutForm = ({
         if (location) {
           console.log(location);
           setValue(
-            "address",
+            "line1",
             `${location.address_line1}, ${location.address_line2}`,
           );
           setValue("city", location.city);
@@ -113,21 +115,7 @@ const CheckoutForm = ({
           Contact Information
         </h2>
 
-        <Controller
-          name="email"
-          control={control}
-          render={({ field }) => (
-            <div>
-              <Label>Email</Label>
-              <Input type="email" {...field} />
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-          )}
-        />
+        <p className="text-sm text-muted-foreground">{user?.email ?? ""}</p>
       </div>
 
       {/* NAME */}
@@ -167,15 +155,15 @@ const CheckoutForm = ({
 
       {/* ADDRESS */}
       <Controller
-        name="address"
+        name="line1"
         control={control}
         render={({ field }) => (
           <div>
             <Label>Address</Label>
             <Textarea {...field} placeholder="Enter your full address..." />
-            {errors.address && (
+            {errors.line1 && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.address.message}
+                {errors.line1.message}
               </p>
             )}
           </div>
@@ -184,6 +172,22 @@ const CheckoutForm = ({
 
       {/* CITY / STATE / COUNTRY / PIN */}
       <div className="grid grid-cols-2 gap-4">
+        <Controller
+          name="phone_number"
+          control={control}
+          render={({ field }) => (
+            <div>
+              <Label>Phone Number</Label>
+              <Input {...field} />
+              {errors.phone_number && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.phone_number.message}
+                </p>
+              )}
+            </div>
+          )}
+        />
+
         <Controller
           name="city"
           control={control}

@@ -136,9 +136,11 @@ const Dashboard = () => {
           .replace(/\.0+$/, "")
           .replace(/(\.\d*[1-9])0+$/, "$1");
 
+    const changeType: "up" | "down" = value >= 0 ? "up" : "down";
+
     return {
       change: `${sign}${formatted}%`,
-      changeType: (value >= 0 ? "up" : "down") as const,
+      changeType,
     };
   };
 
@@ -165,6 +167,25 @@ const Dashboard = () => {
   const topCustomers = [...mockUsers]
     .sort((a, b) => b.spent - a.spent)
     .slice(0, 5);
+
+  const topProducts = (stats?.topProducts ?? []).map((product) => ({
+    id: String(product.id),
+    name: product.name,
+    image: product.image,
+    reviews: product.reviews,
+    price: product.price,
+  }));
+
+  const mappedCategorySeries = categorySeries.map((category) => ({
+    ...category,
+    category_id: String(category.category_id),
+  }));
+
+  const mappedLowStockProducts = lowStockProducts.map((product) => ({
+    ...product,
+    product_id: String(product.product_id),
+    product_variant_id: String(product.product_variant_id),
+  }));
 
   return (
     <div className="space-y-8">
@@ -221,10 +242,7 @@ const Dashboard = () => {
           groupBy={revenueGroupBy}
           onGroupByChange={setRevenueGroupBy}
         />
-        <TopProductsCard
-          loading={loading}
-          products={stats?.topProducts ?? []}
-        />
+        <TopProductsCard loading={loading} products={topProducts} />
       </div>
 
       {/* Charts Section */}
@@ -232,7 +250,7 @@ const Dashboard = () => {
         <VisitorsConversionsChart loading={loading} data={conversionData} />
         <SalesByCategoryChart
           loading={salesByCategoryLoading}
-          data={categorySeries}
+          data={mappedCategorySeries}
         />
       </div>
 
@@ -245,7 +263,7 @@ const Dashboard = () => {
         <RecentOrdersCard loading={recentOrdersLoading} orders={recentOrders} />
         <LowStockAlertsCard
           loading={lowStockLoading}
-          products={lowStockProducts}
+          products={mappedLowStockProducts}
         />
       </div>
 

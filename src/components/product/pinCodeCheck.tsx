@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MapPin, Check, X, Loader2, Truck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ const PincodeCheck = ({
   const checkAvailabilityMutation = useMutation({
     mutationFn: () => checkProductAvailability(productSlug || "", pincode),
     onSuccess: (data) => {
-      const deliverable = data.data?.is_available ?? false;
+      const deliverable = data?.data?.is_available ?? false;
       const eta = deliverable ? getDeliveryETA() : undefined;
       setResult({ deliverable, eta });
       localStorage.setItem(PINCODE_KEY, pincode);

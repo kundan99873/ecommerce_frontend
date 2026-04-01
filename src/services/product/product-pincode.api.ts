@@ -1,6 +1,8 @@
 import { api } from "@/api/api";
 import type { ApiResponse } from "@/api/api.types";
 
+type ApiDataResponse<T> = ApiResponse & { data: T };
+
 interface ProductPincodesResponse {
   slug: string;
   unserviceable_pincodes: string[];
@@ -8,7 +10,7 @@ interface ProductPincodesResponse {
 
 const getProductUnserviceablePincodes = async (
   slug: string,
-): Promise<ProductPincodesResponse> => {
+): Promise<ApiDataResponse<ProductPincodesResponse>> => {
   const response = await api.get(`/product/${slug}/pincodes`);
   return response.data;
 };
@@ -16,7 +18,7 @@ const getProductUnserviceablePincodes = async (
 const addProductUnserviceablePincodes = async (
   slug: string,
   pincodes: string[],
-): Promise<ProductPincodesResponse> => {
+): Promise<ApiDataResponse<ProductPincodesResponse>> => {
   const response = await api.post(`/product/${slug}/pincodes`, {
     pincodes,
   });
@@ -26,7 +28,7 @@ const addProductUnserviceablePincodes = async (
 const replaceProductUnserviceablePincodes = async (
   slug: string,
   pincodes: string[],
-): Promise<ProductPincodesResponse> => {
+): Promise<ApiDataResponse<ProductPincodesResponse>> => {
   const response = await api.put(`/product/${slug}/pincodes`, {
     pincodes,
   });
@@ -36,7 +38,7 @@ const replaceProductUnserviceablePincodes = async (
 const removeProductUnserviceablePincode = async (
   slug: string,
   pincode: string,
-): Promise<ProductPincodesResponse> => {
+): Promise<ApiDataResponse<ProductPincodesResponse>> => {
   const response = await api.delete(`/product/${slug}/pincodes/${pincode}`);
   return response.data;
 };
@@ -44,7 +46,7 @@ const removeProductUnserviceablePincode = async (
 const removeMultipleProductUnserviceablePincodes = async (
   slug: string,
   pincodes: string[],
-): Promise<ProductPincodesResponse> => {
+): Promise<ApiDataResponse<ProductPincodesResponse>> => {
   const response = await api.post(`/product/${slug}/pincodes/delete/multiple`, {
     pincodes,
   });
@@ -60,7 +62,7 @@ interface ProductAvailabilityResponse {
 const checkProductAvailability = async (
   slug: string,
   pincode: string,
-): Promise<ProductAvailabilityResponse> => {
+): Promise<ApiDataResponse<ProductAvailabilityResponse>> => {
   const response = await api.get(`/product/${slug}/availability`, {
     params: { pincode },
   });

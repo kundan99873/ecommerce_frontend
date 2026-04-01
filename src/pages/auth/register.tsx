@@ -145,15 +145,12 @@
 
 // export default Register;
 
-
-
 import { Link, useNavigate } from "react-router";
 import { Eye, EyeOff, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/context/authContext";
 import { toast } from "@/hooks/useToast";
 import { motion } from "motion/react";
 import ImageUpload from "@/components/common/imageUpload";
@@ -216,22 +213,22 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     const formData = new FormData();
 
-  formData.append("name", data.name);
-  formData.append("email", data.email);
-  formData.append("password", data.password);
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
 
-  if (data.avatar) {
-    formData.append("avatar", data.avatar);
-  }
-  console.log(data.avatar instanceof File);
-    console.log({formData})
+    if (data.avatar) {
+      formData.append("avatar", data.avatar);
+    }
+    console.log(data.avatar instanceof File);
+    console.log({ formData });
     if (!isPasswordStrong) {
       return;
     }
 
-    const response = await mutation.mutateAsync(formData)
-    console.log({response})
-    if(response.success) {
+    const response = await mutation.mutateAsync(formData);
+    console.log({ response });
+    if (response.success) {
       toast({ title: "Account created!", description: "Welcome to LUMIÈRE." });
       navigate("/login", { replace: true });
     }
@@ -255,7 +252,10 @@ const Register = () => {
             name="avatar"
             control={control}
             render={({ field }) => (
-              <ImageUpload onUpload={(file) => field.onChange(file)} currentImage={undefined} />
+              <ImageUpload
+                onUpload={(file) => field.onChange(file)}
+                currentImage={undefined}
+              />
             )}
           />
 
@@ -266,7 +266,9 @@ const Register = () => {
               {...register("name", { required: "Name is required" })}
               placeholder="Alex Johnson"
             />
-            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
           {/* EMAIL */}
@@ -277,7 +279,9 @@ const Register = () => {
               {...register("email", { required: "Email is required" })}
               placeholder="your@email.com"
             />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email.message}</p>
+            )}
           </div>
 
           {/* PASSWORD */}
@@ -293,7 +297,11 @@ const Register = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
 
@@ -303,7 +311,9 @@ const Register = () => {
                   <p
                     key={r.label}
                     className={`text-xs ${
-                      r.test(password) ? "text-success" : "text-muted-foreground"
+                      r.test(password)
+                        ? "text-success"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {r.test(password) ? "✓" : "○"} {r.label}
@@ -320,12 +330,13 @@ const Register = () => {
               type="password"
               {...register("confirmPassword", {
                 required: "Confirm password",
-                validate: (val) =>
-                  val === password || "Passwords do not match",
+                validate: (val) => val === password || "Passwords do not match",
               })}
             />
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+              <p className="text-xs text-destructive">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
@@ -344,8 +355,13 @@ const Register = () => {
             />
             <label className="text-sm">
               I agree to the{" "}
-              <span className="text-primary hover:underline">Terms & Conditions</span> and{" "}
-              <span className="text-primary hover:underline">Privacy Policy</span>
+              <span className="text-primary hover:underline">
+                Terms & Conditions
+              </span>{" "}
+              and{" "}
+              <span className="text-primary hover:underline">
+                Privacy Policy
+              </span>
             </label>
           </div>
           {errors.agreed && (
@@ -354,7 +370,11 @@ const Register = () => {
             </p>
           )}
 
-          <Button type="submit" className="w-full py-5" disabled={mutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full py-5"
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : (
@@ -366,7 +386,10 @@ const Register = () => {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
+          <Link
+            to="/login"
+            className="text-primary font-medium hover:underline"
+          >
             Sign in
           </Link>
         </p>

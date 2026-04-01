@@ -43,25 +43,25 @@ const Cart = () => {
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            {items.map(({ product, quantity, size, color }) => (
+            {items.map((item) => (
               <div
-                key={product.id}
+                key={item.sku}
                 className="flex gap-4 p-4 bg-card rounded-lg border"
               >
-                <Link to={`/product/${product.id}`} className="shrink-0">
+                <Link to={`/product/${item.slug}`} className="shrink-0">
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={item.image}
+                    alt={item.name}
                     className="h-28 w-24 object-cover rounded"
                   />
                 </Link>
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <Link
-                      to={`/product/${product.id}`}
+                      to={`/product/${item.slug}`}
                       className="font-medium text-sm hover:text-primary transition-colors"
                     >
-                      {product.name}
+                      {item.name}
                     </Link>
                     <div className="mt-1 rounded-md border bg-background/70 px-2 py-1.5 text-[11px] text-muted-foreground space-y-0.5">
                       <p className="font-medium text-foreground/90">
@@ -69,25 +69,33 @@ const Cart = () => {
                       </p>
                       <p>
                         Color:{" "}
-                        <span className="text-foreground">{color || "-"}</span>
+                        <span className="text-foreground">
+                          {item.color || "-"}
+                        </span>
                       </p>
                       <p>
                         Size:{" "}
-                        <span className="text-foreground">{size || "-"}</span>
+                        <span className="text-foreground">
+                          {item.size || "-"}
+                        </span>
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center border rounded">
                       <button
-                        onClick={() => updateQuantity(product.id, quantity - 1)}
+                        onClick={() =>
+                          updateQuantity(item.slug, item.quantity - 1)
+                        }
                         className="px-2 py-1"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
-                      <span className="px-3 text-sm">{quantity}</span>
+                      <span className="px-3 text-sm">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(product.id, quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.slug, item.quantity + 1)
+                        }
                         className="px-2 py-1"
                       >
                         <Plus className="h-3 w-3" />
@@ -95,10 +103,10 @@ const Cart = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-sm">
-                        ${product.price * quantity}
+                        ${item.price * item.quantity}
                       </span>
                       <button
-                        onClick={() => removeItem(product.id)}
+                        onClick={() => removeItem(item.slug)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />

@@ -2,9 +2,37 @@ import { useState, useEffect } from "react";
 import { Zap } from "lucide-react";
 import { products } from "@/data/products";
 import ProductCard from "../product/productCard";
+import type { Product as ApiProduct } from "@/services/product/product.types";
 
 const FlashDeals = () => {
   const saleProducts = products.filter((p) => p.originalPrice);
+  const mappedProducts: ApiProduct[] = saleProducts.map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: `mock-${p.id}`,
+    description: p.description,
+    brand: p.brand,
+    category: {
+      name: p.category,
+      slug: p.category.toLowerCase(),
+    },
+    is_active: true,
+    average_rating: p.rating,
+    total_reviews: p.reviews,
+    variants: [
+      {
+        id: p.id,
+        sku: `MOCK-${p.id}`,
+        color: p.colors?.[0] ?? "Default",
+        size: p.sizes?.[0] ?? "One Size",
+        original_price: p.originalPrice ?? p.price,
+        discounted_price: p.price,
+        stock: p.inStock ? (p.stock ?? 10) : 0,
+        is_active: true,
+        images: [{ image_url: p.image, is_primary: true }],
+      },
+    ],
+  }));
 
   const getTimeLeft = () => {
     const now = new Date();
@@ -36,7 +64,9 @@ const FlashDeals = () => {
             <Zap className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold">Flash Deals</h2>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">
+              Flash Deals
+            </h2>
             <p className="text-sm text-muted-foreground">Limited time offers</p>
           </div>
         </div>
@@ -49,14 +79,16 @@ const FlashDeals = () => {
           ].map(({ label, val }, i) => (
             <span key={label} className="flex items-center gap-1">
               {i > 0 && <span className="text-muted-foreground">:</span>}
-              <span className="bg-foreground text-background px-2 py-1 rounded font-bold text-base">{val}</span>
+              <span className="bg-foreground text-background px-2 py-1 rounded font-bold text-base">
+                {val}
+              </span>
               <span className="text-xs text-muted-foreground">{label}</span>
             </span>
           ))}
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        {saleProducts.map((p, i) => (
+        {mappedProducts.map((p, i) => (
           <ProductCard key={p.id} product={p} index={i} />
         ))}
       </div>

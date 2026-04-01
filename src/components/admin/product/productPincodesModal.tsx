@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -303,7 +303,6 @@ const ProductPincodesModal = ({
                     <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg">
                       <Checkbox
                         checked={allSelected}
-                        indeterminate={someSelected}
                         onCheckedChange={toggleAllPincodes}
                         id="select-all"
                       />
@@ -320,8 +319,14 @@ const ProductPincodesModal = ({
                       )}
                     </div>
 
+                    {someSelected ? (
+                      <p className="text-xs text-muted-foreground px-1">
+                        Partially selected
+                      </p>
+                    ) : null}
+
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-2 border rounded-lg bg-muted/10">
-                      {pincodes.map((pincode) => (
+                      {pincodes.map((pincode: string) => (
                         <div
                           key={pincode}
                           className="flex items-center gap-2 p-2 rounded border hover:bg-muted/50 transition-colors"

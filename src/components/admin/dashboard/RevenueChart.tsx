@@ -55,7 +55,7 @@ export const RevenueChart = ({
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-lg font-display">Revenue Timeline</CardTitle>
         <Select value={groupBy} onValueChange={onGroupByChange}>
-          <SelectTrigger className="w-[130px] h-8">
+          <SelectTrigger className="w-32.5 h-8">
             <SelectValue placeholder="Group by" />
           </SelectTrigger>
           <SelectContent>
@@ -106,8 +106,8 @@ export const RevenueChart = ({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => [
-                  formatCurrency(value),
+                formatter={(value) => [
+                  formatCurrency(Number(value ?? 0)),
                   "Revenue",
                 ]}
                 labelFormatter={(_, payload) => {

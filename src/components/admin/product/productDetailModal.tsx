@@ -47,7 +47,7 @@ const ProductDetailModal = ({ product, open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-0 bg-gradient-to-b from-background via-background to-muted/20 shadow-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-0 bg-linear-to-b from-background via-background to-muted/20 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <span className="h-8 w-8 rounded-lg bg-primary/15 text-primary grid place-items-center">
@@ -63,7 +63,7 @@ const ProductDetailModal = ({ product, open, onOpenChange }: Props) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex flex-col sm:flex-row gap-5 rounded-2xl border bg-gradient-to-br from-muted/50 to-background p-4">
+          <div className="flex flex-col sm:flex-row gap-5 rounded-2xl border bg-linear-to-br from-muted/50 to-background p-4">
             <div className="shrink-0">
               {firstImage ? (
                 <img
@@ -212,7 +212,7 @@ const ProductDetailModal = ({ product, open, onOpenChange }: Props) => {
                 {variants.map((variant, index) => (
                   <motion.div
                     key={variant.id}
-                    className="rounded-2xl border p-4 bg-gradient-to-br from-background to-muted/30 shadow-sm"
+                    className="rounded-2xl border p-4 bg-linear-to-br from-background to-muted/30 shadow-sm"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.04 }}

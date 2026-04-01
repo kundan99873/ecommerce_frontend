@@ -18,7 +18,7 @@ import { useCart } from "@/context/cartContext";
 import { useAuth } from "@/context/authContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { useAddOrder } from "@/services/order/order.query";
-import { useCheckProductAvailability } from "@/services/product/product-pincode.query";
+import { checkProductAvailability } from "@/services/product/product-pincode.api";
 
 import AddressManager from "@/components/user/checkout/AddressManager";
 import UndeliverableProductsDialog from "@/components/user/checkout/undeliverableProductsDialog";
@@ -132,21 +132,12 @@ const Checkout = () => {
     [items],
   );
 
-  // Simulated API call - replace with actual useCheckProductAvailability
   const checkSingleProductAvailability = async (
     slug: string,
     pincode: string,
   ): Promise<boolean> => {
-    // Simulated delay
-    await new Promise((r) => setTimeout(r, 300));
-
-    // In production, you would use the actual API:
-    // const { data: availabilityData } = await useCheckProductAvailability(slug, pincode);
-    // return availabilityData?.is_available ?? false;
-
-    // For demo: assume all items are available for now
-    // Replace this with actual API call
-    return true;
+    const response = await checkProductAvailability(slug, pincode);
+    return response.data?.is_available ?? false;
   };
 
   const handleRemoveUndeliverableProducts = async (items: CartItem[]) => {

@@ -10,6 +10,9 @@ import {
   type ProductAvailabilityResponse,
 } from "./product-pincode.api";
 import { queryClient } from "@/api/client";
+import type { ApiResponse } from "@/api/api.types";
+
+type ApiDataResponse<T> = ApiResponse & { data: T };
 
 export const productPincodesKeys = {
   all: ["product-pincodes"],
@@ -17,7 +20,7 @@ export const productPincodesKeys = {
 };
 
 const useGetProductUnserviceablePincodes = (slug: string) => {
-  return useQuery<ProductPincodesResponse>({
+  return useQuery<ApiDataResponse<ProductPincodesResponse>>({
     queryKey: productPincodesKeys.detail(slug),
     queryFn: () => getProductUnserviceablePincodes(slug),
     enabled: slug !== "",
@@ -26,7 +29,7 @@ const useGetProductUnserviceablePincodes = (slug: string) => {
 
 const useAddProductUnserviceablePincodes = () => {
   return useMutation<
-    ProductPincodesResponse,
+    ApiDataResponse<ProductPincodesResponse>,
     Error,
     { slug: string; pincodes: string[] }
   >({
@@ -42,7 +45,7 @@ const useAddProductUnserviceablePincodes = () => {
 
 const useReplaceProductUnserviceablePincodes = () => {
   return useMutation<
-    ProductPincodesResponse,
+    ApiDataResponse<ProductPincodesResponse>,
     Error,
     { slug: string; pincodes: string[] }
   >({
@@ -58,7 +61,7 @@ const useReplaceProductUnserviceablePincodes = () => {
 
 const useRemoveProductUnserviceablePincode = () => {
   return useMutation<
-    ProductPincodesResponse,
+    ApiDataResponse<ProductPincodesResponse>,
     Error,
     { slug: string; pincode: string }
   >({
@@ -74,7 +77,7 @@ const useRemoveProductUnserviceablePincode = () => {
 
 const useRemoveMultipleProductUnserviceablePincodes = () => {
   return useMutation<
-    ProductPincodesResponse,
+    ApiDataResponse<ProductPincodesResponse>,
     Error,
     { slug: string; pincodes: string[] }
   >({
@@ -93,7 +96,7 @@ const useCheckProductAvailability = (
   pincode: string,
   options?: { enabled?: boolean },
 ) => {
-  return useQuery<ProductAvailabilityResponse>({
+  return useQuery<ApiDataResponse<ProductAvailabilityResponse>>({
     queryKey: ["product-availability", slug, pincode],
     queryFn: () => checkProductAvailability(slug, pincode),
     enabled: slug !== "" && pincode !== "" && options?.enabled !== false,

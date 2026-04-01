@@ -15,7 +15,6 @@ import {
   ShoppingCart,
   Monitor,
   Smartphone,
-  Globe,
   ShieldCheck,
   LogOutIcon,
 } from "lucide-react";
@@ -661,7 +660,7 @@ const Profile = () => {
                   </p>
                 ) : (
                   <div className="space-y-3 pt-2 grid md:grid-cols-2 gap-4">
-                    {deviceSessions.map((session) => {
+                    {deviceSessions.map((session: DeviceSession) => {
                       const DeviceIcon = getDeviceIcon(session);
                       const isCurrentDevice = session.is_current;
 

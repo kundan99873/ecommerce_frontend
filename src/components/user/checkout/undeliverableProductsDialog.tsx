@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -11,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Trash2, MapPin } from "lucide-react";
-import type { CartItem } from "@/context/cartContext";
+import type { CartItem } from "@/services/cart/cart.types";
 
 interface UndeliverableProductsDialogProps {
   open: boolean;
@@ -45,10 +44,7 @@ const UndeliverableProductsDialog = ({
             </p>
             <div className="space-y-2 max-h-48 overflow-y-auto rounded-lg bg-muted/50 p-3">
               {undeliverableItems.map((item) => (
-                <div
-                  key={item.variant_id}
-                  className="flex items-start gap-2 text-sm"
-                >
+                <div key={item.sku} className="flex items-start gap-2 text-sm">
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
