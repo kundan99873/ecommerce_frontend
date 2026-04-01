@@ -429,7 +429,7 @@ const ProductDetail = () => {
           )}
 
           <div className="mt-6 pt-6 border-t">
-            <PincodeCheck />
+            <PincodeCheck productSlug={product?.slug} />
           </div>
         </div>
       </div>

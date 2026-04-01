@@ -10,6 +10,7 @@ import {
   EyeOff,
   Eye,
   Info,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import {
 import { toast } from "@/hooks/useToast";
 import { productService } from "@/services/productService";
 import ProductFormModal from "@/components/admin/product/productFormModal";
+import ProductPincodesModal from "@/components/admin/product/productPincodesModal";
 import {
   useAddProduct,
   useDeleteProduct,
@@ -56,6 +58,8 @@ const AdminProducts = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [activeTarget, setActiveTarget] = useState<Product | null>(null);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const [pincodesModalOpen, setPincodesModalOpen] = useState(false);
+  const [pincodesProduct, setPincodesProduct] = useState<Product | null>(null);
 
   const debouncedSearch = useDebounce(search);
 
@@ -352,6 +356,18 @@ const AdminProducts = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
+                                onClick={() => {
+                                  setPincodesProduct(p);
+                                  setPincodesModalOpen(true);
+                                }}
+                                title="Manage Pincodes"
+                              >
+                                <MapPin className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
                                 onClick={() => setViewProduct(p)}
                                 title="View Details"
                               >
@@ -470,6 +486,15 @@ const AdminProducts = () => {
         open={!!viewProduct}
         onOpenChange={(open) => {
           if (!open) setViewProduct(null);
+        }}
+      />
+
+      <ProductPincodesModal
+        productSlug={pincodesProduct?.slug || ""}
+        open={pincodesModalOpen}
+        onOpenChange={(open) => {
+          setPincodesModalOpen(open);
+          if (!open) setPincodesProduct(null);
         }}
       />
     </>

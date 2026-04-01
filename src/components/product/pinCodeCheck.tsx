@@ -2,42 +2,11 @@ import { useState, useEffect } from "react";
 import { MapPin, Check, X, Loader2, Truck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
 import { getCurrentLocation, reverseGeocode } from "@/utils/locationService";
+import { checkProductAvailability } from "@/services/product/product-pincode.api";
 
 const PINCODE_KEY = "lumiere_pincode";
-
-const SERVICEABLE_PINS = [
-  "10001",
-  "10002",
-  "10003",
-  "10010",
-  "10011",
-  "10012",
-  "10013",
-  "10014",
-  "90001",
-  "90002",
-  "90003",
-  "90004",
-  "90005",
-  "90210",
-  "60601",
-  "60602",
-  "60603",
-  "60604",
-  "77001",
-  "77002",
-  "77003",
-  "85001",
-  "85002",
-  "85003",
-  "19101",
-  "19102",
-  "19103",
-  "30301",
-  "30302",
-  "30303",
-];
 
 const getDeliveryETA = (): string => {
   const days = Math.floor(Math.random() * 4) + 3;
@@ -51,6 +20,7 @@ const getDeliveryETA = (): string => {
 };
 
 interface PincodeCheckProps {
+  productSlug?: string;
   onResult?: (result: {
     deliverable: boolean;
     pincode: string;
@@ -59,23 +29,35 @@ interface PincodeCheckProps {
   compact?: boolean;
 }
 
-const PincodeCheck = ({ onResult, compact = false }: PincodeCheckProps) => {
+const PincodeCheck = ({
+  productSlug,
+  onResult,
+  compact = false,
+}: PincodeCheckProps) => {
   const [pincode, setPincode] = useState(
     () => localStorage.getItem(PINCODE_KEY) || "",
   );
-  const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<{
     deliverable: boolean;
     eta?: string;
   } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(PINCODE_KEY);
-    // if (saved && saved.length === 5) {
-    //   checkPincode(saved, true);
-    // }
-  }, []);
+  // Mutation for manual API call
+  const checkAvailabilityMutation = useMutation({
+    mutationFn: () => checkProductAvailability(productSlug || "", pincode),
+    onSuccess: (data) => {
+      const deliverable = data.data?.is_available ?? false;
+      const eta = deliverable ? getDeliveryETA() : undefined;
+      setResult({ deliverable, eta });
+      localStorage.setItem(PINCODE_KEY, pincode);
+      onResult?.({ deliverable, pincode, eta });
+    },
+    onError: (error) => {
+      console.error("Error checking availability:", error);
+      setResult(null);
+    },
+  });
 
   const handleAutoDetectLocation = async () => {
     setLocationLoading(true);
@@ -86,6 +68,7 @@ const PincodeCheck = ({ onResult, compact = false }: PincodeCheckProps) => {
         if (location) {
           console.log(location);
           setPincode(location.postcode);
+          setResult(null); // Reset result when pincode changes
           // toast.success("Location detected successfully");
         }
       }
@@ -96,20 +79,9 @@ const PincodeCheck = ({ onResult, compact = false }: PincodeCheckProps) => {
     }
   };
 
-  const checkPincode = async (pin: string, silent = false) => {
-    if (!silent) setChecking(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const deliverable = SERVICEABLE_PINS.includes(pin);
-    const eta = deliverable ? getDeliveryETA() : undefined;
-    setResult({ deliverable, eta });
-    localStorage.setItem(PINCODE_KEY, pin);
-    onResult?.({ deliverable, pincode: pin, eta });
-    if (!silent) setChecking(false);
-  };
-
-  const handleCheck = () => {
-    // if (pincode.length !== 5) return;
-    checkPincode(pincode);
+  const handleCheck = async () => {
+    if (!productSlug || pincode.length < 4) return;
+    checkAvailabilityMutation.mutate();
   };
 
   return (
@@ -125,9 +97,9 @@ const PincodeCheck = ({ onResult, compact = false }: PincodeCheckProps) => {
           placeholder="Enter PIN code"
           value={pincode}
           onChange={(e) => {
-            const v = e.target.value.replace(/\D/g, "").slice(0, 5);
+            const v = e.target.value.replace(/\D/g, "").slice(0, 6);
             setPincode(v);
-            // if (v.length < 5) setResult(null);
+            setResult(null);
           }}
           onKeyDown={(e) => e.key === "Enter" && handleCheck()}
           className={compact ? "text-xs h-8" : "text-sm"}
@@ -144,10 +116,14 @@ const PincodeCheck = ({ onResult, compact = false }: PincodeCheckProps) => {
           variant="outline"
           size={compact ? "sm" : "default"}
           onClick={handleCheck}
-          disabled={pincode.length < 4 || checking}
+          disabled={
+            pincode.length < 4 ||
+            checkAvailabilityMutation.isPending ||
+            !productSlug
+          }
           className={compact ? "text-xs h-8" : "text-sm"}
         >
-          {checking ? (
+          {checkAvailabilityMutation.isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
             "Check"

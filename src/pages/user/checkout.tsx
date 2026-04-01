@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -18,21 +18,25 @@ import { useCart } from "@/context/cartContext";
 import { useAuth } from "@/context/authContext";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { useAddOrder } from "@/services/order/order.query";
+import { useCheckProductAvailability } from "@/services/product/product-pincode.query";
 
 import AddressManager from "@/components/user/checkout/AddressManager";
+import UndeliverableProductsDialog from "@/components/user/checkout/undeliverableProductsDialog";
 import CouponInput from "@/components/cart/couponInput";
 
 import { formatCurrency } from "@/utils/utils";
 import { toast } from "@/hooks/useToast";
 
 import type { Address } from "@/services/user/user.types";
+import type { CartItem } from "@/services/cart/cart.types";
 
 type PaymentMethod = "RAZORPAY" | "COD";
 
 const Checkout = () => {
   const navigate = useNavigate();
 
-  const { items, totalPrice, clearCart, discount, appliedCoupon } = useCart();
+  const { items, totalPrice, clearCart, discount, appliedCoupon, removeItem } =
+    useCart();
   const { user } = useAuth();
   const { openPayment } = useRazorpay();
   const addOrderMutation = useAddOrder();
@@ -44,6 +48,9 @@ const Checkout = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [undeliverableItems, setUndeliverableItems] = useState<CartItem[]>([]);
+  const [undeliverableDialogOpen, setUndeliverableDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!successOpen) return;
@@ -80,6 +87,84 @@ const Checkout = () => {
   const shipping = totalPrice >= 100 ? 0 : 9.99;
   const finalTotal = totalPrice - discount + shipping;
 
+  /* ---- CHECK PRODUCT AVAILABILITY ---- */
+
+  const checkProductsAvailability = useCallback(
+    async (addPincode: string) => {
+      if (!addPincode || items.length === 0) return true;
+
+      setCheckingAvailability(true);
+      const undeliverable: CartItem[] = [];
+
+      try {
+        // Check each product's availability
+        for (const item of items) {
+          // For demo, simulate API call - in production this would be real API
+          // In actual implementation, this would call the checkProductAvailability API
+          const isAvailable = await checkSingleProductAvailability(
+            item.slug,
+            addPincode,
+          );
+
+          if (!isAvailable) {
+            undeliverable.push(item);
+          }
+        }
+
+        if (undeliverable.length > 0) {
+          setUndeliverableItems(undeliverable);
+          setUndeliverableDialogOpen(true);
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error checking availability:", error);
+        toast({
+          title: "Error",
+          description: "Failed to check product availability",
+        });
+        return false;
+      } finally {
+        setCheckingAvailability(false);
+      }
+    },
+    [items],
+  );
+
+  // Simulated API call - replace with actual useCheckProductAvailability
+  const checkSingleProductAvailability = async (
+    slug: string,
+    pincode: string,
+  ): Promise<boolean> => {
+    // Simulated delay
+    await new Promise((r) => setTimeout(r, 300));
+
+    // In production, you would use the actual API:
+    // const { data: availabilityData } = await useCheckProductAvailability(slug, pincode);
+    // return availabilityData?.is_available ?? false;
+
+    // For demo: assume all items are available for now
+    // Replace this with actual API call
+    return true;
+  };
+
+  const handleRemoveUndeliverableProducts = async (items: CartItem[]) => {
+    setCheckingAvailability(true);
+    try {
+      for (const item of items) {
+        removeItem(item.slug);
+      }
+      toast({
+        title: "Products removed",
+        description: `${items.length} undeliverable product(s) have been removed from your cart.`,
+      });
+      setUndeliverableDialogOpen(false);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
+
   /* ---------------- MAIN ORDER FUNCTION ---------------- */
 
   const handlePlaceOrder = async () => {
@@ -88,6 +173,16 @@ const Checkout = () => {
         title: "Select Address",
         description: "Please select a delivery address.",
       });
+      return;
+    }
+
+    // Check availability before proceeding
+    const allAvailable = await checkProductsAvailability(
+      selectedAddress.pin_code,
+    );
+
+    if (!allAvailable) {
+      setConfirmOpen(false);
       return;
     }
 
@@ -199,7 +294,7 @@ const Checkout = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      {isOrderLoading && (
+      {(isOrderLoading || checkingAvailability) && (
         <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md flex items-center justify-center px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -212,7 +307,11 @@ const Checkout = () => {
                 <span className="absolute -inset-1 rounded-full border border-primary/30 animate-ping" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Placing your order</p>
+                <p className="text-sm font-semibold">
+                  {checkingAvailability
+                    ? "Checking availability"
+                    : "Placing your order"}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Hold on while we confirm everything.
                 </p>
@@ -305,13 +404,20 @@ const Checkout = () => {
 
           <Button
             className="w-full py-6 font-semibold"
-            disabled={!selectedAddress || processing || isOrderLoading}
+            disabled={
+              !selectedAddress ||
+              processing ||
+              isOrderLoading ||
+              checkingAvailability
+            }
             onClick={() => setConfirmOpen(true)}
           >
-            {processing || isOrderLoading ? (
+            {processing || isOrderLoading || checkingAvailability ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
+                {checkingAvailability
+                  ? "Checking availability..."
+                  : "Processing..."}
               </span>
             ) : (
               <>Place Order - {formatCurrency(finalTotal)}</>
@@ -394,10 +500,10 @@ const Checkout = () => {
             </Button>
 
             <Button
-              disabled={processing || isOrderLoading}
+              disabled={processing || isOrderLoading || checkingAvailability}
               onClick={handlePlaceOrder}
             >
-              {processing || isOrderLoading ? (
+              {processing || isOrderLoading || checkingAvailability ? (
                 <span className="inline-flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Processing...
@@ -409,6 +515,19 @@ const Checkout = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* UNDELIVERABLE PRODUCTS DIALOG */}
+      <UndeliverableProductsDialog
+        open={undeliverableDialogOpen}
+        onOpenChange={setUndeliverableDialogOpen}
+        undeliverableItems={undeliverableItems}
+        onRemoveProducts={handleRemoveUndeliverableProducts}
+        onChangeAddress={() => {
+          setUndeliverableDialogOpen(false);
+          setUndeliverableItems([]);
+        }}
+        isRemoving={checkingAvailability}
+      />
     </div>
   );
 };

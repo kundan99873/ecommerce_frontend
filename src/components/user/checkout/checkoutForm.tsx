@@ -13,6 +13,7 @@ import { Loader2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/utils/utils";
 import { useAuth } from "@/context/authContext";
+import { useCart } from "@/context/cartContext";
 
 interface Props {
   onSubmit: (data: CheckoutFormValues) => void;
@@ -31,6 +32,8 @@ const CheckoutForm = ({
   finalTotal,
 }: Props) => {
   const { user } = useAuth();
+  const { items } = useCart();
+  const firstProductSlug = items?.[0]?.slug || "";
   const {
     control,
     handleSubmit,
@@ -61,7 +64,10 @@ const CheckoutForm = ({
         const location = await reverseGeocode(coords.lat, coords.lon);
         if (location) {
           console.log(location);
-          setValue("address", `${location.address_line1}, ${location.address_line2}`)
+          setValue(
+            "address",
+            `${location.address_line1}, ${location.address_line2}`,
+          );
           setValue("city", location.city);
           setValue("state", location.state);
           setValue("country", location.country);
@@ -245,7 +251,10 @@ const CheckoutForm = ({
 
       {/* PINCODE CHECK */}
       <div className="bg-card border rounded-lg p-4">
-        <PincodeCheck onResult={(r) => setZipResult(r)} />
+        <PincodeCheck
+          productSlug={firstProductSlug}
+          onResult={(r) => setZipResult(r)}
+        />
       </div>
 
       {/* PAYMENT (UI ONLY) */}

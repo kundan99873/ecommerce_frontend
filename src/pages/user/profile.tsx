@@ -651,81 +651,134 @@ const Profile = () => {
                 </div>
 
                 {devicesLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
+                  <div className="space-y-3 pt-2">
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                    <Skeleton className="h-24 w-full rounded-lg" />
                   </div>
                 ) : deviceSessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="rounded-lg bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
                     No active sessions found.
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 pt-2 grid md:grid-cols-2 gap-4">
                     {deviceSessions.map((session) => {
                       const DeviceIcon = getDeviceIcon(session);
+                      const isCurrentDevice = session.is_current;
 
                       return (
-                        <div
+                        <motion.div
                           key={session.id}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className={`group relative overflow-hidden rounded-lg border-2 transition-all duration-300 ${
+                            isCurrentDevice
+                              ? "border-emerald-300 bg-linear-to-r hover:shadow-lg"
+                              : "border-border bg-muted/30 hover:border-border hover:bg-muted/50 hover:shadow-md"
+                          }`}
                         >
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-center gap-2">
-                              <DeviceIcon className="h-4 w-4 text-muted-foreground" />
-                              <p className="truncate text-sm font-semibold">
-                                {getDeviceDisplayName(session)}
-                              </p>
-                              {session.is_current ? (
-                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                                  <ShieldCheck className="mr-1 h-3 w-3" />{" "}
-                                  Current
-                                </Badge>
-                              ) : null}
-                            </div>
+                          {/* Top accent bar */}
+                          <div
+                            className={`absolute top-0 left-0 h-1 w-full transition-all ${
+                              isCurrentDevice
+                                ? "bg-linear-to-r from-emerald-400 to-green-400"
+                                : "bg-linear-to-r from-blue-400 to-blue-500"
+                            }`}
+                          />
 
-                            <div className="space-y-0.5 text-xs text-muted-foreground">
-                              <p className="truncate">
-                                IP: {session.ip_address || "N/A"}
-                              </p>
-                              <p>
-                                Last used:{" "}
-                                {session.last_used_at
-                                  ? dayjs(session.last_used_at).format(
-                                      "MMM D, YYYY h:mm A",
-                                    )
-                                  : "N/A"}
-                              </p>
-                              <p>
-                                Signed in:{" "}
-                                {session.created_at
-                                  ? dayjs(session.created_at).format(
-                                      "MMM D, YYYY h:mm A",
-                                    )
-                                  : "N/A"}
-                              </p>
-                              {session.user_agent ? (
-                                <p className="truncate inline-flex items-center gap-1">
-                                  <Globe className="h-3 w-3" />{" "}
-                                  {session.user_agent}
-                                </p>
-                              ) : null}
+                          <div className="flex flex-col gap-3 p-4 pt-5">
+                            {/* Header with device info */}
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div
+                                  className={`rounded-lg p-2.5 transition-all ${
+                                    isCurrentDevice
+                                      ? "bg-emerald-100 text-emerald-600"
+                                      : "bg-blue-100 text-blue-600"
+                                  }`}
+                                >
+                                  <DeviceIcon className="h-5 w-5" />
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="truncate text-sm font-semibold text-foreground">
+                                      {getDeviceDisplayName(session)}
+                                    </p>
+                                    {isCurrentDevice && (
+                                      <Badge className="bg-linear-to-r from-emerald-400 to-green-400 text-emerald-950 hover:from-emerald-500 hover:to-green-500">
+                                        <ShieldCheck className="mr-1 h-3 w-3" />{" "}
+                                        Current Device
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Last used:
+                                      </span>
+                                      {session.last_used_at ? (
+                                        <span>
+                                          {dayjs(session.last_used_at).format(
+                                            "MMM D, YYYY h:mm A",
+                                          )}
+                                        </span>
+                                      ) : (
+                                        <span>N/A</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Signed in:
+                                      </span>
+                                      {session.created_at ? (
+                                        <span>
+                                          {dayjs(session.created_at).format(
+                                            "MMM D, YYYY h:mm A",
+                                          )}
+                                        </span>
+                                      ) : (
+                                        <span>N/A</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Button
+                                variant={
+                                  isCurrentDevice ? "outline" : "destructive"
+                                }
+                                size="sm"
+                                onClick={() =>
+                                  setDeviceToLogout(session.device_id)
+                                }
+                                disabled={
+                                  logoutDeviceMutation.isPending ||
+                                  isCurrentDevice
+                                }
+                                className={
+                                  isCurrentDevice
+                                    ? "border-emerald-300 text-emerald-600 hover:bg-emerald-50"
+                                    : ""
+                                }
+                                title={
+                                  isCurrentDevice
+                                    ? "Cannot logout current device from this device"
+                                    : "Logout this device"
+                                }
+                              >
+                                {logoutDeviceMutation.isPending ? (
+                                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <LogOut className="mr-1 h-4 w-4" />
+                                )}
+                                {isCurrentDevice ? "Current" : "Logout"}
+                              </Button>
                             </div>
                           </div>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeviceToLogout(session.device_id)}
-                            disabled={logoutDeviceMutation.isPending}
-                          >
-                            {logoutDeviceMutation.isPending ? (
-                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                            ) : (
-                              <LogOut className="mr-1 h-4 w-4" />
-                            )}
-                            Logout Device
-                          </Button>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
