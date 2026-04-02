@@ -44,7 +44,7 @@ const Navbar = () => {
           to="/"
           className="font-display text-2xl font-bold tracking-tight text-foreground"
         >
-          SHOPNOW
+          <img src="/logo.png" alt="ShopBazzar" className="h-12 w-auto object-contain" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

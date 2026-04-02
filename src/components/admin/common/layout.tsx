@@ -39,7 +39,7 @@ const AdminLayout = () => {
             to="/"
             className="font-display text-xl font-bold text-foreground"
           >
-            SHOPNOW
+            SHOPBAZZAR
           </Link>
           <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
         </div>

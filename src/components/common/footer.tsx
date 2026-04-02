@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-display text-lg font-bold mb-3">SHOPNOW</h3>
+            <h3 className="font-display text-lg font-bold mb-3">SHOPBAZZAR</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Curated essentials for the modern wardrobe. Quality materials, timeless design.
             </p>
