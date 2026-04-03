@@ -4,8 +4,8 @@ export default function PageLoader() {
       <style>
         {`
           @keyframes loaderFloat {
-            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.85; }
-            50% { transform: translateY(-12px) scale(1.08); opacity: 1; }
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.75; }
+            50% { transform: translateY(-10px) scale(1.06); opacity: 1; }
           }
 
           @keyframes loaderSpinSlow {
@@ -19,8 +19,8 @@ export default function PageLoader() {
           }
 
           @keyframes loaderPop {
-            0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
-            40% { transform: translateY(-7px); opacity: 1; }
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+            40% { transform: translateY(-6px); opacity: 1; }
           }
 
           @keyframes loaderShimmer {
@@ -61,46 +61,72 @@ export default function PageLoader() {
       </style>
 
       <div className="pointer-events-none absolute inset-0">
-        <div className="loader-float absolute -left-15 top-[12%] h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
+        <div className="loader-float absolute -left-20 top-[10%] h-40 w-40 rounded-full bg-primary/15 blur-3xl md:h-52 md:w-52" />
         <div
-          className="loader-float absolute -right-10 top-[56%] h-52 w-52 rounded-full bg-accent/20 blur-3xl"
+          className="loader-float absolute -right-12 top-[56%] h-48 w-48 rounded-full bg-accent/15 blur-3xl md:h-64 md:w-64"
           style={{ animationDelay: "-2.2s" }}
         />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/8 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6">
-        <div className="w-full max-w-xs text-center">
-          <div className="relative mx-auto mb-8 grid h-44 w-44 place-items-center">
-            <div className="loader-spin-slow absolute inset-0 rounded-full border-2 border-primary/25 border-t-primary/70" />
-            <div className="loader-spin-reverse absolute inset-3 rounded-full border border-primary/15 border-b-primary/60" />
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+        <div className="w-full max-w-sm text-center sm:max-w-md">
+          <div className="mx-auto overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/85 p-5 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.45)] backdrop-blur-md sm:p-7">
+            <div className="relative mx-auto mb-6 grid h-28 w-28 place-items-center sm:mb-7 sm:h-40 sm:w-40">
+              <div className="loader-spin-slow absolute inset-0 rounded-full border-2 border-primary/20 border-t-primary/75" />
+              <div className="loader-spin-reverse absolute inset-3 rounded-full border border-primary/15 border-b-primary/60" />
 
-            <div className="loader-float relative rounded-full bg-background/85 p-5 shadow-[0_16px_45px_-20px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-              <img
-                src="/logo.png"
-                alt="ShopBazzar"
-                className="h-20 w-auto object-contain drop-shadow-lg"
-              />
+              <div className="loader-float relative rounded-full bg-background/90 p-4 shadow-[0_14px_40px_-22px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-5">
+                <img
+                  src="/logo.png"
+                  alt="ShopBazzar"
+                  className="h-12 w-auto object-contain drop-shadow-lg sm:h-20"
+                />
+              </div>
             </div>
-          </div>
 
-          <p className="mb-4 text-sm font-medium tracking-[0.18em] text-foreground/80 uppercase">
-            Preparing your storefront
-          </p>
+            <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground sm:text-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Loading experience
+            </div>
 
-          <div className="relative mx-auto mb-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <span className="loader-shimmer absolute inset-y-0 left-0 w-1/2 rounded-full bg-primary/80" />
-          </div>
+            <p className="text-sm font-semibold tracking-[0.16em] text-foreground/80 uppercase sm:text-base sm:tracking-[0.22em]">
+              Preparing your storefront
+            </p>
 
-          <div className="flex items-center justify-center gap-2">
-            <span className="loader-dot h-2 w-2 rounded-full bg-primary" />
-            <span
-              className="loader-dot h-2 w-2 rounded-full bg-primary"
-              style={{ animationDelay: "0.15s" }}
-            />
-            <span
-              className="loader-dot h-2 w-2 rounded-full bg-primary"
-              style={{ animationDelay: "0.3s" }}
-            />
+            <p className="mx-auto mt-2 max-w-xs text-xs leading-5 text-muted-foreground sm:text-sm">
+              Bringing products, categories, and offers into view.
+            </p>
+
+            <div className="mt-5 space-y-3 sm:mt-6">
+              <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+                <span className="loader-shimmer absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
+              </div>
+
+              <div className="flex items-center justify-center gap-2">
+                <span className="loader-dot h-2 w-2 rounded-full bg-primary" />
+                <span
+                  className="loader-dot h-2 w-2 rounded-full bg-primary"
+                  style={{ animationDelay: "0.15s" }}
+                />
+                <span
+                  className="loader-dot h-2 w-2 rounded-full bg-primary"
+                  style={{ animationDelay: "0.3s" }}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-2 text-left text-[10px] text-muted-foreground sm:text-xs">
+                <div className="rounded-xl border border-border/60 bg-background/70 px-2 py-2 backdrop-blur-sm">
+                  Products
+                </div>
+                <div className="rounded-xl border border-border/60 bg-background/70 px-2 py-2 backdrop-blur-sm">
+                  Categories
+                </div>
+                <div className="rounded-xl border border-border/60 bg-background/70 px-2 py-2 backdrop-blur-sm">
+                  Offers
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
