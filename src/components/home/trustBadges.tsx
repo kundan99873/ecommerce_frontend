@@ -2,7 +2,7 @@ import { Shield, Truck, RotateCcw, CreditCard } from "lucide-react";
 
 const badges = [
   { icon: Shield, label: "Secure Payment", desc: "256-bit SSL encryption" },
-  { icon: Truck, label: "Fast Delivery", desc: "Free shipping $100+" },
+  { icon: Truck, label: "Fast Delivery", desc: "Free shipping Rs.500+" },
   { icon: RotateCcw, label: "Easy Returns", desc: "30-day return policy" },
   { icon: CreditCard, label: "Safe Checkout", desc: "Multiple payment options" },
 ];

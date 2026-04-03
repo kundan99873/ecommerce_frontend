@@ -51,8 +51,9 @@ const CustomerReviews = ({
   const ratingDist = useMemo(
     () =>
       [5, 4, 3, 2, 1].map((star) => {
-        const fallbackCount = reviews.filter((review) => review.rating === star)
-          .length;
+        const fallbackCount = reviews.filter(
+          (review) => review.rating === star,
+        ).length;
         const count = Number(ratingBreakdown?.[String(star)] ?? fallbackCount);
         const pct =
           resolvedTotalReviews > 0 ? (count / resolvedTotalReviews) * 100 : 0;
@@ -121,19 +122,19 @@ const CustomerReviews = ({
 
   return (
     <motion.section
-      className="mt-20 pb-10"
+      className="mt-0 pb-0"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
     >
-      <div className="mb-10 flex items-center justify-between">
+      <div className="mb-7 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-            <MessageSquare className="h-6 w-6 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+            <MessageSquare className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold">
+            <h2 className="text-xl md:text-2xl font-display font-bold">
               Customer Reviews
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -189,7 +190,7 @@ const CustomerReviews = ({
         </div>
       ) : (
         <>
-          <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
             <motion.div
               className="relative overflow-hidden rounded-2xl border bg-card p-5"
               initial={{ opacity: 0, y: 20 }}
@@ -202,7 +203,7 @@ const CustomerReviews = ({
                 Overall Rating
               </p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">
+                <span className="text-3xl font-bold">
                   {computedAverageRating.toFixed(1)}
                 </span>
                 <span className="text-sm text-muted-foreground">/5</span>
@@ -229,7 +230,9 @@ const CustomerReviews = ({
                 Total Reviews
               </p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{resolvedTotalReviews}</span>
+                <span className="text-3xl font-bold">
+                  {resolvedTotalReviews}
+                </span>
               </div>
               <div className="mt-2 flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="h-3.5 w-3.5" />
@@ -249,7 +252,9 @@ const CustomerReviews = ({
                 Recommend
               </p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{recommendationPercent}%</span>
+                <span className="text-3xl font-bold">
+                  {recommendationPercent}%
+                </span>
               </div>
               <div className="mt-2 flex items-center gap-1">
                 <Award className="h-3.5 w-3.5 text-amber-500" />
@@ -271,14 +276,17 @@ const CustomerReviews = ({
                 5-Star Reviews
               </p>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">
+                <span className="text-3xl font-bold">
                   {ratingDist.find((item) => item.star === 5)?.count ?? 0}
                 </span>
               </div>
               <div className="mt-2 flex items-center gap-1">
                 <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                 <span className="text-xs font-medium text-muted-foreground">
-                  {Math.round(ratingDist.find((item) => item.star === 5)?.pct ?? 0)}%
+                  {Math.round(
+                    ratingDist.find((item) => item.star === 5)?.pct ?? 0,
+                  )}
+                  %
                 </span>
               </div>
             </motion.div>
@@ -292,7 +300,9 @@ const CustomerReviews = ({
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
               >
-                <h3 className="text-sm font-semibold">Rating Breakdown</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Rating Breakdown
+                </h3>
                 {ratingDist.map(({ star, count, pct }) => (
                   <div key={star} className="flex items-center gap-3 text-sm">
                     <span className="flex w-12 shrink-0 items-center justify-end gap-1 text-right font-medium text-muted-foreground">
@@ -366,14 +376,13 @@ const CustomerReviews = ({
                               </div>
                               {review.created_at ? (
                                 <p className="mt-0.5 text-xs text-muted-foreground">
-                                  {new Date(review.created_at).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      month: "long",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    },
-                                  )}
+                                  {new Date(
+                                    review.created_at,
+                                  ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
                                 </p>
                               ) : null}
                             </div>
@@ -395,9 +404,9 @@ const CustomerReviews = ({
                           ))}
                         </div>
 
-                        <div className="relative ml-1 border-l-2 border-primary/15 pl-5">
+                        <div className="relative ml-1 border-l-2 border-primary/15 pl-4">
                           <Quote className="absolute -left-3 -top-1 h-5 w-5 rounded-full bg-card p-0.5 text-primary/15" />
-                          <p className="text-sm italic leading-relaxed text-foreground/80">
+                          <p className="text-xs italic leading-relaxed text-foreground/80 md:text-sm">
                             {review.comment}
                           </p>
                         </div>

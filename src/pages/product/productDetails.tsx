@@ -30,6 +30,7 @@ import ProductCoupon from "@/components/product/productCoupon";
 import CustomerReviews from "@/components/product/customer-reviews";
 import ProductCard from "@/components/product/productCard";
 import ProductCardSkeleton from "@/components/product/productCardSkeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ProductReview } from "@/services/product/product.types";
 
 const ProductDetail = () => {
@@ -319,12 +320,6 @@ const ProductDetail = () => {
             )}
           </div>
 
-          <div>
-            <p className="mt-6 text-sm text-muted-foreground">Description</p>
-
-            <p className="mt-2">{product.description}</p>
-          </div>
-
           {/* COLOR */}
           <div className="mt-6">
             <p className="text-sm font-medium mb-2">Color</p>
@@ -434,32 +429,80 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {hasReviews && (
-        <>
-          <hr className="my-6" />
+      <section className="mt-12">
+        <Tabs defaultValue="description" className="w-full">
+          <TabsList variant="line" className="mb-6 w-full justify-start gap-6">
+            <TabsTrigger value="description" className="px-0 text-base">
+              Description
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="px-0 text-base">
+              Reviews
+            </TabsTrigger>
+            <TabsTrigger value="shipping" className="px-0 text-base">
+              Shipping Policy
+            </TabsTrigger>
+          </TabsList>
 
-          <CustomerReviews
-            reviewsLoading={reviewsLoading}
-            reviews={productReviews}
-            averageRating={averageRating}
-            totalReviews={totalReviews}
-            ratingBreakdown={firstReviewsPage?.ratingBreakdown}
-            isFetchingMoreReviews={isFetchingMoreReviews}
-            hasMoreReviews={hasMoreReviews}
-            loadMoreRef={reviewsLoadMoreRef}
-          />
-        </>
-      )}
+          <TabsContent value="description">
+            <div className="rounded-xl border bg-card p-6 md:p-8">
+              <h3 className="text-2xl font-display font-bold text-foreground">
+                Product Description
+              </h3>
+              <p className="mt-4 text-lg text-foreground/90">
+                {product.description}
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            {hasReviews ? (
+              <div className="rounded-xl border bg-card p-6 md:p-8">
+                <CustomerReviews
+                  reviewsLoading={reviewsLoading}
+                  reviews={productReviews}
+                  averageRating={averageRating}
+                  totalReviews={totalReviews}
+                  ratingBreakdown={firstReviewsPage?.ratingBreakdown}
+                  isFetchingMoreReviews={isFetchingMoreReviews}
+                  hasMoreReviews={hasMoreReviews}
+                  loadMoreRef={reviewsLoadMoreRef}
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border bg-card p-6 md:p-8">
+                <h3 className="text-2xl font-display font-bold text-foreground">
+                  Customer Reviews
+                </h3>
+                <p className="mt-4 text-muted-foreground">
+                  No reviews yet for this product.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="shipping">
+            <div className="rounded-xl border bg-card p-6 md:p-8">
+              <h3 className="text-2xl font-display font-bold text-foreground">
+                Shipping Policy
+              </h3>
+              <p className="mt-4 text-foreground/90">
+                Orders are processed within 24-48 hours and usually delivered in
+                3-7 business days depending on your location. You will receive
+                tracking details as soon as your order is shipped.
+              </p>
+              <p className="mt-3 text-foreground/90">
+                If your area is serviceable, expedited delivery options may be
+                available at checkout. For damaged or delayed deliveries, please
+                contact our support team for priority assistance.
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </section>
 
       <section className="mt-14">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-display font-bold">You may also like</h2>
-          <Link
-            to="/products"
-            className="text-sm text-primary hover:underline underline-offset-4"
-          >
-            View more
-          </Link>
+          <h2 className="text-2xl font-display font-bold">Related Products</h2>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

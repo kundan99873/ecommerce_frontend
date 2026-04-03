@@ -45,7 +45,7 @@ const Footer = () => {
             <h4 className="font-body text-sm font-semibold mb-3">Support</h4>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>help@lumiere.com</p>
-              <p>Free shipping on orders Rs.1000+</p>
+              <p>Free shipping on orders Rs.500+</p>
               <p>30-day returns</p>
             </div>
           </div>

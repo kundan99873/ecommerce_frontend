@@ -34,9 +34,8 @@ const PincodeCheck = ({
   onResult,
   compact = false,
 }: PincodeCheckProps) => {
-  const [pincode, setPincode] = useState(
-    () => localStorage.getItem(PINCODE_KEY) || "",
-  );
+  const [pincode, setPincode] = useState("");
+  // () => localStorage.getItem(PINCODE_KEY) || "",
   const [result, setResult] = useState<{
     deliverable: boolean;
     eta?: string;

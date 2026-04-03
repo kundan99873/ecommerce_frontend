@@ -36,10 +36,14 @@ const AdminLayout = () => {
       <aside className="hidden md:flex flex-col w-64 border-r bg-card h-full">
         <div className="p-6 border-b">
           <Link
-            to="/"
-            className="font-display text-xl font-bold text-foreground"
+            to="/admin"
+            className="font-display text-2xl font-bold tracking-tight text-foreground"
           >
-            SHOPBAZZAR
+            <img
+              src="/logo.png"
+              alt="ShopBazzar"
+              className="h-12 w-auto object-contain"
+            />
           </Link>
           <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
         </div>
