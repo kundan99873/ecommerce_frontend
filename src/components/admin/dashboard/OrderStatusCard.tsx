@@ -46,7 +46,7 @@ export const OrderStatusCard = ({
         ) : (
           data.map((item) => (
             <div key={item.status} className="space-y-1.5">
-              <div className="flex justify-between text-sm">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-sm">
                 <span className="font-medium">{item.label}</span>
                 <span className="text-muted-foreground">
                   {item.count} ({item.percentage.toFixed(2)}%)

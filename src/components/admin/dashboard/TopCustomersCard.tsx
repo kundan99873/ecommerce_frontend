@@ -28,7 +28,7 @@ export const TopCustomersCard = ({
         {loading ? (
           <Skeleton className="h-20 w-full" />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             {customers.map((u, i) => (
               <motion.div
                 key={u.id}

@@ -168,7 +168,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : alreadyInCart ? (
                 <span className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> In Cart
+                  <CheckCircle2 className="h-4 w-4" /> In Cart
                 </span>
               ) : (
                 <ShoppingBag className="h-4 w-4" />

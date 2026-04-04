@@ -52,10 +52,10 @@ export const RevenueChart = ({
 }: RevenueChartProps) => {
   return (
     <Card className="lg:col-span-2">
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="text-lg font-display">Revenue Timeline</CardTitle>
         <Select value={groupBy} onValueChange={onGroupByChange}>
-          <SelectTrigger className="w-32.5 h-8">
+          <SelectTrigger className="h-9 w-full sm:w-[140px]">
             <SelectValue placeholder="Group by" />
           </SelectTrigger>
           <SelectContent>
@@ -96,6 +96,7 @@ export const RevenueChart = ({
                   fill: "hsl(var(--muted-foreground))",
                   fontSize: 12,
                 }}
+                interval="preserveStartEnd"
               />
               <YAxis
                 tick={{

@@ -41,8 +41,8 @@ export const SalesByCategoryChart = ({
             No category sales data available for the selected range.
           </p>
         ) : (
-          <div className="flex items-center gap-6">
-            <ResponsiveContainer width="50%" height={200}>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={data}
@@ -50,8 +50,8 @@ export const SalesByCategoryChart = ({
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
+                  innerRadius={48}
+                  outerRadius={84}
                 >
                   {data.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -60,7 +60,7 @@ export const SalesByCategoryChart = ({
                 <Tooltip contentStyle={tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-3 min-w-0">
               {data.map((item) => (
                 <div key={item.category_id} className="space-y-1">
                   <div className="flex justify-between text-xs">

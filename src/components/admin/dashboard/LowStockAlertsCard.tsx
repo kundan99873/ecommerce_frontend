@@ -44,9 +44,9 @@ export const LowStockAlertsCard = ({
                 <img
                   src={p.image_url}
                   alt={p.name}
-                  className="h-10 w-10 rounded-lg object-cover"
+                  className="h-10 w-10 shrink-0 rounded-lg object-cover"
                 />
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{p.name}</p>
                   <p className="text-xs text-destructive font-medium">
                     {p.stock_status === "out_of_stock"

@@ -49,8 +49,8 @@ const StatCard = ({
     transition={{ duration: 0.3 }}
   >
     <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
+      <CardContent className="p-4 sm:p-5 lg:p-6">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
             {loading ? (
@@ -92,7 +92,7 @@ export const OverviewSection = ({
   productGrowth,
 }: OverviewSectionProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <StatCard
         title="Total Revenue"
         value={formatCurrency(totalRevenue)}

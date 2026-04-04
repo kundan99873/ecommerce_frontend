@@ -188,12 +188,14 @@ const Dashboard = () => {
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
             Overview of your store performance
           </p>
         </div>
@@ -235,7 +237,7 @@ const Dashboard = () => {
       />
 
       {/* Revenue & Products Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <RevenueChart
           loading={revenueLoading}
           data={revenueSeries}
@@ -246,7 +248,7 @@ const Dashboard = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <VisitorsConversionsChart loading={loading} data={conversionData} />
         <SalesByCategoryChart
           loading={salesByCategoryLoading}
@@ -255,7 +257,7 @@ const Dashboard = () => {
       </div>
 
       {/* Order Management Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <OrderStatusCard
           loading={orderStatusLoading}
           data={orderStatusSeries}

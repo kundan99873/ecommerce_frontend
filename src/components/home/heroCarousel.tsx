@@ -63,7 +63,7 @@ const HeroCarousel = () => {
   }
 
   return (
-    <section className="relative h-[72vh] min-h-28rem overflow-hidden md:h-[75vh]">
+    <section className="relative h-84 min-h-28rem overflow-hidden md:h-[75vh]">
       <AnimatePresence mode="wait">
         <motion.img
           key={slide.id || current}
@@ -152,7 +152,7 @@ const HeroCarousel = () => {
               )}
 
               <motion.div
-                className="mt-4 grid grid-cols-3 gap-2 md:hidden"
+                className="mt-4 flex gap-2 md:hidden"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.34 }}
@@ -160,10 +160,10 @@ const HeroCarousel = () => {
                 {slides.map((_, i) => (
                   <div
                     key={`mobile-progress-${i}`}
-                    className="h-1.5 overflow-hidden rounded-full bg-white/25"
+                    className="h-1.5 overflow-hidden rounded-full bg-white/25 w-10"
                   >
                     <motion.div
-                      className="h-full rounded-full bg-white"
+                      className={`h-full rounded-full ${i <= current ? "bg-white" : ""}`}
                       initial={{ width: i === current ? "0%" : "100%" }}
                       animate={{ width: i === current ? "100%" : "100%" }}
                       transition={{

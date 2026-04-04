@@ -58,7 +58,7 @@ export const RecentOrdersCard = ({
             {orders.map((o) => (
               <div
                 key={o.order_number}
-                className="flex items-center justify-between py-2 border-b last:border-0"
+                className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="text-sm font-medium">{o.order_number}</p>
@@ -66,7 +66,7 @@ export const RecentOrdersCard = ({
                     {dayjs(o.order_date).format("DD MMM YYYY, hh:mm A")}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
                   <Badge
                     className={
                       statusColor[o.status.toUpperCase()] ||

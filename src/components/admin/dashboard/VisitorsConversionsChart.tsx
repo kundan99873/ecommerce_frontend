@@ -47,7 +47,7 @@ export const VisitorsConversionsChart = ({
         {loading ? (
           <Skeleton className="h-56 w-full" />
         ) : (
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
@@ -56,6 +56,7 @@ export const VisitorsConversionsChart = ({
                   fill: "hsl(var(--muted-foreground))",
                   fontSize: 12,
                 }}
+                interval={0}
               />
               <YAxis
                 tick={{
