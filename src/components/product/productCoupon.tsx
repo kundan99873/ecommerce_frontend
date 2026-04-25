@@ -69,14 +69,16 @@ const ProductCoupon = ({
       coupon.discount_type === "PERCENTAGE"
         ? (price * coupon.discount_value) / 100
         : coupon.discount_value;
+    const effectiveDisc =
+      coupon.max_discount != null ? Math.min(disc, coupon.max_discount) : disc;
 
-    const discounted = Math.max(0, price - disc);
+    const discounted = Math.max(0, price - effectiveDisc);
     onCouponSelect?.(coupon.code);
     setAppliedCouponCode(coupon.code);
     setResult({
       valid: true,
       discountedPrice: discounted,
-      message: `You save ${formatCurrency(disc)} with ${coupon.code}`,
+      message: `You save ${formatCurrency(effectiveDisc)} with ${coupon.code}`,
     });
   };
 
@@ -96,13 +98,17 @@ const ProductCoupon = ({
         coupon.discount_type === "PERCENTAGE"
           ? (price * coupon.discount_value) / 100
           : coupon.discount_value;
-      const discounted = Math.max(0, price - disc);
+      const effectiveDisc =
+        coupon.max_discount != null
+          ? Math.min(disc, coupon.max_discount)
+          : disc;
+      const discounted = Math.max(0, price - effectiveDisc);
       onCouponSelect?.(coupon.code);
       setAppliedCouponCode(coupon.code);
       setResult({
         valid: true,
         discountedPrice: discounted,
-        message: `You save ${formatCurrency(disc)} with ${coupon.code}`,
+        message: `You save ${formatCurrency(effectiveDisc)} with ${coupon.code}`,
       });
     }
 

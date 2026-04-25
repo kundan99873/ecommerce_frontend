@@ -1,5 +1,8 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +61,23 @@ const CheckoutForm = ({
 
   const [locationLoading, setLocationLoading] = useState(false);
 
+  const handleFormSubmit = (data: CheckoutFormValues) => {
+    if (!isValidPhoneNumber(data.phone_number)) {
+      return;
+    }
+
+    const normalizedPhoneCode = data.phone_code.trim();
+    const normalizedPhoneNumber = data.phone_number
+      .slice(normalizedPhoneCode.length)
+      .trim();
+
+    onSubmit({
+      ...data,
+      phone_code: normalizedPhoneCode,
+      phone_number: normalizedPhoneNumber,
+    });
+  };
+
   const handleAutoDetectLocation = async () => {
     setLocationLoading(true);
     try {
@@ -86,7 +106,10 @@ const CheckoutForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="md:col-span-3 space-y-6">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="md:col-span-3 space-y-6"
+    >
       <div className="bg-card border rounded-lg p-3 mx-2 mb-3">
         <button
           type="button"
@@ -178,7 +201,23 @@ const CheckoutForm = ({
           render={({ field }) => (
             <div>
               <Label>Phone Number</Label>
-              <Input {...field} />
+              <PhoneInput
+                country="in"
+                countryCodeEditable={false}
+                enableSearch={true}
+                searchPlaceholder="Search country"
+                value={field.value}
+                onChange={(value, data: { dialCode?: string } | {}) => {
+                  const dialCode =
+                    "dialCode" in data && data.dialCode ? data.dialCode : "";
+
+                  field.onChange(value ? `+${value}` : "");
+                  setValue("phone_code", dialCode ? `+${dialCode}` : "+1");
+                }}
+                inputStyle={{ width: "100%" }}
+                inputClass="!w-full !bg-transparent !text-base !border !dark:bg-input/30 !border-input !rounded-md"
+                dropdownClass="!bg-popover !text-popover-foreground !border !dark:bg-input/30 !border-input !rounded-md"
+              />
               {errors.phone_number && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.phone_number.message}

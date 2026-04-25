@@ -37,7 +37,7 @@ const AdminCoupons = () => {
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [activeTarget, setActiveTarget] = useState<Coupon | null>(null);
   const [viewCoupon, setViewCoupon] = useState<Coupon | null>(null);
 
@@ -52,12 +52,12 @@ const AdminCoupons = () => {
   const updateCouponMutation = useUpdateCoupon();
   const deleteCouponMutation = useDeleteCoupon();
 
-  const totalPages = Math.ceil(data?.totalCounts || 0 / PAGE_SIZE);
+  const totalPages = Math.ceil((data?.totalCounts ?? 0) / PAGE_SIZE);
 
   const handleSubmit = async (values: CouponFormValues) => {
     if (editingCoupon) {
       const res = await updateCouponMutation.mutateAsync({
-        id: editingCoupon.id,
+        code: editingCoupon.code,
         data: {
           code: values.code,
           description: values.description || "",
@@ -123,7 +123,7 @@ const AdminCoupons = () => {
   const handleChangeStatus = async () => {
     if (activeTarget === null) return;
     const res = await updateCouponMutation.mutateAsync({
-      id: activeTarget.id,
+      code: activeTarget.code,
       data: { is_active: !activeTarget.is_active },
     });
     if (res.success) {
@@ -279,7 +279,7 @@ const AdminCoupons = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-destructive"
-                                onClick={() => setDeleteTarget(c.id)}
+                                onClick={() => setDeleteTarget(c.code)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

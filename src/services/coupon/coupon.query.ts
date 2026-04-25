@@ -5,7 +5,11 @@ import {
   getCoupons,
   updateCoupon,
 } from "./coupon.api";
-import type { CouponBody, GetCouponsQuery, UpdateCouponBody } from "./coupon.types";
+import type {
+  CouponBody,
+  GetCouponsQuery,
+  UpdateCouponBody,
+} from "./coupon.types";
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
 
@@ -24,16 +28,19 @@ const useAddCoupon = () => {
 };
 
 const useUpdateCoupon = () => {
-  return useMutation<ApiResponse, Error, { data: UpdateCouponBody; id: number }>({
-    mutationFn: ({ data, id }) => updateCoupon({ data, id }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+  return useMutation<
+    ApiResponse,
+    Error,
+    { data: UpdateCouponBody; code: string }
+  >({
+    mutationFn: ({ data, code }) => updateCoupon({ data, code }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
   });
 };
 
 const useDeleteCoupon = () => {
-  return useMutation<ApiResponse, Error, number>({
-    mutationFn: (id) => deleteCoupon(id),
+  return useMutation<ApiResponse, Error, string>({
+    mutationFn: (code) => deleteCoupon(code),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
   });
 };
