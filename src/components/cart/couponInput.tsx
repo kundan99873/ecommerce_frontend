@@ -3,9 +3,11 @@ import { Tag, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cartContext";
-import { useGetCoupons } from "@/services/coupon/coupon.query";
+import { useGetAllCartCoupons } from "@/services/cart/cart.query";
 import { toast } from "@/hooks/useToast";
 import { formatCurrency } from "@/utils/utils";
+import { useAuth } from "@/context/authContext";
+import type { CartAvailableCoupon } from "@/services/cart/cart.types";
 
 interface CouponInputProps {
   cartTotal: number;
@@ -21,13 +23,18 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
     isApplyingCoupon,
     isRemovingCoupon,
   } = useCart();
-  const { data: couponsResponse } = useGetCoupons({
-    is_active: true,
-    limit: 100,
-  });
+  const { isAuthenticated } = useAuth();
+  const { data: couponsResponse } = useGetAllCartCoupons(isAuthenticated);
+  const couponPayload = couponsResponse?.data as
+    | CartAvailableCoupon[]
+    | { coupons?: CartAvailableCoupon[] }
+    | undefined;
+  const coupons = Array.isArray(couponPayload)
+    ? couponPayload
+    : (couponPayload?.coupons ?? []);
   const [code, setCode] = useState("");
 
-  const couponToApply = couponsResponse?.data.find(
+  const couponToApply = coupons.find(
     (c) => c.code.toUpperCase() === code.trim().toUpperCase(),
   );
   const isApplyingCurrentCode =
@@ -36,7 +43,7 @@ const CouponInput = ({ cartTotal }: CouponInputProps) => {
   const handleApply = () => {
     if (!code.trim()) return;
 
-    const coupon = couponsResponse?.data.find(
+    const coupon = coupons.find(
       (c) => c.code.toUpperCase() === code.trim().toUpperCase(),
     );
 

@@ -38,6 +38,9 @@ import { toast } from "@/hooks/useToast";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "motion/react";
 import dayjs from "dayjs";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import ConfirmDialog from "@/components/admin/common/confirmModal";
 import ProfileHeader from "@/components/user/profile/profileHeader";
 import OrdersStatCard from "@/components/user/profile/ordersStatCard";
@@ -93,6 +96,7 @@ const Profile = () => {
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [logoutAllDevicesDialogOpen, setLogoutAllDevicesDialogOpen] =
     useState(false);
@@ -103,6 +107,12 @@ const Profile = () => {
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    phone_code: "+1",
+    phone_number: "",
+  });
 
   const [newAddr, setNewAddr] = useState<AddAddressBody>(EMPTY_ADDRESS);
 
@@ -121,18 +131,42 @@ const Profile = () => {
     setEditingAddressId(null);
   };
 
+  const openEditProfileForm = () => {
+    if (!personalInfo) {
+      return;
+    }
+
+    const profilePhoneCode = personalInfo.phone_code || "+1";
+    const profilePhoneNumber = personalInfo.phone_number || "";
+
+    setProfileForm({
+      name: personalInfo.name ?? "",
+      email: personalInfo.email ?? "",
+      phone_code: profilePhoneCode,
+      phone_number: profilePhoneNumber
+        ? `${profilePhoneCode}${profilePhoneNumber}`
+        : "",
+    });
+    setProfileModalOpen(true);
+  };
+
   const openAddAddressForm = () => {
     resetAddressForm();
     setAddressModalOpen(true);
   };
 
   const openEditAddressForm = (address: Address) => {
+    const addressPhoneCode = address.phone_code || "+1";
+    const addressPhoneNumber = address.phone_number || "";
+
     setEditingAddressId(String(address.id));
     setNewAddr({
       first_name: address.first_name,
       last_name: address.last_name,
-      phone_number: address.phone_number,
-      phone_code: address.phone_code,
+      phone_number: addressPhoneNumber
+        ? `${addressPhoneCode}${addressPhoneNumber}`
+        : "",
+      phone_code: addressPhoneCode,
       line1: address.line1,
       line2: address.line2 ?? "",
       city: address.city,
@@ -161,15 +195,42 @@ const Profile = () => {
       return;
     }
 
+    if (!isValidPhoneNumber(newAddr.phone_number)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Please enter a valid phone number.",
+      });
+      return;
+    }
+
+    const normalizedPhoneCode = newAddr.phone_code.trim();
+    const normalizedPhoneNumber = newAddr.phone_number
+      .slice(normalizedPhoneCode.length)
+      .trim();
+
+    if (!/^\d{6,15}$/.test(normalizedPhoneNumber)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Phone number must contain 6 to 15 digits.",
+      });
+      return;
+    }
+
+    const addressPayload: AddAddressBody = {
+      ...newAddr,
+      phone_code: normalizedPhoneCode,
+      phone_number: normalizedPhoneNumber,
+    };
+
     try {
       if (editingAddressId) {
         await updateAddressMutation.mutateAsync({
           id: editingAddressId,
-          data: newAddr,
+          data: addressPayload,
         });
         toast({ title: "Address updated" });
       } else {
-        await addAddressMutation.mutateAsync(newAddr);
+        await addAddressMutation.mutateAsync(addressPayload);
         toast({ title: "Address added" });
       }
 
@@ -296,6 +357,76 @@ const Profile = () => {
           ?.data?.message || "Unable to update avatar right now.";
 
       toast({ title: "Failed to update avatar", description: message });
+    }
+  };
+
+  const handleProfileDetailsUpdate = async () => {
+    const normalizedName = profileForm.name.trim();
+    const normalizedPhoneCode = profileForm.phone_code.trim();
+    const normalizedPhoneInput = profileForm.phone_number.trim();
+
+    if (!normalizedName || normalizedName.length < 2) {
+      toast({
+        title: "Invalid name",
+        description: "Name must be at least 2 characters.",
+      });
+      return;
+    }
+
+    if (!profileForm.email.trim()) {
+      toast({ title: "Email is required" });
+      return;
+    }
+
+    if (!isValidPhoneNumber(normalizedPhoneInput)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Please enter a valid phone number.",
+      });
+      return;
+    }
+
+    const normalizedPhoneNumber = normalizedPhoneInput
+      .slice(normalizedPhoneCode.length)
+      .trim();
+
+    if (!/^\d{6,15}$/.test(normalizedPhoneNumber)) {
+      toast({
+        title: "Invalid phone number",
+        description: "Phone number must contain 6 to 15 digits.",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", normalizedName);
+    formData.append("phone_code", normalizedPhoneCode);
+    formData.append("phone_number", normalizedPhoneNumber);
+
+    try {
+      const response = await updateProfileMutation.mutateAsync(formData);
+
+      if (!response.success) {
+        toast({
+          title: "Failed to update profile",
+          description: response.message || "Please try again.",
+        });
+        return;
+      }
+
+      toast({
+        title: "Profile updated",
+        description:
+          response.message || "Your profile details were updated successfully.",
+      });
+
+      setProfileModalOpen(false);
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Unable to update profile right now.";
+
+      toast({ title: "Failed to update profile", description: message });
     }
   };
 
@@ -474,9 +605,18 @@ const Profile = () => {
 
           <TabsContent value="profile" className="mt-6">
             <div className="space-y-4 rounded-lg border bg-card p-6">
-              <h2 className="text-lg font-display font-bold">
-                Personal Information
-              </h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-display font-bold">
+                  Personal Information
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openEditProfileForm}
+                >
+                  <Pencil className="mr-1 h-4 w-4" /> Edit Details
+                </Button>
+              </div>
               <div className="grid gap-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Name</span>
@@ -799,6 +939,86 @@ const Profile = () => {
         </Tabs>
 
         <Dialog
+          open={profileModalOpen}
+          onOpenChange={(open) => {
+            setProfileModalOpen(open);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Update Profile Details</DialogTitle>
+              <DialogDescription>
+                Update your name, email and phone details.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={profileForm.name}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={profileForm.email} disabled />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Email cannot be changed for this account.
+                </p>
+              </div>
+              <div>
+                <Label>Phone Number</Label>
+                <PhoneInput
+                  country="in"
+                  countryCodeEditable={false}
+                  enableSearch={true}
+                  searchPlaceholder="Search country"
+                  value={profileForm.phone_number}
+                  onChange={(value, data: { dialCode?: string } | {}) => {
+                    const dialCode =
+                      "dialCode" in data && data.dialCode ? data.dialCode : "";
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      phone_number: value ? `+${value}` : "",
+                      phone_code: dialCode ? `+${dialCode}` : prev.phone_code,
+                    }));
+                  }}
+                  inputStyle={{ width: "100%" }}
+                  inputClass="!w-full !bg-transparent !text-base !border !dark:bg-input/30 !border-input !rounded-md"
+                  dropdownClass="!bg-popover !text-popover-foreground !border !dark:bg-input/30 !border-input !rounded-md"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setProfileModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleProfileDetailsUpdate}
+                disabled={updateProfileMutation.isPending}
+              >
+                {updateProfileMutation.isPending ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : null}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
           open={passwordModalOpen}
           onOpenChange={(open) => {
             setPasswordModalOpen(open);
@@ -938,21 +1158,28 @@ const Profile = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Phone Code</Label>
-                  <Input
-                    value={newAddr.phone_code}
-                    onChange={(e) =>
-                      setNewAddr({ ...newAddr, phone_code: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Phone Number</Label>
-                  <Input
+                  <Label>Phone</Label>
+                  <PhoneInput
+                    country="in"
+                    countryCodeEditable={false}
+                    enableSearch={true}
+                    searchPlaceholder="Search country"
                     value={newAddr.phone_number}
-                    onChange={(e) =>
-                      setNewAddr({ ...newAddr, phone_number: e.target.value })
-                    }
+                    onChange={(value, data: { dialCode?: string } | {}) => {
+                      const dialCode =
+                        "dialCode" in data && data.dialCode
+                          ? data.dialCode
+                          : "";
+
+                      setNewAddr((prev) => ({
+                        ...prev,
+                        phone_number: value ? `+${value}` : "",
+                        phone_code: dialCode ? `+${dialCode}` : prev.phone_code,
+                      }));
+                    }}
+                    inputStyle={{ width: "100%" }}
+                    inputClass="!w-full !bg-transparent !text-base !border !dark:bg-input/30 !border-input !rounded-md"
+                    dropdownClass="!bg-popover !text-popover-foreground !border !dark:bg-input/30 !border-input !rounded-md"
                   />
                 </div>
               </div>

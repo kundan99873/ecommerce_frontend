@@ -1,5 +1,10 @@
 import { api } from "@/api/api";
-import type { CouponBody, CouponResponse, GetCouponsQuery, UpdateCouponBody } from "./coupon.types";
+import type {
+  CouponBody,
+  CouponResponse,
+  GetCouponsQuery,
+  UpdateCouponBody,
+} from "./coupon.types";
 import { cleanQueryParams } from "@/utils/utils";
 
 const getCoupons = async (params?: GetCouponsQuery) => {
@@ -14,13 +19,19 @@ const addCoupon = async (data: CouponBody) => {
   return response.data;
 };
 
-const updateCoupon = async ({ data, id }: { data: UpdateCouponBody; id: number }) => {
-  const response = await api.patch(`/coupon/${id}`, data);
+const updateCoupon = async ({
+  data,
+  code,
+}: {
+  data: UpdateCouponBody;
+  code: string;
+}) => {
+  const response = await api.patch(`/coupon/${encodeURIComponent(code)}`, data);
   return response.data;
 };
 
-const deleteCoupon = async (id: number) => {
-  const response = await api.delete(`/coupon/${id}`);
+const deleteCoupon = async (code: string) => {
+  const response = await api.delete(`/coupon/${encodeURIComponent(code)}`);
   return response.data;
 };
 

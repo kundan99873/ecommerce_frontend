@@ -39,9 +39,9 @@ const AddressForm = ({
     defaultValues: {
       first_name: data?.first_name ? data.first_name : user?.name || "",
       phone_number: data?.phone_number
-        ? `${data?.phone_code} ${data?.phone_number}`
+        ? `${data?.phone_code}${data?.phone_number}`
         : "",
-      phone_code: data?.phone_code || "",
+      phone_code: data?.phone_code || "+1",
       last_name: data?.last_name || "",
       line1: data?.line1 || "",
       line2: data?.line2 || "",
@@ -112,7 +112,6 @@ const AddressForm = ({
         toast({
           title: "Failed to update address",
           description: res.message || "Please try again",
-          
         });
       }
     } else {
@@ -205,11 +204,14 @@ const AddressForm = ({
             <Label>Phone</Label>
             <PhoneInput
               country="in"
+              countryCodeEditable={false}
+              enableSearch={true}
+              searchPlaceholder="Search country"
               value={field.value}
               // onChange={(value) => field.onChange("+" + value)}
               onChange={(value, data: any) => {
                 const dialCode = data?.dialCode || "";
-                field.onChange("+" + value);
+                field.onChange(value ? "+" + value : "");
                 setValue("phone_code", "+" + dialCode);
               }}
               inputStyle={{ width: "100%" }}
