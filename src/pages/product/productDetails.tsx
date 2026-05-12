@@ -444,13 +444,76 @@ const ProductDetail = () => {
           </TabsList>
 
           <TabsContent value="description">
-            <div className="rounded-xl border bg-card p-6 md:p-8">
-              <h3 className="text-2xl font-display font-bold text-foreground">
+            <div className="rounded-xl border bg-gradient-to-br from-card via-card to-card/50 p-6 md:p-8">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-6">
                 Product Description
               </h3>
-              <p className="mt-4 text-lg text-foreground/90">
-                {product.description}
-              </p>
+
+              <div className="space-y-6">
+                {product.description ? (
+                  <div className="space-y-4">
+                    {/* Split description by bullet points or stars and format nicely */}
+                    {product.description
+                      .split("★")
+                      .filter(Boolean)
+                      .map((item, index) => {
+                        const trimmed = item.trim();
+                        if (!trimmed) return null;
+
+                        return (
+                          <div
+                            key={index}
+                            className="flex gap-3 p-3 rounded-lg bg-background/40 hover:bg-background/60 transition-colors"
+                          >
+                            <div className="text-primary font-bold mt-0.5 flex-shrink-0">
+                              ★
+                            </div>
+                            <p className="text-sm md:text-base text-foreground/85 leading-relaxed">
+                              {trimmed}
+                            </p>
+                          </div>
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <p className="text-sm md:text-base text-muted-foreground italic">
+                    No description available for this product.
+                  </p>
+                )}
+              </div>
+
+              {/* Additional info section */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <h4 className="text-sm font-semibold text-foreground mb-4 uppercase tracking-wide">
+                  Key Features
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-start gap-2 p-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-xs md:text-sm text-foreground/80">
+                      Premium Quality Material
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 p-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-xs md:text-sm text-foreground/80">
+                      Authentic & Certified
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 p-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-xs md:text-sm text-foreground/80">
+                      Ethically Sourced
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 p-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span className="text-xs md:text-sm text-foreground/80">
+                      Carefully Inspected
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -481,20 +544,43 @@ const ProductDetail = () => {
           </TabsContent>
 
           <TabsContent value="shipping">
-            <div className="rounded-xl border bg-card p-6 md:p-8">
-              <h3 className="text-2xl font-display font-bold text-foreground">
+            <div className="rounded-xl border bg-gradient-to-br from-card via-card to-card/50 p-6 md:p-8">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-6">
                 Shipping Policy
               </h3>
-              <p className="mt-4 text-foreground/90">
-                Orders are processed within 24-48 hours and usually delivered in
-                3-7 business days depending on your location. You will receive
-                tracking details as soon as your order is shipped.
-              </p>
-              <p className="mt-3 text-foreground/90">
-                If your area is serviceable, expedited delivery options may be
-                available at checkout. For damaged or delayed deliveries, please
-                contact our support team for priority assistance.
-              </p>
+              <div className="space-y-4">
+                <div className="flex gap-3 p-3 rounded-lg bg-background/40">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm md:text-base text-foreground/85 leading-relaxed">
+                    Orders are processed within <strong>24-48 hours</strong> and
+                    usually delivered in <strong>3-7 business days</strong>{" "}
+                    depending on your location.
+                  </p>
+                </div>
+                <div className="flex gap-3 p-3 rounded-lg bg-background/40">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm md:text-base text-foreground/85 leading-relaxed">
+                    You will receive <strong>tracking details</strong> as soon
+                    as your order is shipped.
+                  </p>
+                </div>
+                <div className="flex gap-3 p-3 rounded-lg bg-background/40">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm md:text-base text-foreground/85 leading-relaxed">
+                    If your area is serviceable,{" "}
+                    <strong>expedited delivery</strong> options may be available
+                    at checkout.
+                  </p>
+                </div>
+                <div className="flex gap-3 p-3 rounded-lg bg-background/40">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm md:text-base text-foreground/85 leading-relaxed">
+                    For damaged or delayed deliveries, please{" "}
+                    <strong>contact our support team</strong> for priority
+                    assistance.
+                  </p>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

@@ -50,7 +50,7 @@ const ProductFilters = ({
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => onUpdateParam("category", "all")}
-            className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+            className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors ${
               activeCategory === "all"
                 ? "border-foreground bg-foreground text-background"
                 : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -62,7 +62,7 @@ const ProductFilters = ({
             <button
               key={cat.slug}
               onClick={() => onUpdateParam("category", cat.slug)}
-              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+              className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors ${
                 activeCategory === cat.slug
                   ? "border-foreground bg-foreground text-background"
                   : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -87,7 +87,7 @@ const ProductFilters = ({
             <button
               key={item.value}
               onClick={() => onUpdateParam("filter", item.value)}
-              className={`rounded-md border px-3 py-2 text-xs transition-colors ${
+              className={`cursor-pointer rounded-md border px-3 py-2 text-xs transition-colors ${
                 activeFilter === item.value
                   ? "border-foreground bg-foreground text-background"
                   : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -101,23 +101,26 @@ const ProductFilters = ({
 
       <div>
         <h3 className="mb-3 text-sm font-semibold">Brand</h3>
-        <div className="space-y-2 rounded-md border p-3">
+        <div className="rounded-md border p-3">
           {brandOptions.length > 0 ? (
-            brandOptions.map((brand) => {
-              const isChecked = activeBrands.includes(brand);
-              return (
-                <label
-                  key={brand}
-                  className="flex cursor-pointer items-center gap-2 text-sm"
-                >
-                  <Checkbox
-                    checked={isChecked}
-                    onCheckedChange={() => onToggleBrand(brand)}
-                  />
-                  <span className="text-foreground/90">{brand}</span>
-                </label>
-              );
-            })
+            <div className="grid grid-cols-2 gap-3">
+              {brandOptions.map((brand) => {
+                const isChecked = activeBrands.includes(brand);
+                return (
+                  <label
+                    key={brand}
+                    className="cursor-pointer flex items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => onToggleBrand(brand)}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-foreground/90">{brand}</span>
+                  </label>
+                );
+              })}
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">
               No brand options available yet.
@@ -128,7 +131,7 @@ const ProductFilters = ({
             <button
               type="button"
               onClick={() => onUpdateParam("brands", "")}
-              className="pt-1 text-xs text-primary hover:underline"
+              className="cursor-pointer pt-3 text-xs text-primary hover:underline block w-full text-left"
             >
               Clear selected brands
             </button>
@@ -158,7 +161,7 @@ const ProductFilters = ({
             <button
               key={r}
               onClick={() => onSetMinRating(r)}
-              className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+              className={`cursor-pointer flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                 minRating === r
                   ? "border-foreground bg-foreground text-background"
                   : "border-border hover:border-foreground"
