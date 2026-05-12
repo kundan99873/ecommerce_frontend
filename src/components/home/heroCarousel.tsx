@@ -63,7 +63,7 @@ const HeroCarousel = () => {
   }
 
   return (
-    <section className="relative h-84 min-h-28rem overflow-hidden md:h-[75vh]">
+    <section className="relative h-84 min-h-112 overflow-hidden md:h-[75vh]">
       <AnimatePresence mode="wait">
         <motion.img
           key={slide.id || current}
@@ -107,7 +107,7 @@ const HeroCarousel = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
-              className="max-w-lg"
+              className="max-w-lg xl:px-16"
             >
               <motion.h1
                 className="text-2xl font-bold leading-tight text-white whitespace-pre-line md:text-4xl"

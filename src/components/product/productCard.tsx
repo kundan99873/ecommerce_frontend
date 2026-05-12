@@ -150,8 +150,8 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               variant={alreadyInCart ? "secondary" : "outline"}
               className={
                 alreadyInCart
-                  ? "h-8 rounded-full px-3 text-xs sm:h-9 sm:px-3.5 sm:text-sm hover:bg-primary hover:text-primary-foreground"
-                  : "h-8 w-8 sm:h-9 sm:w-9 rounded-full hover:bg-primary hover:text-primary-foreground"
+                  ? "h-8 rounded-xl px-3 text-xs sm:h-9 sm:px-3.5 sm:text-sm hover:bg-primary hover:text-primary-foreground"
+                  : "h-8 w-8 sm:h-9 sm:w-9 rounded-xl hover:bg-primary hover:text-primary-foreground"
               }
               onClick={(e) => {
                 e.preventDefault();
