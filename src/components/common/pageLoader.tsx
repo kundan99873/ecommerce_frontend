@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { ShoppingBag } from "lucide-react";
 
 const PageLoader = () => {
   return (
@@ -7,7 +6,10 @@ const PageLoader = () => {
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/20 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/20 blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
       </div>
 
       <div className="relative flex flex-col items-center gap-8">
@@ -30,7 +32,11 @@ const PageLoader = () => {
             animate={{ scale: [1, 1.1, 1], rotate: [0, -8, 8, 0] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <ShoppingBag className="w-8 h-8 text-primary-foreground" strokeWidth={2.4} />
+            {/* <ShoppingCart
+              className="w-8 h-8 text-primary-foreground"
+              strokeWidth={2.4}
+            /> */}
+            <img src="/icon.ico" alt="ShopNow" className="w-12 h-12" />
           </motion.div>
         </div>
 
@@ -41,7 +47,7 @@ const PageLoader = () => {
             animate={{ backgroundPosition: ["0% center", "200% center"] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           >
-            LUMIÈRE
+            ShopBazzar
           </motion.h1>
 
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
@@ -53,7 +59,11 @@ const PageLoader = () => {
             <motion.div
               className="h-full bg-linear-to-r from-primary to-accent rounded-full"
               animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              transition={{
+                duration: 1.4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               style={{ width: "60%" }}
             />
           </div>
@@ -65,7 +75,12 @@ const PageLoader = () => {
                 key={i}
                 className="w-1.5 h-1.5 rounded-full bg-primary"
                 animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 1, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.15,
+                  ease: "easeInOut",
+                }}
               />
             ))}
           </div>

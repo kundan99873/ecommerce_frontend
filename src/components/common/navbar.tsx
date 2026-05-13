@@ -92,7 +92,7 @@ const Navbar = () => {
               onClick={() => setTheme("light")}
               className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
                 theme === "light"
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
               aria-label="Light theme"
@@ -120,7 +120,7 @@ const Navbar = () => {
               onClick={() => setTheme("dark")}
               className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
                 theme === "dark"
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
               aria-label="Dark theme"

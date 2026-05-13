@@ -9,6 +9,7 @@ import {
 } from "@/services/product/product.query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/context/authContext";
+import { formatCurrency } from "@/utils/utils";
 
 interface SearchModalProps {
   open: boolean;
@@ -16,6 +17,8 @@ interface SearchModalProps {
 }
 
 const TRENDING = ["Cashmere", "Leather", "Sneakers", "Gold"];
+const MIN_SEARCH_LENGTH = 3;
+const RESULT_LIMIT = 4;
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const { isAuthenticated } = useAuth();
@@ -23,13 +26,14 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 350);
-  const canSearch = debouncedQuery.trim().length >= 3;
+  const trimmedQuery = query.trim();
+  const canSearch = debouncedQuery.trim().length >= MIN_SEARCH_LENGTH;
 
   const { data } = useGetRecentSearches(isAuthenticated);
   const { data: searchData, isFetching: isSearching } = useProducts(
     {
       search: debouncedQuery.trim(),
-      limit: 6,
+      limit: RESULT_LIMIT,
       page: 1,
     },
     { enabled: canSearch },
@@ -71,8 +75,9 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   };
 
   const goToShop = () => {
+    if (trimmedQuery.length < MIN_SEARCH_LENGTH) return;
     onOpenChange(false);
-    navigate(`/products?search=${encodeURIComponent(query)}`);
+    navigate(`/products?search=${encodeURIComponent(trimmedQuery)}`);
   };
 
   return (
@@ -86,7 +91,8 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && query.trim().length >= 3) goToShop();
+              if (e.key === "Enter" && query.trim().length >= MIN_SEARCH_LENGTH)
+                goToShop();
               if (e.key === "Escape") onOpenChange(false);
             }}
             placeholder="Search products, brands, categories..."
@@ -95,16 +101,33 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
+        <div className="px-4 py-2 border-b bg-muted/30">
+          {trimmedQuery.length > 0 &&
+          trimmedQuery.length < MIN_SEARCH_LENGTH ? (
+            <p className="text-xs text-muted-foreground">
+              Type at least {MIN_SEARCH_LENGTH} characters to start searching.
+            </p>
+          ) : trimmedQuery.length >= MIN_SEARCH_LENGTH ? (
+            <p className="text-xs text-muted-foreground">
+              Search Results for "{trimmedQuery}".
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Discover products faster with recent and trending searches.
+            </p>
+          )}
+        </div>
+
         <div className="max-h-[60vh] overflow-y-auto">
           <AnimatePresence mode="wait">
-            {query.length < 3 ? (
+            {trimmedQuery.length < MIN_SEARCH_LENGTH ? (
               <motion.div
                 key="suggestions"
                 initial={{ opacity: 0 }}
@@ -190,12 +213,12 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-semibold">
-                            ${primaryVariant.discounted_price}
+                            {formatCurrency(primaryVariant.discounted_price)}
                           </p>
                           {primaryVariant.original_price >
                             primaryVariant.discounted_price && (
                             <p className="text-xs text-muted-foreground line-through">
-                              ${primaryVariant.original_price}
+                              {formatCurrency(primaryVariant.original_price)}
                             </p>
                           )}
                         </div>
@@ -208,7 +231,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   onClick={goToShop}
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 border-t text-sm font-medium text-primary hover:bg-muted transition-colors"
                 >
-                  View all results for "{query}"
+                  View all results for "{trimmedQuery}"
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </motion.div>
@@ -218,11 +241,24 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="px-4 py-12 text-center"
+                className="p-4 space-y-3"
               >
-                <p className="text-sm font-medium text-muted-foreground">
-                  Searching...
-                </p>
+                {Array.from({ length: RESULT_LIMIT }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-2.5 rounded-lg border animate-pulse"
+                  >
+                    <div className="h-12 w-10 rounded-md bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 w-2/3 rounded bg-muted" />
+                      <div className="h-3 w-1/2 rounded bg-muted" />
+                    </div>
+                    <div className="w-16 space-y-2">
+                      <div className="h-3.5 w-full rounded bg-muted" />
+                      <div className="h-3 w-2/3 ml-auto rounded bg-muted" />
+                    </div>
+                  </div>
+                ))}
               </motion.div>
             ) : (
               <motion.div
