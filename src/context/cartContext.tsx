@@ -18,6 +18,7 @@ import {
 } from "@/services/cart/cart.query";
 import type { CartCoupon, CartItem } from "@/services/cart/cart.types";
 import { useAuth } from "@/context/authContext";
+import { consumePendingCartAction as consumeDeferredCartAction } from "@/utils/pendingCartAction";
 
 interface CartContextType {
   items: CartItem[];
@@ -104,6 +105,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [addToCart, isAuthenticated],
   );
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const pendingAction = consumeDeferredCartAction();
+    if (!pendingAction) return;
+
+    addItem(
+      pendingAction.sku,
+      pendingAction.quantity ?? 1,
+      pendingAction.coupon_code,
+    );
+  }, [addItem, isAuthenticated]);
 
   const applyCoupon = useCallback(
     (couponCode: string) => {

@@ -16,6 +16,7 @@ import {
 import { queryClient } from "@/api/client";
 import type { ApiResponse } from "@/api/api.types";
 import type {
+  GoogleLoginBody,
   LoggedInDevicesResponse,
   LoginBody,
   LoginResponse,
@@ -37,8 +38,8 @@ const useUserLogin = () => {
 };
 
 const useGoogleLogin = () => {
-  return useMutation({
-    mutationFn: (credential: string) => googleLogin(credential),
+  return useMutation<LoginResponse, Error, GoogleLoginBody>({
+    mutationFn: (body: GoogleLoginBody) => googleLogin(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });

@@ -11,6 +11,11 @@ export interface LoginBody {
   force_logout_device_id?: string;
 }
 
+export interface GoogleLoginBody {
+  token: string;
+  force_logout_device_id?: string;
+}
+
 export interface LoginResponse {
   success: boolean;
   message?: string;

@@ -1,5 +1,6 @@
 import { api } from "@/api/api";
 import type {
+  GoogleLoginBody,
   LoggedInDevicesResponse,
   LoginBody,
   LoginResponse,
@@ -33,10 +34,8 @@ const logoutOtherSessions = async () => {
   return response.data;
 };
 
-const googleLogin = async (token: string) => {
-  const response = await api.post(`/auth/google-login`, {
-    token,
-  });
+const googleLogin = async (body: GoogleLoginBody) => {
+  const response = await api.post<LoginResponse>(`/auth/google-login`, body);
   return response.data;
 };
 

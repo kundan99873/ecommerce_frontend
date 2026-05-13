@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { CheckCircle2, Heart, Loader2, ShoppingBag, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
@@ -7,6 +7,7 @@ import { formatCurrency } from "@/utils/utils";
 import { useCart } from "@/context/cartContext";
 import { useAuth } from "@/context/authContext";
 import { useWishlist } from "@/context/wishlistContext";
+import { setPendingCartAction } from "@/utils/pendingCartAction";
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addItem, addingSku, items } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toggleItem, isInWishlist, moveLoading, removeLoading } =
     useWishlist();
   const primaryVariant = product.variants[0];
@@ -156,7 +158,15 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               onClick={(e) => {
                 e.preventDefault();
                 if (alreadyInCart) return;
-                if (!isAuthenticated) return navigate("/login");
+                if (!isAuthenticated) {
+                  setPendingCartAction({
+                    sku: primaryVariant.sku,
+                    quantity: 1,
+                  });
+                  return navigate("/login", {
+                    state: { from: `${location.pathname}${location.search}` },
+                  });
+                }
                 addItem(primaryVariant.sku, 1);
               }}
               disabled={

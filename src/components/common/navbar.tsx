@@ -90,7 +90,7 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => setTheme("light")}
-              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 cursor-pointer ${
                 theme === "light"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -104,7 +104,7 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => setTheme("system")}
-              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 cursor-pointer ${
                 theme === "system"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -118,7 +118,7 @@ const Navbar = () => {
             <button
               type="button"
               onClick={() => setTheme("dark")}
-              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 cursor-pointer ${
                 theme === "dark"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"

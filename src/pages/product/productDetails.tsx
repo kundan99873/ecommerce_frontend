@@ -1,4 +1,10 @@
-import { useParams, Link, useSearchParams } from "react-router";
+import {
+  useParams,
+  Link,
+  useSearchParams,
+  useNavigate,
+  useLocation,
+} from "react-router";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Minus,
@@ -32,10 +38,15 @@ import ProductCard from "@/components/product/productCard";
 import ProductCardSkeleton from "@/components/product/productCardSkeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ProductReview } from "@/services/product/product.types";
+import { useAuth } from "@/context/authContext";
+import { setPendingCartAction } from "@/utils/pendingCartAction";
 
 const ProductDetail = () => {
   const { id: slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   const { addItem, loading, items } = useCart();
   const { toggleItem, isInWishlist, moveLoading, removeLoading } =
@@ -395,9 +406,24 @@ const ProductDetail = () => {
               <Button
                 disabled={isOutOfStock || loading || alreadyInCart}
                 className="flex-1"
-                onClick={() =>
-                  addItem(selectedVariant.sku, quantity, selectedCouponCode)
-                }
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setPendingCartAction({
+                      sku: selectedVariant.sku,
+                      quantity,
+                      ...(selectedCouponCode
+                        ? { coupon_code: selectedCouponCode }
+                        : {}),
+                    });
+
+                    navigate("/login", {
+                      state: { from: `${location.pathname}${location.search}` },
+                    });
+                    return;
+                  }
+
+                  addItem(selectedVariant.sku, quantity, selectedCouponCode);
+                }}
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
