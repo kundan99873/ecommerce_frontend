@@ -7,6 +7,7 @@ import {
   X,
   Moon,
   Sun,
+  Monitor,
   LogIn,
   Shield,
   ChevronRight,
@@ -31,7 +32,7 @@ const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { items: wishlistItems } = useWishlist();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
 
   const links = [
@@ -82,16 +83,52 @@ const Navbar = () => {
           >
             <Search className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
-          <button
-            onClick={toggleTheme}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          <div
+            className="flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 p-1 shadow-sm"
+            aria-label="Theme selector"
           >
-            {theme === "light" ? (
-              <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
-            ) : (
-              <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setTheme("light")}
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+                theme === "light"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="Light theme"
+              aria-pressed={theme === "light"}
+            >
+              <Sun className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme("system")}
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+                theme === "system"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="System theme"
+              aria-pressed={theme === "system"}
+            >
+              <Monitor className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme("dark")}
+              className={`grid h-8 w-8 place-items-center rounded-full transition-colors sm:h-9 sm:w-9 ${
+                theme === "dark"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              aria-label="Dark theme"
+              aria-pressed={theme === "dark"}
+            >
+              <Moon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+            </button>
+          </div>
           {isAuthenticated && (
             <Link
               to="/wishlist"
