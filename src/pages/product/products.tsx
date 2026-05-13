@@ -242,187 +242,196 @@ const Products = () => {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl md:text-4xl font-display font-bold mb-6">
-          Shop
-        </h1>
-        <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-          <aside className="hidden h-fit rounded-xl border bg-card p-5 lg:sticky lg:top-24 lg:block">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold">Filters</h2>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-primary hover:underline"
+      <section className="container mx-auto px-2 sm:px-4">
+        <div className="p-3 sm:p-6 md:p-10">
+          {/* <h1 className="text-3xl md:text-4xl font-display font-bold mb-6">
+            Shop
+          </h1> */}
+          <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+            <aside className="hidden h-fit rounded-xl border bg-card p-5 lg:sticky lg:top-24 lg:block">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-lg font-bold">Filters</h2>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+              <ProductFilters
+                activeCategory={activeCategory}
+                activeFilter={activeFilter}
+                activeBrands={activeBrands}
+                categoryOptions={categoryData?.data ?? []}
+                brandOptions={brandOptions}
+                priceRange={priceRange}
+                computedMaxPrice={computedMaxPrice}
+                minRating={minRating}
+                hasActiveFilters={hasActiveFilters}
+                onUpdateParam={updateParam}
+                onToggleBrand={toggleBrand}
+                onSetPriceRange={setPriceRange}
+                onSetMinRating={setMinRating}
+                onClearFilters={clearFilters}
+              />
+            </aside>
+
+            <div>
+              <div className="mb-8 flex flex-col gap-3 sm:flex-row">
+                <div ref={searchBoxRef} className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={search}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    className="pl-9"
+                  />
+
+                  {isSearchFocused && filteredRecentSearches.length > 0 && (
+                    <div className="absolute z-20 mt-2 w-full rounded-lg border bg-background shadow-md">
+                      <p className="px-3 pb-1 pt-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                        Recent Searches
+                      </p>
+                      <div className="pb-2">
+                        {filteredRecentSearches.map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            onClick={() => {
+                              handleSearchChange(term);
+                              setIsSearchFocused(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                          >
+                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Select
+                  value={activeSort}
+                  onValueChange={(value) => updateParam("sort", value)}
                 >
-                  Reset
-                </button>
+                  <SelectTrigger className="w-full sm:w-52">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="price_low">
+                      Price: Low to High
+                    </SelectItem>
+                    <SelectItem value="price_high">
+                      Price: High to Low
+                    </SelectItem>
+                    <SelectItem value="top_rated">Top Rated</SelectItem>
+                    <SelectItem value="newest">Newest</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="lg:hidden">
+                      <SlidersHorizontal className="mr-2 h-4 w-4" />
+                      Filters
+                      {hasActiveFilters && (
+                        <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                          !
+                        </span>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="bottom"
+                    className="h-[85vh] rounded-t-2xl"
+                  >
+                    <SheetHeader>
+                      <SheetTitle className="font-display">Filters</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6 overflow-y-auto pr-1">
+                      <ProductFilters
+                        activeCategory={activeCategory}
+                        activeFilter={activeFilter}
+                        activeBrands={activeBrands}
+                        categoryOptions={categoryData?.data ?? []}
+                        brandOptions={brandOptions}
+                        priceRange={priceRange}
+                        computedMaxPrice={computedMaxPrice}
+                        minRating={minRating}
+                        hasActiveFilters={hasActiveFilters}
+                        onUpdateParam={updateParam}
+                        onToggleBrand={toggleBrand}
+                        onSetPriceRange={setPriceRange}
+                        onSetMinRating={setMinRating}
+                        onClearFilters={clearFilters}
+                        isMobile
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
+              <p className="mb-4 text-sm text-muted-foreground">
+                Showing {visibleCount} of {totalCounts} product
+                {totalCounts !== 1 ? "s" : ""}
+              </p>
+
+              {isLoading ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
+                  {Array(4)
+                    .fill(undefined)
+                    .map((_, i) => (
+                      <ProductCardSkeleton key={i} />
+                    ))}
+                </div>
+              ) : visibleCount > 0 ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
+                  {visibleProducts.map((item, index) => (
+                    <ProductCard key={item.slug} product={item} index={index} />
+                  ))}
+
+                  <div ref={loadMoreRef} className="col-span-full h-10" />
+
+                  {isFetchingNextPage &&
+                    Array(4)
+                      .fill(undefined)
+                      .map((_, i) => <ProductCardSkeleton key={i} />)}
+
+                  {!hasNextPage && (
+                    <p className="col-span-full text-center text-gray-500">
+                      No more products
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="py-20 text-center text-muted-foreground"
+                >
+                  <p className="text-lg">No products found</p>
+                  <p className="mt-1 text-sm">
+                    Try adjusting your search or filters
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={clearFilters}
+                  >
+                    Clear Filters
+                  </Button>
+                </motion.div>
               )}
             </div>
-            <ProductFilters
-              activeCategory={activeCategory}
-              activeFilter={activeFilter}
-              activeBrands={activeBrands}
-              categoryOptions={categoryData?.data ?? []}
-              brandOptions={brandOptions}
-              priceRange={priceRange}
-              computedMaxPrice={computedMaxPrice}
-              minRating={minRating}
-              hasActiveFilters={hasActiveFilters}
-              onUpdateParam={updateParam}
-              onToggleBrand={toggleBrand}
-              onSetPriceRange={setPriceRange}
-              onSetMinRating={setMinRating}
-              onClearFilters={clearFilters}
-            />
-          </aside>
-
-          <div>
-            <div className="mb-8 flex flex-col gap-3 sm:flex-row">
-              <div ref={searchBoxRef} className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  className="pl-9"
-                />
-
-                {isSearchFocused && filteredRecentSearches.length > 0 && (
-                  <div className="absolute z-20 mt-2 w-full rounded-lg border bg-background shadow-md">
-                    <p className="px-3 pb-1 pt-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                      Recent Searches
-                    </p>
-                    <div className="pb-2">
-                      {filteredRecentSearches.map((term) => (
-                        <button
-                          key={term}
-                          type="button"
-                          onClick={() => {
-                            handleSearchChange(term);
-                            setIsSearchFocused(false);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                        >
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          {term}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Select
-                value={activeSort}
-                onValueChange={(value) => updateParam("sort", value)}
-              >
-                <SelectTrigger className="w-full sm:w-52">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="price_low">Price: Low to High</SelectItem>
-                  <SelectItem value="price_high">Price: High to Low</SelectItem>
-                  <SelectItem value="top_rated">Top Rated</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="lg:hidden">
-                    <SlidersHorizontal className="mr-2 h-4 w-4" />
-                    Filters
-                    {hasActiveFilters && (
-                      <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                        !
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-                  <SheetHeader>
-                    <SheetTitle className="font-display">Filters</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 overflow-y-auto pr-1">
-                    <ProductFilters
-                      activeCategory={activeCategory}
-                      activeFilter={activeFilter}
-                      activeBrands={activeBrands}
-                      categoryOptions={categoryData?.data ?? []}
-                      brandOptions={brandOptions}
-                      priceRange={priceRange}
-                      computedMaxPrice={computedMaxPrice}
-                      minRating={minRating}
-                      hasActiveFilters={hasActiveFilters}
-                      onUpdateParam={updateParam}
-                      onToggleBrand={toggleBrand}
-                      onSetPriceRange={setPriceRange}
-                      onSetMinRating={setMinRating}
-                      onClearFilters={clearFilters}
-                      isMobile
-                    />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            <p className="mb-4 text-sm text-muted-foreground">
-              Showing {visibleCount} of {totalCounts} product
-              {totalCounts !== 1 ? "s" : ""}
-            </p>
-
-            {isLoading ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
-                {Array(4)
-                  .fill(undefined)
-                  .map((_, i) => (
-                    <ProductCardSkeleton key={i} />
-                  ))}
-              </div>
-            ) : visibleCount > 0 ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
-                {visibleProducts.map((item, index) => (
-                  <ProductCard key={item.slug} product={item} index={index} />
-                ))}
-
-                <div ref={loadMoreRef} className="col-span-full h-10" />
-
-                {isFetchingNextPage &&
-                  Array(4)
-                    .fill(undefined)
-                    .map((_, i) => <ProductCardSkeleton key={i} />)}
-
-                {!hasNextPage && (
-                  <p className="col-span-full text-center text-gray-500">
-                    No more products
-                  </p>
-                )}
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="py-20 text-center text-muted-foreground"
-              >
-                <p className="text-lg">No products found</p>
-                <p className="mt-1 text-sm">
-                  Try adjusting your search or filters
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={clearFilters}
-                >
-                  Clear Filters
-                </Button>
-              </motion.div>
-            )}
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 };

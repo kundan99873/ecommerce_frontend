@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const OrderDetailSkeleton = () => {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl animate-pulse">
+    <div className="container mx-auto px-4 py-8 max-w-5xl animate-pulse">
       {/* Back button */}
       <Skeleton className="h-4 w-28 mb-6" />
 

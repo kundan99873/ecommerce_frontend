@@ -52,8 +52,8 @@ const Orders = () => {
     );
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 py-8 sm:px-4">
+      <div className="p-3 sm:p-6 md:px-10">
         <h1 className="text-3xl font-display font-bold mb-8">Order History</h1>
 
         {orders.length === 0 ? (
@@ -215,7 +215,7 @@ const Orders = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
